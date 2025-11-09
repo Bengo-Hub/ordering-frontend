@@ -2,60 +2,64 @@
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { useMemo, useState, type ReactNode } from "react";
 
-import { LogInIcon, ShieldIcon, UserCogIcon, UsersIcon } from "lucide-react";
+import { BikeIcon, ShoppingBagIcon, UsersIcon } from "lucide-react";
 
 import { SiteShell } from "@/components/layout/site-shell";
-import { Button } from "@/components/primitives/button";
-import { Input } from "@/components/primitives/input";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import { useAuthStore } from "@/store/auth";
 
-type AuthTab = "rider" | "merchant" | "staff" | "admin";
+type AuthTab = "customer" | "rider" | "staff";
 
-const tabs: Array<{ id: AuthTab; label: string; icon: React.ReactNode; description: string }> = [
+type TabConfig = {
+  id: AuthTab;
+  label: string;
+  icon: ReactNode;
+  description: string;
+};
+
+const tabs: TabConfig[] = [
+  {
+    id: "customer",
+    label: "Customer",
+    icon: <ShoppingBagIcon className="size-4" aria-hidden />,
+    description: "Sign in to place and track orders. Google sign-in is supported.",
+  },
   {
     id: "rider",
     label: "Rider",
-    icon: <ShieldIcon className="size-4" aria-hidden />,
-    description: "Verify with Google or email before accessing rider tasks.",
-  },
-  {
-    id: "merchant",
-    label: "Merchant admin",
-    icon: <UsersIcon className="size-4" aria-hidden />,
-    description: "Manage outlets, menus, and staff invitations.",
+    icon: <BikeIcon className="size-4" aria-hidden />,
+    description: "Verified riders can use Google OAuth or email to access shifts.",
   },
   {
     id: "staff",
     label: "Staff portal",
-    icon: <LogInIcon className="size-4" aria-hidden />,
-    description: "Use your invitation code to access assigned tools.",
-  },
-  {
-    id: "admin",
-    label: "Admin",
-    icon: <UserCogIcon className="size-4" aria-hidden />,
-    description: "Platform and tenant administration (invitation only).",
+    icon: <UsersIcon className="size-4" aria-hidden />,
+    description: "Admins and staff sign in here with invitation credentials.",
   },
 ];
 
-export default function AuthPage() {
-  const [activeTab, setActiveTab] = useState<AuthTab>("rider");
+export default function AuthPage(): JSX.Element {
+  const [activeTab, setActiveTab] = useState<AuthTab>("customer");
+  const activeDescription = useMemo(
+    () => tabs.find((tab) => tab.id === activeTab)?.description ?? "",
+    [activeTab],
+  );
 
   return (
     <SiteShell>
-      <section className="border-b border-slate-200 bg-brand-muted/60 py-16 dark:border-slate-800 dark:bg-brand-dark/20">
-        <div className="mx-auto flex w-full max-w-4xl flex-col gap-4 px-4 text-center">
-          <h1 className="text-4xl font-semibold text-slate-900 dark:text-white md:text-5xl">Sign in</h1>
-          <p className="text-base text-slate-600 dark:text-slate-300">
-            Choose the role that matches your invitation. Riders must be verified. Admin accounts are created by a
-            superuser; no public admin sign up is available.
+      <section className="border-b border-border bg-brand-surface/60 py-12">
+        <div className="mx-auto flex w-full max-w-4xl flex-col gap-3 px-4 text-center">
+          <h1 className="text-4xl font-semibold text-foreground md:text-5xl">Sign in</h1>
+          <p className="text-base text-muted-foreground">
+            {"Select the experience that matches your role. Customers and riders can use Google OAuth."}
           </p>
         </div>
       </section>
 
-      <section className="bg-white py-16 dark:bg-slate-950">
+      <section className="bg-background py-12">
         <div className="mx-auto flex w-full max-w-4xl flex-col gap-8 px-4">
           <div className="flex flex-wrap justify-center gap-3">
             {tabs.map((tab) => (
@@ -66,7 +70,7 @@ export default function AuthPage() {
                 className={`inline-flex items-center gap-2 rounded-full border px-4 py-2 text-sm font-medium transition ${
                   activeTab === tab.id
                     ? "border-brand-emphasis bg-brand-emphasis/10 text-brand-emphasis"
-                    : "border-slate-200 text-slate-600 hover:border-brand-emphasis hover:text-brand-emphasis dark:border-slate-700 dark:text-slate-300"
+                    : "border-border text-muted-foreground hover:border-brand-emphasis hover:text-brand-emphasis  text-muted-foreground"
                 }`}
               >
                 {tab.icon}
@@ -74,15 +78,12 @@ export default function AuthPage() {
               </button>
             ))}
           </div>
-          <p className="text-center text-sm text-slate-500 dark:text-slate-400">
-            {tabs.find((tab) => tab.id === activeTab)?.description}
-          </p>
+          <p className="text-center text-sm text-muted-foreground">{activeDescription}</p>
 
-          <div className="rounded-3xl border border-slate-200 bg-white p-8 shadow-soft dark:border-slate-800 dark:bg-slate-900/70">
+          <div className="rounded-3xl border border-border bg-card p-6 shadow-soft">
+            {activeTab === "customer" ? <CustomerSignIn /> : null}
             {activeTab === "rider" ? <RiderSignIn /> : null}
-            {activeTab === "merchant" ? <MerchantSignIn /> : null}
-            {activeTab === "staff" ? <StaffSignIn /> : null}
-            {activeTab === "admin" ? <AdminSignIn /> : null}
+            {activeTab === "staff" ? <StaffPortalSignIn /> : null}
           </div>
         </div>
       </section>
@@ -90,7 +91,71 @@ export default function AuthPage() {
   );
 }
 
-function RiderSignIn() {
+function CustomerSignIn(): JSX.Element {
+  const loginWithEmail = useAuthStore((s) => s.loginWithEmail);
+  const loginWithGoogle = useAuthStore((s) => s.loginWithGoogle);
+  const router = useRouter();
+
+  const onSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    const form = new FormData(event.currentTarget);
+    const email = String(form.get("email") ?? "");
+    const password = String(form.get("password") ?? "");
+    await loginWithEmail({ email, password, role: "customer" });
+    router.push("/menu");
+  };
+
+  return (
+    <div className="space-y-6">
+      <div className="space-y-2">
+        <h2 className="text-2xl font-semibold text-card-foreground">Customer sign in</h2>
+        <p className="text-sm text-muted-foreground">
+          Use your email or continue with Google to place orders and track deliveries. New here?{" "}
+          <Link href={{ pathname: "/customers/signup" }} className="font-semibold text-primary">
+            Create an account
+          </Link>
+          .
+        </p>
+      </div>
+      <Button variant="outline" className="w-full justify-center" onClick={() => loginWithGoogle("customer")}>
+        Continue with Google
+      </Button>
+      <form className="space-y-4" onSubmit={onSubmit}>
+        <div>
+          <label htmlFor="customerEmail" className="block text-xs font-semibold uppercase text-muted-foreground">
+            Email
+          </label>
+          <Input
+            id="customerEmail"
+            name="email"
+            type="email"
+            placeholder="you@example.com"
+            defaultValue="customer@demo.com"
+            required
+          />
+        </div>
+        <div>
+          <label htmlFor="customerPassword" className="block text-xs font-semibold uppercase text-muted-foreground">
+            Password
+          </label>
+          <Input
+            id="customerPassword"
+            name="password"
+            type="password"
+            placeholder="Your password"
+            defaultValue="demo1234"
+            required
+          />
+        </div>
+        <Button type="submit" className="w-full">
+          Sign in as customer
+        </Button>
+      </form>
+    </div>
+  );
+}
+
+function RiderSignIn(): JSX.Element {
   const loginWithEmail = useAuthStore((s) => s.loginWithEmail);
   const loginWithGoogle = useAuthStore((s) => s.loginWithGoogle);
   const router = useRouter();
@@ -107,11 +172,11 @@ function RiderSignIn() {
   return (
     <div className="space-y-6">
       <div className="space-y-2">
-        <h2 className="text-2xl font-semibold text-slate-900 dark:text-white">Rider sign in</h2>
-        <p className="text-sm text-slate-600 dark:text-slate-300">
-          Verified riders can sign in with Google OAuth or their registered email address. Need to join?{" "}
-          <Link href="/riders/signup" className="font-semibold text-brand-emphasis">
-            Start onboarding
+        <h2 className="text-2xl font-semibold text-card-foreground">Rider sign in</h2>
+        <p className="text-sm text-muted-foreground">
+          Verified riders use Google OAuth or email credentials issued during onboarding. Need to apply?{" "}
+          <Link href={{ pathname: "/riders/signup" }} className="font-semibold text-primary">
+            Start rider onboarding
           </Link>
           .
         </p>
@@ -121,16 +186,30 @@ function RiderSignIn() {
       </Button>
       <form className="space-y-4" onSubmit={onSubmit}>
         <div>
-          <label htmlFor="riderEmail" className="block text-xs font-semibold uppercase text-slate-500 dark:text-slate-300">
+          <label htmlFor="riderEmail" className="block text-xs font-semibold uppercase text-muted-foreground">
             Email
           </label>
-          <Input id="riderEmail" name="email" type="email" placeholder="you@example.com" required />
+          <Input
+            id="riderEmail"
+            name="email"
+            type="email"
+            placeholder="rider@example.com"
+            defaultValue="rider@demo.com"
+            required
+          />
         </div>
         <div>
-          <label htmlFor="riderPassword" className="block text-xs font-semibold uppercase text-slate-500 dark:text-slate-300">
+          <label htmlFor="riderPassword" className="block text-xs font-semibold uppercase text-muted-foreground">
             Password
           </label>
-          <Input id="riderPassword" name="password" type="password" placeholder="Your password" required />
+          <Input
+            id="riderPassword"
+            name="password"
+            type="password"
+            placeholder="Your password"
+            defaultValue="demo1234"
+            required
+          />
         </div>
         <Button type="submit" className="w-full">
           Sign in as rider
@@ -140,140 +219,96 @@ function RiderSignIn() {
   );
 }
 
-function MerchantSignIn() {
+function StaffPortalSignIn(): JSX.Element {
   const loginWithEmail = useAuthStore((s) => s.loginWithEmail);
   const router = useRouter();
-
-  const onSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
-    event.preventDefault();
-    const form = new FormData(event.currentTarget);
-    const email = String(form.get("email") ?? "");
-    const password = String(form.get("password") ?? "");
-    await loginWithEmail({ email, password, role: "merchant" });
-    router.push("/merchants");
-  };
-
-  return (
-    <div className="space-y-6">
-      <div className="space-y-2">
-        <h2 className="text-2xl font-semibold text-slate-900 dark:text-white">Merchant admin</h2>
-        <p className="text-sm text-slate-600 dark:text-slate-300">
-          Merchant administrators manage outlets, menus, and payouts. New to the platform?{" "}
-          <Link href="/merchants/signup" className="font-semibold text-brand-emphasis">
-            Create a merchant account
-          </Link>
-          .
-        </p>
-      </div>
-      <form className="space-y-4" onSubmit={onSubmit}>
-        <div>
-          <label htmlFor="merchantEmail" className="block text-xs font-semibold uppercase text-slate-500 dark:text-slate-300">
-            Email
-          </label>
-          <Input id="merchantEmail" name="email" type="email" placeholder="ops@merchant.com" required />
-        </div>
-        <div>
-          <label htmlFor="merchantPassword" className="block text-xs font-semibold uppercase text-slate-500 dark:text-slate-300">
-            Password
-          </label>
-          <Input id="merchantPassword" name="password" type="password" placeholder="Strong password" required />
-        </div>
-        <div>
-          <label htmlFor="workspace" className="block text-xs font-semibold uppercase text-slate-500 dark:text-slate-300">
-            Workspace slug
-          </label>
-          <Input id="workspace" name="workspace" placeholder="urbancafe" required />
-          <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">
-            Workspace slugs are created during onboarding and shared with your leadership team.
-          </p>
-        </div>
-        <Button type="submit" className="w-full">
-          Sign in as merchant admin
-        </Button>
-      </form>
-    </div>
-  );
-}
-
-function StaffSignIn() {
-  const loginWithEmail = useAuthStore((s) => s.loginWithEmail);
-  const router = useRouter();
+  const [role, setRole] = useState<"staff" | "admin">("staff");
 
   const onSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     const form = new FormData(event.currentTarget);
     const email = String(form.get("email") ?? "");
     const code = String(form.get("code") ?? "");
-    await loginWithEmail({ email, password: code, role: "staff" });
-    router.push("/merchants");
-  };
-
-  return (
-    <div className="space-y-6">
-      <div className="space-y-2">
-        <h2 className="text-2xl font-semibold text-slate-900 dark:text-white">Staff portal</h2>
-        <p className="text-sm text-slate-600 dark:text-slate-300">
-          Use your invitation email and one-time code shared by your administrator.
-        </p>
-      </div>
-      <form className="space-y-4" onSubmit={onSubmit}>
-        <div>
-          <label htmlFor="staffEmail" className="block text-xs font-semibold uppercase text-slate-500 dark:text-slate-300">
-            Email
-          </label>
-          <Input id="staffEmail" name="email" type="email" placeholder="staff@merchant.com" required />
-        </div>
-        <div>
-          <label htmlFor="staffCode" className="block text-xs font-semibold uppercase text-slate-500 dark:text-slate-300">
-            Invitation code
-          </label>
-          <Input id="staffCode" name="code" placeholder="6-digit code" required />
-        </div>
-        <Button type="submit" className="w-full">
-          Sign in as staff
-        </Button>
-      </form>
-    </div>
-  );
-}
-
-function AdminSignIn() {
-  const loginWithEmail = useAuthStore((s) => s.loginWithEmail);
-  const router = useRouter();
-
-  const onSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
-    event.preventDefault();
-    const form = new FormData(event.currentTarget);
-    const email = String(form.get("email") ?? "");
-    const password = String(form.get("password") ?? "");
-    await loginWithEmail({ email, password, role: "admin" });
+    await loginWithEmail({ email, password: code, role });
     router.push("/");
   };
 
   return (
     <div className="space-y-6">
       <div className="space-y-2">
-        <h2 className="text-2xl font-semibold text-slate-900 dark:text-white">Admin sign in</h2>
-        <p className="text-sm text-slate-600 dark:text-slate-300">
-          Admin accounts are created by a superuser (developer). If you need access, ask your platform owner.
+        <h2 className="text-2xl font-semibold text-card-foreground">Staff portal</h2>
+        <p className="text-sm text-muted-foreground">
+          Use your invitation email and one-time code shared by your administrator. Choose your role to load the right workspace.
         </p>
       </div>
       <form className="space-y-4" onSubmit={onSubmit}>
+        <div className="flex gap-3">
+          <label
+            className={`flex-1 cursor-pointer rounded-2xl border px-4 py-3 text-sm transition ${
+              role === "staff"
+                ? "border-primary bg-primary/10 text-primary"
+                : "border-border text-muted-foreground hover:border-primary hover:text-primary"
+            }`}
+          >
+            <input
+              type="radio"
+              name="portalRole"
+              value="staff"
+              checked={role === "staff"}
+              onChange={() => setRole("staff")}
+              className="hidden"
+            />
+            Staff
+          </label>
+          <label
+            className={`flex-1 cursor-pointer rounded-2xl border px-4 py-3 text-sm transition ${
+              role === "admin"
+                ? "border-primary bg-primary/10 text-primary"
+                : "border-border text-muted-foreground hover:border-primary hover:text-primary"
+            }`}
+          >
+            <input
+              type="radio"
+              name="portalRole"
+              value="admin"
+              checked={role === "admin"}
+              onChange={() => setRole("admin")}
+              className="hidden"
+            />
+            Admin
+          </label>
+        </div>
         <div>
-          <label htmlFor="adminEmail" className="block text-xs font-semibold uppercase text-slate-500 dark:text-slate-300">
+          <label htmlFor="staffEmail" className="block text-xs font-semibold uppercase text-muted-foreground">
             Email
           </label>
-          <Input id="adminEmail" name="email" type="email" placeholder="admin@domain.com" required />
+          <Input
+            id="staffEmail"
+            name="email"
+            type="email"
+            placeholder="staff@urbancafe.com"
+            defaultValue="staff@demo.com"
+            required
+          />
         </div>
         <div>
-          <label htmlFor="adminPassword" className="block text-xs font-semibold uppercase text-slate-500 dark:text-slate-300">
-            Password
+          <label htmlFor="staffCode" className="block text-xs font-semibold uppercase text-muted-foreground">
+            Invitation code
           </label>
-          <Input id="adminPassword" name="password" type="password" placeholder="Strong password" required />
+          <Input
+            id="staffCode"
+            name="code"
+            placeholder="6-digit code"
+            defaultValue="123456"
+            required
+          />
         </div>
         <Button type="submit" className="w-full">
-          Sign in as admin
+          Sign in to staff portal
         </Button>
+        <p className="text-xs text-muted-foreground">
+          Need help? Contact your organization admin or use the in-app support channel after signing in.
+        </p>
       </form>
     </div>
   );

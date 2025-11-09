@@ -1,15 +1,8 @@
 import type { Config } from "tailwindcss";
+import tailwindcssAnimate from "tailwindcss-animate";
 import defaultTheme from "tailwindcss/defaultTheme";
 
-const withOpacityValue = (variable: string) => {
-  return ({ opacityValue }: { opacityValue?: string }) => {
-    if (opacityValue === undefined) {
-      return `rgb(var(${variable}))`;
-    }
-
-    return `rgb(var(${variable}) / ${opacityValue})`;
-  };
-};
+const withOpacityValue = (variable: string) => `rgb(var(${variable}) / <alpha-value>)`;
 
 const config: Config = {
   content: [
@@ -56,15 +49,55 @@ const config: Config = {
           dark: withOpacityValue("--brand-dark"),
         },
         neutral: {
-          25: "#fafafa",
-          50: "#f5f5f5",
-          100: "#e5e7eb",
-          200: "#d1d5db",
-          300: "#9ca3af",
-          400: "#6b7280",
-          500: "#4b5563",
-          600: "#374151",
-          700: "#1f2937",
+          "25": "#fafafa",
+          "50": "#f5f5f5",
+          "100": "#e5e7eb",
+          "200": "#d1d5db",
+          "300": "#9ca3af",
+          "400": "#6b7280",
+          "500": "#4b5563",
+          "600": "#374151",
+          "700": "#1f2937",
+        },
+        background: "hsl(var(--background))",
+        foreground: "hsl(var(--foreground))",
+        card: {
+          DEFAULT: "hsl(var(--card))",
+          foreground: "hsl(var(--card-foreground))",
+        },
+        popover: {
+          DEFAULT: "hsl(var(--popover))",
+          foreground: "hsl(var(--popover-foreground))",
+        },
+        primary: {
+          DEFAULT: "hsl(var(--primary))",
+          foreground: "hsl(var(--primary-foreground))",
+        },
+        secondary: {
+          DEFAULT: "hsl(var(--secondary))",
+          foreground: "hsl(var(--secondary-foreground))",
+        },
+        muted: {
+          DEFAULT: "hsl(var(--muted))",
+          foreground: "hsl(var(--muted-foreground))",
+        },
+        accent: {
+          DEFAULT: "hsl(var(--accent))",
+          foreground: "hsl(var(--accent-foreground))",
+        },
+        destructive: {
+          DEFAULT: "hsl(var(--destructive))",
+          foreground: "hsl(var(--destructive-foreground))",
+        },
+        border: "hsl(var(--border))",
+        input: "hsl(var(--input))",
+        ring: "hsl(var(--ring))",
+        chart: {
+          "1": "hsl(var(--chart-1))",
+          "2": "hsl(var(--chart-2))",
+          "3": "hsl(var(--chart-3))",
+          "4": "hsl(var(--chart-4))",
+          "5": "hsl(var(--chart-5))",
         },
       },
       fontFamily: {
@@ -72,21 +105,61 @@ const config: Config = {
         display: ["Cal Sans", ...defaultTheme.fontFamily.sans],
       },
       fontSize: {
-        xs: ["0.75rem", { lineHeight: "1.25rem" }],
-        sm: ["0.875rem", { lineHeight: "1.35rem" }],
-        base: ["1rem", { lineHeight: "1.6rem" }],
-        lg: ["clamp(1.05rem, 1vw + 0.85rem, 1.25rem)", { lineHeight: "1.75rem" }],
-        xl: ["clamp(1.25rem, 1.2vw + 1rem, 1.5rem)", { lineHeight: "2rem" }],
-        "2xl": ["clamp(1.5rem, 1.4vw + 1.1rem, 1.8rem)", { lineHeight: "2.25rem" }],
-        "3xl": ["clamp(1.85rem, 1.8vw + 1.2rem, 2.25rem)", { lineHeight: "2.5rem" }],
-        "4xl": ["clamp(2.25rem, 2.2vw + 1.4rem, 2.75rem)", { lineHeight: "1.1" }],
+        xs: [
+          "0.75rem",
+          {
+            lineHeight: "1.25rem",
+          },
+        ],
+        sm: [
+          "0.875rem",
+          {
+            lineHeight: "1.35rem",
+          },
+        ],
+        base: [
+          "1rem",
+          {
+            lineHeight: "1.6rem",
+          },
+        ],
+        lg: [
+          "clamp(1.05rem, 1vw + 0.85rem, 1.25rem)",
+          {
+            lineHeight: "1.75rem",
+          },
+        ],
+        xl: [
+          "clamp(1.25rem, 1.2vw + 1rem, 1.5rem)",
+          {
+            lineHeight: "2rem",
+          },
+        ],
+        "2xl": [
+          "clamp(1.5rem, 1.4vw + 1.1rem, 1.8rem)",
+          {
+            lineHeight: "2.25rem",
+          },
+        ],
+        "3xl": [
+          "clamp(1.85rem, 1.8vw + 1.2rem, 2.25rem)",
+          {
+            lineHeight: "2.5rem",
+          },
+        ],
+        "4xl": [
+          "clamp(2.25rem, 2.2vw + 1.4rem, 2.75rem)",
+          {
+            lineHeight: "1.1",
+          },
+        ],
       },
       spacing: {
-        13: "3.25rem",
-        15: "3.75rem",
-        18: "4.5rem",
-        21: "5.25rem",
-        25: "6.25rem",
+        "13": "3.25rem",
+        "15": "3.75rem",
+        "18": "4.5rem",
+        "21": "5.25rem",
+        "25": "6.25rem",
       },
       maxWidth: {
         prose: "65ch",
@@ -99,9 +172,14 @@ const config: Config = {
       transitionTimingFunction: {
         "ease-out-expo": "cubic-bezier(0.16, 1, 0.3, 1)",
       },
+      borderRadius: {
+        lg: "var(--radius)",
+        md: "calc(var(--radius) - 2px)",
+        sm: "calc(var(--radius) - 4px)",
+      },
     },
   },
-  plugins: [],
+  plugins: [tailwindcssAnimate],
 };
 
 export default config;

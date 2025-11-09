@@ -13,7 +13,7 @@ export function SiteShell({ children, className, mainClassName }: SiteShellProps
   return (
     <div
       className={cn(
-        "flex min-h-screen flex-col bg-white text-slate-900 transition-colors duration-150 ease-out dark:bg-slate-950 dark:text-slate-100",
+        "flex min-h-screen flex-col bg-background text-foreground transition-colors duration-150 ease-out",
         className,
       )}
     >

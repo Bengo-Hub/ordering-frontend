@@ -1,66 +1,132 @@
-import { MailIcon, MapPinIcon, PhoneIcon } from "lucide-react";
+"use client";
+
+import Link from "next/link";
+
+import { ClockIcon, MailIcon, MapPinIcon, MessageCircleIcon, PhoneIcon } from "lucide-react";
 
 import { ContactForm } from "@/components/contact/contact-form";
 import { SiteShell } from "@/components/layout/site-shell";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { brand } from "@/config/brand";
 
-export default function ContactPage() {
+const quickLinks = [
+  {
+    title: "Call the Café",
+    subtitle: "Talk to our hospitality team",
+    icon: <PhoneIcon className="size-5 text-primary" aria-hidden />,
+    href: `tel:${brand.support.phone.replace(/\s+/g, "")}`,
+    label: brand.support.phone,
+  },
+  {
+    title: "WhatsApp support",
+    subtitle: "Chat for live order help",
+    icon: <MessageCircleIcon className="size-5 text-primary" aria-hidden />,
+    href: "https://wa.me/254743793901",
+    label: "Message Urban Café",
+  },
+  {
+    title: "Email the crew",
+    subtitle: "Send feedback or partnerships",
+    icon: <MailIcon className="size-5 text-primary" aria-hidden />,
+    href: `mailto:${brand.support.email}`,
+    label: brand.support.email,
+  },
+];
+
+export default function ContactPage(): JSX.Element {
   return (
     <SiteShell>
-      <section className="border-b border-slate-200 bg-brand-muted/50 py-16 dark:border-slate-800 dark:bg-brand-dark/20">
-        <div className="mx-auto flex w-full max-w-5xl flex-col gap-6 px-4 text-center">
-          <span className="inline-flex items-center justify-center rounded-full bg-brand-emphasis/10 px-4 py-1 text-xs font-semibold uppercase tracking-wide text-brand-emphasis">
-            Contact
+      <section className="border-b border-border bg-brand-surface/60 py-16">
+        <div className="mx-auto flex w-full max-w-5xl flex-col items-center gap-6 px-4 text-center">
+          <span className="inline-flex items-center gap-2 rounded-full border border-primary/30 bg-card/80 px-4 py-1 text-xs font-semibold uppercase tracking-wide text-primary shadow-sm backdrop-blur">
+            We’re here for you
           </span>
-          <h1 className="text-4xl font-semibold text-slate-900 dark:text-white md:text-5xl">
-            Let&apos;s build the next chapter of {brand.shortName}.
-          </h1>
-          <p className="mx-auto max-w-3xl text-base text-slate-600 dark:text-slate-300">
-            Share what you&apos;re working on—whether it&apos;s rolling out a white-label delivery experience,
-            onboarding cafes, or launching rider fleets. Our team responds within one business day.
+          <h1 className="text-4xl font-semibold text-foreground md:text-5xl">Let’s make your next Urban Café visit effortless.</h1>
+          <p className="max-w-3xl text-base text-muted-foreground">
+            Whether you’re ordering breakfast for the office, tracking a rider, or planning a celebration, our team is a message away. Reach us anytime—we love hearing from our guests.
           </p>
+          <div className="flex flex-wrap justify-center gap-3">
+            <Button size="lg" asChild>
+              <Link href="/menu">Start an order</Link>
+            </Button>
+            <Button variant="secondary" size="lg" asChild>
+              <Link href="#support">Talk to support</Link>
+            </Button>
+          </div>
         </div>
       </section>
 
-      <section className="bg-white py-16 dark:bg-slate-950">
+      <section id="support" className="border-b border-border bg-background py-16">
+        <div className="mx-auto grid w-full max-w-6xl gap-6 px-4 md:grid-cols-3">
+          {quickLinks.map((card) => (
+            <Card key={card.title} className="h-full">
+              <CardHeader className="space-y-3">
+                <span className="inline-flex size-11 items-center justify-center rounded-2xl bg-brand-muted">{card.icon}</span>
+                <div className="space-y-1">
+                  <h2 className="text-xl font-semibold text-foreground">{card.title}</h2>
+                  <p className="text-sm text-muted-foreground">{card.subtitle}</p>
+                </div>
+              </CardHeader>
+              <CardContent>
+                <a
+                  href={card.href}
+                  className="text-sm font-semibold text-primary underline-offset-4 hover:underline"
+                >
+                  {card.label}
+                </a>
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+      </section>
+
+      <section className="bg-background py-16">
         <div className="mx-auto grid w-full max-w-6xl gap-10 px-4 lg:grid-cols-[1.1fr_0.9fr]">
-          <ContactForm />
-          <aside className="space-y-6 rounded-3xl border border-slate-200 bg-brand-surface/40 p-8 shadow-sm dark:border-slate-800 dark:bg-brand-dark/30">
-            <div className="space-y-2">
-              <h2 className="text-2xl font-semibold text-slate-900 dark:text-white">Reach our team</h2>
-              <p className="text-sm text-slate-600 dark:text-slate-300">
-                We tailor onboarding for multi-tenant cafe groups, independent riders, and technology partners.
-                Let us know how we can help.
-              </p>
-            </div>
-            <ul className="space-y-4 text-sm">
-              <li className="flex items-start gap-3 text-slate-600 dark:text-slate-300">
-                <MailIcon className="mt-1 size-4 text-brand-emphasis" aria-hidden />
-                <div>
-                  <p className="font-semibold text-slate-900 dark:text-white">Email</p>
-                  <a href={`mailto:${brand.support.email}`} className="hover:text-brand-emphasis">
-                    {brand.support.email}
-                  </a>
-                </div>
-              </li>
-              <li className="flex items-start gap-3 text-slate-600 dark:text-slate-300">
-                <PhoneIcon className="mt-1 size-4 text-brand-emphasis" aria-hidden />
-                <div>
-                  <p className="font-semibold text-slate-900 dark:text-white">Phone</p>
-                  <a href={`tel:${brand.support.phone.replace(/\s+/g, "")}`} className="hover:text-brand-emphasis">
-                    {brand.support.phone}
-                  </a>
-                </div>
-              </li>
-              <li className="flex items-start gap-3 text-slate-600 dark:text-slate-300">
-                <MapPinIcon className="mt-1 size-4 text-brand-emphasis" aria-hidden />
-                <div>
-                  <p className="font-semibold text-slate-900 dark:text-white">Headquarters</p>
-                  <p>{brand.support.headquarters}</p>
-                </div>
-              </li>
-            </ul>
-          </aside>
+          <div className="space-y-4">
+            <h2 className="text-2xl font-semibold text-foreground">Send us a note</h2>
+            <p className="text-sm text-muted-foreground">
+              Share your question, celebration plans, or feedback and we’ll reply within one business day.
+            </p>
+            <ContactForm />
+          </div>
+
+          <div className="space-y-4">
+            <Card>
+              <CardHeader className="space-y-2">
+                <ClockIcon className="size-5 text-primary" aria-hidden />
+                <h3 className="text-xl font-semibold text-foreground">Service hours</h3>
+                <p className="text-sm text-muted-foreground">
+                  Daily 7:00am – 9:00pm. Riders are on standby throughout peak breakfast and evening slots.
+                </p>
+              </CardHeader>
+            </Card>
+            <Card>
+              <CardHeader className="space-y-2">
+                <MapPinIcon className="size-5 text-primary" aria-hidden />
+                <h3 className="text-xl font-semibold text-foreground">Visit the café</h3>
+                <p className="text-sm text-muted-foreground">
+                  {brand.support.headquarters}
+                </p>
+                <p className="text-sm text-muted-foreground">
+                  Stop by for signature roasts, limited-edition pastries, and a chat with our baristas.
+                </p>
+              </CardHeader>
+            </Card>
+            <Card>
+              <CardHeader className="space-y-2">
+                <h3 className="text-xl font-semibold text-foreground">Need an admin account?</h3>
+                <p className="text-sm text-muted-foreground">
+                  Operations leads can request demo or trial access to manage staff invites and café settings.
+                </p>
+              </CardHeader>
+              <CardContent>
+                <Button variant="outline" className="w-full" asChild>
+                  <Link href="/admin/request">Request admin access</Link>
+                </Button>
+              </CardContent>
+            </Card>
+          </div>
         </div>
       </section>
     </SiteShell>

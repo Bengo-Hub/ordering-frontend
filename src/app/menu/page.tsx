@@ -1,23 +1,24 @@
 import { MapPinIcon, ShoppingCartIcon } from "lucide-react";
 
+import { CustomerLocationPicker } from "@/components/location/customer-location-picker";
 import { SiteShell } from "@/components/layout/site-shell";
 import { MenuDiscovery } from "@/components/menu/menu-discovery";
-import { Button } from "@/components/primitives/button";
+import { Button } from "@/components/ui/button";
 import { brand } from "@/config/brand";
 
 export default function MenuPage() {
   return (
     <SiteShell>
-      <section className="border-b border-slate-200 bg-brand-muted/60 py-16 dark:border-slate-800 dark:bg-brand-dark/20">
-        <div className="mx-auto flex w-full max-w-6xl flex-col gap-10 px-4 md:flex-row md:items-center md:justify-between">
-          <div className="space-y-4">
+      <section className="border-b border-border bg-brand-surface/60 py-16">
+        <div className="mx-auto grid w/full max-w-6xl gap-10 px-4 md:grid-cols-[1.1fr_0.9fr] md:items-start">
+          <div className="space-y-6">
             <span className="inline-flex items-center gap-2 rounded-full bg-brand-emphasis/10 px-3 py-1 text-xs font-semibold uppercase tracking-wide text-brand-emphasis">
               <ShoppingCartIcon className="size-3.5" aria-hidden /> Menu & Ordering
             </span>
-            <h1 className="text-4xl font-semibold text-slate-900 dark:text-white md:text-5xl">
+            <h1 className="text-4xl font-semibold text-foreground md:text-5xl">
               Curated menus crafted for {brand.shortName} patrons.
             </h1>
-            <p className="max-w-2xl text-base text-slate-600 dark:text-slate-300">
+            <p className="max-w-2xl text-base text-muted-foreground">
               Browse seasonal dishes, personalize dietary filters, and sync your cart across web, PWA, and mobile
               clients. Availability is managed in real time by cafe operations and the food-delivery backend
               services.
@@ -31,12 +32,15 @@ export default function MenuPage() {
               </Button>
             </div>
           </div>
-          <div className="rounded-3xl border border-slate-200 bg-white p-6 shadow-soft dark:border-slate-800 dark:bg-slate-900/80">
-            <div className="flex items-center gap-3 text-sm text-slate-600 dark:text-slate-300">
-              <MapPinIcon className="size-5 text-brand-emphasis" aria-hidden />
-              <div>
-                <p className="font-semibold text-slate-900 dark:text-white">Multi-outlet menus</p>
-                <p>Pull tenant-aware pricing sourced from the backend order catalog service.</p>
+          <div className="space-y-4">
+            <CustomerLocationPicker />
+            <div className="rounded-3xl border border-border bg-card p-6 shadow-soft">
+              <div className="flex items-center gap-3 text-sm text-muted-foreground">
+                <MapPinIcon className="size-5 text-primary" aria-hidden />
+                <div>
+                  <p className="font-semibold text-foreground">Multi-outlet menus</p>
+                  <p>Pull tenant-aware pricing sourced from the backend order catalog service.</p>
+                </div>
               </div>
             </div>
           </div>

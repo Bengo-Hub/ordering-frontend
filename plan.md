@@ -6,18 +6,20 @@
 - Leverage shared design tokens and component libraries to keep feature parity between customer, rider, cafe, and admin touchpoints.
 
 ## Recent Progress (November 2025)
-- Implemented configurable brand theming with CSS variables and default assets (logo fallback) ready for backend-managed look & feel updates.
-- Delivered public marketing surface: landing page CTAs for riders and SaaS merchants, plus dedicated overview pages for riders, merchants, delivery, cafés, loyalty, and services.
-- Added rider onboarding and merchant signup flows with KYC capture, Google OAuth entry points, and staff portal scaffolding.
-- Updated navigation, footer, and contact touchpoints to surface the new signup journeys and staff portal access.
+- Unified light/dark theming with CSS variables, shadcn components, and mobile-ready navigation/headers/footers.
+- Revamped public marketing surface (landing, about, contact, delivery, menu, loyalty, cafés) with customer-focused storytelling and responsive design.
+- Delivered location-aware experiences: reusable Leaflet map component, Busia geofence, geolocation hooks, and customer/rider address selectors with autocomplete.
+- Implemented role-based auth hub plus polished customer sign-up, rider onboarding (map pin capture), and staff portal entry points using Zustand demo auth.
+- Rationalised sitemap—removed placeholder merchant docs—and refreshed contact flows, support CTAs, and CTA copy across the site.
 
 ## Upcoming Focus
 - Integrate brand configuration, logo management, and copy overrides with backend admin APIs (`look_and_feel` settings).
+- Persist customer/rider address books via backend location services, including reverse geocoding and Busia geofence validation on the server.
 - Wire rider onboarding form to backend KYC workflow service, implementing document upload storage and verification status APIs.
-- Connect merchant signup flow to tenancy provisioning pipeline and automate staff invitation emails.
+- Connect merchant/staff invite flows to tenancy provisioning once backend tenancy endpoints are live.
 - Expand auth flows with actual OAuth callbacks, OTP support, and session handling shared with mobile apps.
-- Implement dashboard shells for merchants and riders once backend endpoints for orders, payouts, and alerts are available.
-- Admin creation is restricted: superuser (developer) provisions initial admin accounts; no public admin signup flows will be exposed.
+- Implement dashboard shells for merchants and riders once orders, payouts, and analytics APIs are available.
+- Admin creation remains restricted: superuser provisions initial admin accounts; no public admin signup flows will be exposed.
 
 ## Client Applications & Feature Scope
 1. **Customer Web/PWA (Priority 1)**
@@ -45,14 +47,14 @@
 
 ## Experience Structure
 - **Public Website:**
-  - Landing page with hero, featured restaurants, CTA to order, and clear links to About, Contact, and Services pages.
-  - `About` page telling the Urban Cafe story, sustainability commitments, and partner testimonials.
-  - `Services` page describing ordering, catering, fleet management, and treasury integrations for merchants.
-  - `Contact` page with support channels, branch locations, embedded map, and lead capture form.
+  - Landing page with urban café story, customer & rider CTAs, testimonials, and consistent theming.
+  - `About` page centred on Urban Café’s story, commitments, and community impact.
+  - `Delivery`, `Menu`, `Cafés`, `Loyalty`, and `Contact` pages describe customer value propositions with address-aware components.
+  - `Contact` page provides support channels, café visit info, and lead capture form.
 - **Ordering Journey (Customers):**
   - Browse → menu detail → cart → checkout (support prepay or COD) → order confirmation.
   - Real-time order tracking view with status timeline and map.
-  - Profile area for address management, saved payment methods, loyalty, and receipts.
+  - Profile area for address management (default & custom pins), saved payment methods, loyalty, and receipts.
   - _Backend references: [Sprint 3 – Orders & Cart](../food-delivery-backend/plan.md#sprint-3--orders--cart-weeks-6-7), [Sprint 4 – Payments Core](../food-delivery-backend/plan.md#sprint-4--payments-core-weeks-8-9)._
 - **Driver App Group:**
   - Shift management (clock-in/out), order queue, navigation hand-off, proof of delivery capture.
@@ -71,7 +73,7 @@
 - **State & Data:** TanStack Query for server state, Zustand for lightweight client state, React Hook Form + Zod validation, Jotai for low-level atoms where needed.
 - **Networking:** Axios via shared `baseapi` wrapper, WebSocket/SSE client for live updates, service worker API for offline sync.
 - **UI System:** Tailwind CSS + Radix UI (web), NativeWind (mobile), Figma handoff tokens synced through Style Dictionary.
-- **Maps & Geo:** Mapbox GL JS (web) and mapbox/react-native-mapbox-gl, fallback to Google Maps if required.
+- **Maps & Geo:** Leaflet (web) with reusable map component and geofence logic; Mapbox/React Native Mapbox GL on mobile; fallback to Google Maps if required.
 - **Internationalization:** next-intl (web) & react-native-localize + i18next (mobile), centralized copy JSON with translation pipeline.
 - **Testing & Quality:** Vitest + Testing Library, Detox/E2E for mobile, Playwright for PWA, Percy visual testing.
 - **Analytics:** Segment/Amplitude instrumentation, consent-aware tracking toggles.

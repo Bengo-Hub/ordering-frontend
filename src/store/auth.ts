@@ -1,6 +1,6 @@
 import { create } from "zustand";
 
-type UserRole = "rider" | "merchant" | "staff" | "admin";
+type UserRole = "customer" | "rider" | "staff" | "admin";
 
 type User = {
   id: string;
@@ -25,15 +25,14 @@ const issueDemoJwt = (payload: Record<string, unknown>): string => {
 
 export const useAuthStore = create<AuthState>((set) => ({
   user: null,
-  loginWithEmail: async ({ email, password, role }) => {
-    // Simulate validation
+  loginWithEmail: async ({ email, password: _password, role }) => {
     await new Promise((resolve) => setTimeout(resolve, 300));
     const user: User = {
       id: crypto?.randomUUID?.() ?? Math.random().toString(36).slice(2),
       name: email.split("@")[0] ?? "User",
       email,
       role,
-      jwt: issueDemoJwt({ sub: email, role }),
+      jwt: issueDemoJwt({ sub: email, role, provider: "email" }),
     };
     localStorage.setItem("demo_user", JSON.stringify(user));
     set({ user });
