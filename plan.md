@@ -100,41 +100,29 @@
 - Rider and merchant dashboards will ship after orders, payouts, and analytics APIs are available.
 
 ## Delivery Roadmap (Priority-Ordered Sprints)
-1. **Sprint 0 – Foundations & Design System (Week 1)**
-   - Setup monorepo, Next.js shell, React Native/Expo workspace, shared UI kit, Storybook, lint/test pipelines.
-   - Define routing architecture, internationalization scaffolding, theming tokens.
-   - _Backend link: [Sprint 0 – Foundation](../food-delivery-backend/plan.md#sprint-0--foundation-week-1)._
-2. **Sprint 1 – Customer Web MVP (Weeks 2-3)**
-   - Landing page, menu listing, product detail, cart UI, auth flows (login/register/OTP), TanStack Query data hooks.
-   - Integrate baseapi client, skeleton state management, analytics instrumentation baseline.
-   - Progress: marketing surface, rider/merchant CTAs, and base brand theming delivered.
-   - _Backend link: [Sprint 1 – Identity & Access](../food-delivery-backend/plan.md#sprint-1--identity--access-management-weeks-2-3) & [Sprint 2 – Catalog & Localization](../food-delivery-backend/plan.md#sprint-2--catalog--localization-weeks-4-5)._
-3. **Sprint 2 – Checkout & Payments UX (Weeks 4-5)**
-   - Checkout form, address management, promo/loyalty handling, payment orchestration UI (treasury integration), order confirmation.
-   - Error handling patterns, accessibility pass for core journey.
-   - _Backend link: [Sprint 4 – Payments Core](../food-delivery-backend/plan.md#sprint-4--payments-core-weeks-8-9)._
-4. **Sprint 3 – Real-Time Tracking & Notifications (Weeks 6-7)**
-   - Live order status timeline, map tracking, WebSocket integration, notification preferences, service worker push support.
-   - _Backend link: [Sprint 5 – Fulfilment & Dispatch](../food-delivery-backend/plan.md#sprint-5--fulfilment--dispatch-weeks-10-11) & [Sprint 6 – Notifications & Ops](../food-delivery-backend/plan.md#sprint-6--notifications--ops-weeks-12-13)._
-5. **Sprint 4 – Cafe Dashboard (Weeks 8-9)**
-   - Authenticated dashboard layout, order queue management, menu CRUD, promo scheduler, analytics overview.
-   - Role-based routing, optimistic updates, multi-language management.
-   - _Backend link: [Sprint 2 – Catalog & Localization](../food-delivery-backend/plan.md#sprint-2--catalog--localization-weeks-4-5) & [Sprint 7 – Analytics, Compliance & Hardening](../food-delivery-backend/plan.md#sprint-7--analytics-compliance--hardening-weeks-14-15)._
-6. **Sprint 5 – Mobile Apps Phase 1 (Weeks 10-11)**
-   - Customer React Native app parity (auth, menu, cart, checkout), offline cart caching, biometric login.
-   - Deploy internal beta via Expo EAS/TestFlight.
-   - _Backend link: [Sprint 5 – Fulfilment & Dispatch](../food-delivery-backend/plan.md#sprint-5--fulfilment--dispatch-weeks-10-11)._
-7. **Sprint 6 – Rider App & Fulfillment (Weeks 12-13)**
-   - Rider order queue, navigation integration, proof-of-delivery capture, earnings dashboard.
-   - Background location tracking, push notifications, offline resilience.
-   - _Backend link: [Sprint 5 – Fulfilment & Dispatch](../food-delivery-backend/plan.md#sprint-5--fulfilment--dispatch-weeks-10-11) & [Sprint 6 – Notifications & Ops](../food-delivery-backend/plan.md#sprint-6--notifications--ops-weeks-12-13)._
-8. **Sprint 7 – Admin Console & Ops Tooling (Weeks 14-15)**
-   - Admin analytics, marketing campaign management, notification template preview, SLA dashboards.
-   - Advanced filters, export flows, real-time fleet map.
-   - _Backend link: [Sprint 7 – Analytics, Compliance & Hardening](../food-delivery-backend/plan.md#sprint-7--analytics-compliance--hardening-weeks-14-15)._
-9. **Sprint 8 – Hardening & Launch (Week 16)**
-   - Cross-platform QA, localization polish, performance tuning, app store submissions, PWA audits, documentation handover.
-   - _Backend link: [Sprint 8 – Launch & Handover](../food-delivery-backend/plan.md#sprint-8--launch--handover-week-16)._
+1. **Sprint 0 – Foundations & Design System (Week 1)** — _Status: ✅ Completed (Nov 2025)_
+   - Setup repo, Next.js shell, shadcn UI, Storybook, lint/test pipelines. ✔
+   - Define routing architecture, internationalization scaffolding, theming tokens. ✔
+   - Implement identity bootstrap: RBAC role/permission model, auth store scaffolding, Google OAuth wiring from frontend to backend contracts (stubs until APIs ready). ✔
+   - Deliverables shipped: base layout, theming tokens, auth state container, component primitives reused across marketing pages.
+   - Next: none (move focus to Sprint 1).
+   - _Backend link: [Sprint 0 – Foundation](../food-delivery-backend/plan.md#sprint-0--foundation-week-1)._ 
+2. **Sprint 1 – Customer Web MVP (Weeks 2-3)** — _Status: 🚧 In Progress_
+   - Completed: Marketing landing page overhaul, About/Contact/Delivery/Menu/Loyalty/Cafés pages, role-aware auth hub, customer & rider signup flows, address picker with geofence, responsive header/footer, protected dashboards (`src/app/page.tsx`, `src/app/menu/page.tsx`, `src/app/customers/signup/page.tsx`, `src/components/location/*`, `src/store/auth.ts`, `src/app/profile/page.tsx`, `src/app/dashboard/*`).
+   - Outstanding: Product detail view, cart & promo codes, loyalty balance UI, checkout scaffolding, backend integration layer (axios baseapi), wire OAuth/JWT flows to live backend endpoints.
+   - Next sprint tasks: build menu detail route, cart drawer, TanStack Query hooks for menu/catalog once backend contract is ready, wire customer location store into future checkout.
+   - _Backend link: [Sprint 1 – Identity & Access](../food-delivery-backend/plan.md#sprint-1--identity--access-management-weeks-2-3) & [Sprint 2 – Catalog & Localization](../food-delivery-backend/plan.md#sprint-2--catalog--localization-weeks-4-5)._ 
+3. **Sprint 2 – Checkout & Payments UX (Weeks 4-5)** — _Status: ⏳ Not Started_
+   - Planned: Checkout form, address management, promo/loyalty handling, payment orchestration UI (treasury integration), order confirmation.
+   - Dependencies: baseapi client, treasury APIs, persisted address book from Sprint 1 location store.
+   - Next up once Sprint 1 closes: design checkout pages, integrate saved/default addresses from `useCustomerLocationStore`, begin payment method components.
+   - _Backend link: [Sprint 4 – Payments Core](../food-delivery-backend/plan.md#sprint-4--payments-core-weeks-8-9)._ 
+4. **Sprint 3 – Real-Time Tracking & Notifications (Weeks 6-7)** — _Status: ⏳ Not Started (early groundwork laid)_
+   - Groundwork shipped in Sprint 1: reusable map component and delivery timeline (`src/app/delivery/page.tsx`) ready to consume WebSocket updates.
+   - Upcoming: Live order status timeline, WebSocket integration, notification preferences, service worker push support.
+   - _Backend link: [Sprint 5 – Fulfilment & Dispatch](../food-delivery-backend/plan.md#sprint-5--fulfilment--dispatch-weeks-10-11) & [Sprint 6 – Notifications & Ops](../food-delivery-backend/plan.md#sprint-6--notifications--ops-weeks-12-13)._ 
+5. **Sprint 4 – Cafe Dashboard (Weeks 8-9)** — _Status: ⏳ Not Started_
+   - Cross-sprint dependency: location picker + geofence from Sprint 1 also powers future cart/checkout (Sprint 2) and tracking (Sprint 3).
 
 ## Backlog & Enhancements
 - AI-driven recommendations & upsell banners, live chat support widget, referral programs, queue-based loyalty rewards, white-label theming for multi-brand expansion.

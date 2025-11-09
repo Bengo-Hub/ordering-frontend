@@ -1,11 +1,11 @@
+import "@/styles/globals.css";
 import type { Metadata, Viewport } from "next";
 import { Inter, Playfair_Display as PlayfairDisplay } from "next/font/google";
 import type { CSSProperties } from "react";
-import "@/styles/globals.css";
 
 import { brand } from "@/config/brand";
-import { AppProviders } from "@/providers/app-providers";
 import { cn } from "@/lib/utils";
+import { AppProviders } from "@/providers/app-providers";
 
 const inter = Inter({
   subsets: ["latin"],
@@ -44,14 +44,14 @@ export const viewport: Viewport = {
   ],
 };
 
-const brandCssVariables: CSSProperties = {
+const brandCssVariables = {
   "--brand-primary": brand.cssVariables.primary,
   "--brand-emphasis": brand.cssVariables.emphasis,
   "--brand-contrast": brand.cssVariables.contrast,
   "--brand-muted": brand.cssVariables.muted,
   "--brand-surface": brand.cssVariables.surface,
   "--brand-dark": brand.cssVariables.dark,
-};
+} satisfies Record<string, string>;
 
 export default function RootLayout({
   children,
@@ -59,7 +59,7 @@ export default function RootLayout({
   return (
     <html lang="en" suppressHydrationWarning>
       <body
-        style={brandCssVariables}
+        style={brandCssVariables as CSSProperties}
         className={cn(inter.variable, display.variable, "font-sans antialiased")}
       >
         <AppProviders>{children}</AppProviders>

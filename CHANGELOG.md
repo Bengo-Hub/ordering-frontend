@@ -15,10 +15,14 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) 
 - Rider onboarding form with KYC capture, Google OAuth entry point, and verification guidance.
 - Merchant signup workflow with staff invitation scaffolding and dedicated staff portal sign-in.
 - Role-aware authentication hub for riders, merchants, and staff.
+- Role-gated dashboards for customer, rider, and staff roles with reusable authorization guards and metric cards.
+- Full-stack user management module with RBAC-aware Zustand store, OAuth2 (Google) initiation/callback handlers, session persistence, and account/profile dashboards.
+- Google-branded sign-in buttons with official iconography across customer and rider flows.
 
 ### Changed
 - Overhauled landing, about, contact, menu, delivery, cafés, and loyalty pages with consistent light/dark theming and customer-first copy.
 - Refined header/footer navigation, mobile drawer, and theme toggle for accessibility and responsiveness.
+- Header now surfaces authenticated account shortcuts and logout, with profile page managing security, loyalty, and preferences.
 
 ### Removed
 - Deprecated merchant placeholder pages in favour of streamlined public sitemap.

@@ -1,11 +1,12 @@
 "use client";
 
 import Link from "next/link";
-import { useRouter } from "next/navigation";
 import { useMemo, useState, type ReactNode } from "react";
 
-import { BikeIcon, ShoppingBagIcon, UsersIcon } from "lucide-react";
+import { BikeIcon, ShieldCheckIcon, ShoppingBagIcon, UsersIcon } from "lucide-react";
+import { useRouter, useSearchParams } from "next/navigation";
 
+import { GoogleIcon } from "@/components/icons/google";
 import { SiteShell } from "@/components/layout/site-shell";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -25,37 +26,49 @@ const tabs: TabConfig[] = [
     id: "customer",
     label: "Customer",
     icon: <ShoppingBagIcon className="size-4" aria-hidden />,
-    description: "Sign in to place and track orders. Google sign-in is supported.",
+    description: "Customers can place orders, manage saved addresses, and track deliveries.",
   },
   {
     id: "rider",
     label: "Rider",
     icon: <BikeIcon className="size-4" aria-hidden />,
-    description: "Verified riders can use Google OAuth or email to access shifts.",
+    description: "Verified riders manage shifts, navigation, and proof-of-delivery from here.",
   },
   {
     id: "staff",
     label: "Staff portal",
     icon: <UsersIcon className="size-4" aria-hidden />,
-    description: "Admins and staff sign in here with invitation credentials.",
+    description: "Admins and invited staff access dashboards, loyalty, and support tooling.",
   },
 ];
 
 export default function AuthPage(): JSX.Element {
-  const [activeTab, setActiveTab] = useState<AuthTab>("customer");
+  const searchParams = useSearchParams();
+  const initialTab = (searchParams.get("tab") as AuthTab | null) ?? "customer";
+  const [activeTab, setActiveTab] = useState<AuthTab>(initialTab);
   const activeDescription = useMemo(
     () => tabs.find((tab) => tab.id === activeTab)?.description ?? "",
     [activeTab],
   );
+  const status = useAuthStore((state) => state.status);
+  const error = useAuthStore((state) => state.error);
 
   return (
     <SiteShell>
       <section className="border-b border-border bg-brand-surface/60 py-12">
         <div className="mx-auto flex w-full max-w-4xl flex-col gap-3 px-4 text-center">
-          <h1 className="text-4xl font-semibold text-foreground md:text-5xl">Sign in</h1>
+          <h1 className="flex items-center justify-center gap-2 text-4xl font-semibold text-foreground md:text-5xl">
+            <ShieldCheckIcon className="size-8 text-brand-emphasis" aria-hidden />
+            Sign in securely
+          </h1>
           <p className="text-base text-muted-foreground">
-            {"Select the experience that matches your role. Customers and riders can use Google OAuth."}
+            Select the experience that matches your role. Google OAuth flows redirect through our secure backend.
           </p>
+          {error ? (
+            <span className="text-sm font-medium text-destructive">
+              {error}
+            </span>
+          ) : null}
         </div>
       </section>
 
@@ -70,7 +83,7 @@ export default function AuthPage(): JSX.Element {
                 className={`inline-flex items-center gap-2 rounded-full border px-4 py-2 text-sm font-medium transition ${
                   activeTab === tab.id
                     ? "border-brand-emphasis bg-brand-emphasis/10 text-brand-emphasis"
-                    : "border-border text-muted-foreground hover:border-brand-emphasis hover:text-brand-emphasis  text-muted-foreground"
+                    : "border-border text-muted-foreground hover:border-brand-emphasis hover:text-brand-emphasis"
                 }`}
               >
                 {tab.icon}
@@ -81,9 +94,9 @@ export default function AuthPage(): JSX.Element {
           <p className="text-center text-sm text-muted-foreground">{activeDescription}</p>
 
           <div className="rounded-3xl border border-border bg-card p-6 shadow-soft">
-            {activeTab === "customer" ? <CustomerSignIn /> : null}
-            {activeTab === "rider" ? <RiderSignIn /> : null}
-            {activeTab === "staff" ? <StaffPortalSignIn /> : null}
+            {activeTab === "customer" ? <CustomerSignIn isLoading={status === "loading"} /> : null}
+            {activeTab === "rider" ? <RiderSignIn isLoading={status === "loading"} /> : null}
+            {activeTab === "staff" ? <StaffPortalSignIn isLoading={status === "loading"} /> : null}
           </div>
         </div>
       </section>
@@ -91,9 +104,13 @@ export default function AuthPage(): JSX.Element {
   );
 }
 
-function CustomerSignIn(): JSX.Element {
+interface SignInProps {
+  isLoading: boolean;
+}
+
+function CustomerSignIn({ isLoading }: SignInProps): JSX.Element {
   const loginWithEmail = useAuthStore((s) => s.loginWithEmail);
-  const loginWithGoogle = useAuthStore((s) => s.loginWithGoogle);
+  const beginGoogleOAuth = useAuthStore((s) => s.beginGoogleOAuth);
   const router = useRouter();
 
   const onSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
@@ -102,7 +119,7 @@ function CustomerSignIn(): JSX.Element {
     const email = String(form.get("email") ?? "");
     const password = String(form.get("password") ?? "");
     await loginWithEmail({ email, password, role: "customer" });
-    router.push("/menu");
+    router.push("/dashboard/customer");
   };
 
   return (
@@ -110,14 +127,22 @@ function CustomerSignIn(): JSX.Element {
       <div className="space-y-2">
         <h2 className="text-2xl font-semibold text-card-foreground">Customer sign in</h2>
         <p className="text-sm text-muted-foreground">
-          Use your email or continue with Google to place orders and track deliveries. New here?{" "}
+          Use email or Google to access your saved addresses, loyalty balance, and order tracking.
+          New here?{" "}
           <Link href={{ pathname: "/customers/signup" }} className="font-semibold text-primary">
             Create an account
           </Link>
           .
         </p>
       </div>
-      <Button variant="outline" className="w-full justify-center" onClick={() => loginWithGoogle("customer")}>
+      <Button
+        type="button"
+        variant="outline"
+        className="w-full justify-center gap-2"
+        onClick={() => beginGoogleOAuth({ role: "customer" })}
+        disabled={isLoading}
+      >
+        <GoogleIcon className="size-4" />
         Continue with Google
       </Button>
       <form className="space-y-4" onSubmit={onSubmit}>
@@ -142,12 +167,12 @@ function CustomerSignIn(): JSX.Element {
             id="customerPassword"
             name="password"
             type="password"
-            placeholder="Your password"
+            placeholder="•••••••"
             defaultValue="demo1234"
             required
           />
         </div>
-        <Button type="submit" className="w-full">
+        <Button type="submit" className="w-full" disabled={isLoading}>
           Sign in as customer
         </Button>
       </form>
@@ -155,9 +180,9 @@ function CustomerSignIn(): JSX.Element {
   );
 }
 
-function RiderSignIn(): JSX.Element {
+function RiderSignIn({ isLoading }: SignInProps): JSX.Element {
   const loginWithEmail = useAuthStore((s) => s.loginWithEmail);
-  const loginWithGoogle = useAuthStore((s) => s.loginWithGoogle);
+  const beginGoogleOAuth = useAuthStore((s) => s.beginGoogleOAuth);
   const router = useRouter();
 
   const onSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
@@ -166,7 +191,7 @@ function RiderSignIn(): JSX.Element {
     const email = String(form.get("email") ?? "");
     const password = String(form.get("password") ?? "");
     await loginWithEmail({ email, password, role: "rider" });
-    router.push("/");
+    router.push("/dashboard/rider");
   };
 
   return (
@@ -174,14 +199,22 @@ function RiderSignIn(): JSX.Element {
       <div className="space-y-2">
         <h2 className="text-2xl font-semibold text-card-foreground">Rider sign in</h2>
         <p className="text-sm text-muted-foreground">
-          Verified riders use Google OAuth or email credentials issued during onboarding. Need to apply?{" "}
+          Use your onboarding credentials or Google account to manage assigned routes and delivery proof.
+          Need to apply?{" "}
           <Link href={{ pathname: "/riders/signup" }} className="font-semibold text-primary">
             Start rider onboarding
           </Link>
           .
         </p>
       </div>
-      <Button variant="outline" className="w-full justify-center" onClick={() => loginWithGoogle("rider")}>
+      <Button
+        type="button"
+        variant="outline"
+        className="w-full justify-center gap-2"
+        onClick={() => beginGoogleOAuth({ role: "rider" })}
+        disabled={isLoading}
+      >
+        <GoogleIcon className="size-4" />
         Continue with Google
       </Button>
       <form className="space-y-4" onSubmit={onSubmit}>
@@ -206,12 +239,12 @@ function RiderSignIn(): JSX.Element {
             id="riderPassword"
             name="password"
             type="password"
-            placeholder="Your password"
+            placeholder="•••••••"
             defaultValue="demo1234"
             required
           />
         </div>
-        <Button type="submit" className="w-full">
+        <Button type="submit" className="w-full" disabled={isLoading}>
           Sign in as rider
         </Button>
       </form>
@@ -219,7 +252,7 @@ function RiderSignIn(): JSX.Element {
   );
 }
 
-function StaffPortalSignIn(): JSX.Element {
+function StaffPortalSignIn({ isLoading }: SignInProps): JSX.Element {
   const loginWithEmail = useAuthStore((s) => s.loginWithEmail);
   const router = useRouter();
   const [role, setRole] = useState<"staff" | "admin">("staff");
@@ -230,7 +263,7 @@ function StaffPortalSignIn(): JSX.Element {
     const email = String(form.get("email") ?? "");
     const code = String(form.get("code") ?? "");
     await loginWithEmail({ email, password: code, role });
-    router.push("/");
+    router.push("/dashboard/staff");
   };
 
   return (
@@ -238,7 +271,7 @@ function StaffPortalSignIn(): JSX.Element {
       <div className="space-y-2">
         <h2 className="text-2xl font-semibold text-card-foreground">Staff portal</h2>
         <p className="text-sm text-muted-foreground">
-          Use your invitation email and one-time code shared by your administrator. Choose your role to load the right workspace.
+          Use your invitation email and one-time passcode shared by the superuser. Admin and merchant admin share the same role.
         </p>
       </div>
       <form className="space-y-4" onSubmit={onSubmit}>
@@ -303,11 +336,11 @@ function StaffPortalSignIn(): JSX.Element {
             required
           />
         </div>
-        <Button type="submit" className="w-full">
+        <Button type="submit" className="w-full" disabled={isLoading}>
           Sign in to staff portal
         </Button>
         <p className="text-xs text-muted-foreground">
-          Need help? Contact your organization admin or use the in-app support channel after signing in.
+          Need help? Contact Codevertex IT Solution via your admin workspace support channel.
         </p>
       </form>
     </div>

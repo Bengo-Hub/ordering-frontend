@@ -29,8 +29,8 @@ DEVOPS_REPO=${DEVOPS_REPO:-"Bengo-Hub/devops-k8s"}
 DEVOPS_DIR=${DEVOPS_DIR:-"$HOME/devops-k8s"}
 VALUES_FILE_PATH=${VALUES_FILE_PATH:-"apps/${APP_NAME}/values.yaml"}
 
-GIT_EMAIL=${GIT_EMAIL:-"dev@bengobox.com"}
-GIT_USER=${GIT_USER:-"Food Delivery Bot"}
+GIT_EMAIL=${GIT_EMAIL:-"titusowuor30@gmail.com"}
+GIT_USER=${GIT_USER:-"Titus Owuor"}
 TRIVY_ECODE=${TRIVY_ECODE:-0}
 
 if [[ -z ${GITHUB_SHA:-} ]]; then

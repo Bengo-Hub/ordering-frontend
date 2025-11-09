@@ -10,20 +10,47 @@ import { MenuIcon, XIcon } from "lucide-react";
 import { ThemeToggle } from "@/components/layout/theme-toggle";
 import { Button } from "@/components/ui/button";
 import { brand } from "@/config/brand";
+import { userHasRole } from "@/lib/auth/permissions";
+import type { UserRole } from "@/lib/auth/types";
 import { cn } from "@/lib/utils";
+import { useAuthStore } from "@/store/auth";
 
-const links = [
+interface NavLink {
+  href: string;
+  label: string;
+  roles?: UserRole[];
+}
+
+const publicLinks: NavLink[] = [
   { href: "/menu", label: "Menu" },
   { href: "/delivery", label: "Delivery" },
   { href: "/about", label: "About" },
   { href: "/contact", label: "Contact" },
 ];
 
+const roleDashboards: NavLink[] = [
+  { href: "/dashboard/customer", label: "My dashboard", roles: ["customer"] },
+  { href: "/dashboard/rider", label: "Rider console", roles: ["rider"] },
+  { href: "/dashboard/staff", label: "Staff workspace", roles: ["staff", "admin", "superadmin"] },
+];
+
 export function SiteHeader() {
   const pathname = usePathname();
   const [mobileOpen, setMobileOpen] = useState(false);
+  const user = useAuthStore((state) => state.user);
+  const logout = useAuthStore((state) => state.logout);
 
   const activeHref = useMemo(() => pathname ?? "/", [pathname]);
+
+  const navigation = useMemo(() => {
+    const links = [...publicLinks];
+    roleDashboards.forEach((link) => {
+      if (userHasRole(user, link.roles)) {
+        links.push(link);
+      }
+    });
+    return links;
+  }, [user]);
 
   useEffect(() => {
     // Close drawer on route change
@@ -51,6 +78,8 @@ export function SiteHeader() {
     return () => window.removeEventListener("keydown", onKeyDown);
   }, [mobileOpen]);
 
+  const showBecomeRider = !userHasRole(user, ["rider"]) && !user; // only show for non logged in users
+
   return (
     <header className="sticky top-0 z-40 border-b border-border bg-card/80 backdrop-blur supports-[backdrop-filter]:bg-card/70">
       <div className="mx-auto flex h-16 w-full max-w-6xl items-center justify-between px-4">
@@ -68,15 +97,13 @@ export function SiteHeader() {
           <span>{brand.name}</span>
         </Link>
         <nav className="hidden items-center gap-6 text-sm font-medium md:flex">
-          {links.map((link) => (
+          {navigation.map((link) => (
             <Link
               key={link.href}
               href={{ pathname: link.href }}
               className={cn(
                 "transition-colors hover:text-primary",
-                activeHref.startsWith(link.href)
-                  ? "text-primary"
-                  : "text-muted-foreground",
+                activeHref.startsWith(link.href) ? "text-primary" : "text-muted-foreground",
               )}
             >
               {link.label}
@@ -85,12 +112,25 @@ export function SiteHeader() {
         </nav>
         <div className="hidden items-center gap-3 md:flex">
           <ThemeToggle />
-          <Button variant="ghost" size="sm" asChild>
-            <Link href="/riders/signup">Become a rider</Link>
-          </Button>
-          <Button size="sm" asChild>
-            <Link href="/auth">Sign in</Link>
-          </Button>
+          {showBecomeRider ? (
+            <Button variant="ghost" size="sm" asChild>
+              <Link href="/riders/signup">Become a rider</Link>
+            </Button>
+          ) : null}
+          {user ? (
+            <>
+              <Button variant="outline" size="sm" asChild>
+                <Link href="/profile">My account</Link>
+              </Button>
+              <Button size="sm" onClick={() => void logout()}>
+                Sign out
+              </Button>
+            </>
+          ) : (
+            <Button size="sm" asChild>
+              <Link href="/auth">Sign in</Link>
+            </Button>
+          )}
         </div>
         <div className="flex items-center gap-2 md:hidden">
           <ThemeToggle />
@@ -135,15 +175,13 @@ export function SiteHeader() {
               </button>
             </div>
             <nav className="flex flex-col gap-3 text-foreground">
-              {links.map((link) => (
+              {navigation.map((link) => (
                 <Link
                   key={link.href}
                   href={{ pathname: link.href }}
                   className={cn(
                     "rounded-xl px-3 py-2 text-sm font-medium transition-colors hover:bg-muted hover:text-primary",
-                    activeHref.startsWith(link.href)
-                      ? "bg-muted text-primary"
-                      : "text-muted-foreground",
+                    activeHref.startsWith(link.href) ? "bg-muted text-primary" : "text-muted-foreground",
                   )}
                 >
                   {link.label}
@@ -151,12 +189,23 @@ export function SiteHeader() {
               ))}
             </nav>
             <div className="flex flex-col gap-3">
-              <Button variant="ghost" asChild>
-                <Link href="/riders/signup">Become a rider</Link>
-              </Button>
-              <Button asChild>
-                <Link href="/auth">Sign in</Link>
-              </Button>
+              {showBecomeRider ? (
+                <Button variant="ghost" asChild>
+                  <Link href="/riders/signup">Become a rider</Link>
+                </Button>
+              ) : null}
+              {user ? (
+                <>
+                  <Button variant="outline" asChild>
+                    <Link href="/profile">My account</Link>
+                  </Button>
+                  <Button onClick={() => void logout()}>Sign out</Button>
+                </>
+              ) : (
+                <Button asChild>
+                  <Link href="/auth">Sign in</Link>
+                </Button>
+              )}
               <ThemeToggle />
             </div>
           </div>
