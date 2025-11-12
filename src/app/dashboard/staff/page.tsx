@@ -11,9 +11,24 @@ import { formatDateTime } from "@/lib/datetime";
 import { useAuthStore } from "@/store/auth";
 
 const mockStaffActivity = [
-  { id: "SUP-1001", actor: "Grace (Admin)", action: "Approved rider KYC", at: "2025-11-09T10:12:00Z" },
-  { id: "ORD-2044", actor: "Kevin (Staff)", action: "Issued refund to customer", at: "2025-11-09T09:55:00Z" },
-  { id: "LOY-12", actor: "Amelia (Admin)", action: "Published new loyalty campaign", at: "2025-11-08T16:34:00Z" },
+  {
+    id: "SUP-1001",
+    actor: "Grace (Admin)",
+    action: "Approved rider KYC",
+    at: "2025-11-09T10:12:00Z",
+  },
+  {
+    id: "ORD-2044",
+    actor: "Kevin (Staff)",
+    action: "Issued refund to customer",
+    at: "2025-11-09T09:55:00Z",
+  },
+  {
+    id: "LOY-12",
+    actor: "Amelia (Admin)",
+    action: "Published new loyalty campaign",
+    at: "2025-11-08T16:34:00Z",
+  },
 ];
 
 export default function StaffDashboardPage(): JSX.Element {
@@ -24,10 +39,15 @@ export default function StaffDashboardPage(): JSX.Element {
       <SiteShell>
         <div className="mx-auto my-12 flex w-full max-w-6xl flex-col gap-8 px-4">
           <header className="flex flex-col gap-1">
-            <p className="text-sm font-semibold uppercase tracking-wide text-brand-emphasis">Staff workspace</p>
-            <h1 className="text-3xl font-semibold text-foreground">Good day, {user?.fullName ?? "team member"}.</h1>
+            <p className="text-sm font-semibold uppercase tracking-wide text-brand-emphasis">
+              Staff workspace
+            </p>
+            <h1 className="text-3xl font-semibold text-foreground">
+              Good day, {user?.fullName ?? "team member"}.
+            </h1>
             <p className="text-sm text-muted-foreground">
-              Monitor orders, loyalty programs, and rider onboarding performance across Urban Cafe operations.
+              Monitor orders, loyalty programs, and rider onboarding performance across Urban Cafe
+              operations.
             </p>
           </header>
 
@@ -95,4 +115,3 @@ export default function StaffDashboardPage(): JSX.Element {
     </RequireAuth>
   );
 }
-

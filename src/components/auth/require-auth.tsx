@@ -28,7 +28,9 @@ export function RequireAuth({
   permissionOperator,
   redirectTo,
   loadingFallback = (
-    <div className="flex min-h-[60vh] items-center justify-center text-muted-foreground">Preparing your workspace…</div>
+    <div className="flex min-h-[60vh] items-center justify-center text-muted-foreground">
+      Preparing your workspace…
+    </div>
   ),
   denialFallback = (
     <div className="flex min-h-[60vh] items-center justify-center text-muted-foreground">
@@ -43,7 +45,12 @@ export function RequireAuth({
 
   useEffect(() => {
     if (status === "authenticated" && user) {
-      const permitted = userCanAccess(user, { roles, permissions, roleOperator, permissionOperator });
+      const permitted = userCanAccess(user, {
+        roles,
+        permissions,
+        roleOperator,
+        permissionOperator,
+      });
       if (!permitted) {
         router.replace(redirectTo ?? "/");
       }
@@ -56,7 +63,17 @@ export function RequireAuth({
       });
       router.replace(`/auth?${params.toString()}`);
     }
-  }, [status, user, roles, permissions, roleOperator, permissionOperator, router, pathname, redirectTo]);
+  }, [
+    status,
+    user,
+    roles,
+    permissions,
+    roleOperator,
+    permissionOperator,
+    router,
+    pathname,
+    redirectTo,
+  ]);
 
   if (status === "loading") {
     return <>{loadingFallback}</>;
@@ -73,4 +90,3 @@ export function RequireAuth({
 
   return <>{children}</>;
 }
-

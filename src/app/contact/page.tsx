@@ -42,9 +42,13 @@ export default function ContactPage(): JSX.Element {
           <span className="inline-flex items-center gap-2 rounded-full border border-primary/30 bg-card/80 px-4 py-1 text-xs font-semibold uppercase tracking-wide text-primary shadow-sm backdrop-blur">
             We’re here for you
           </span>
-          <h1 className="text-4xl font-semibold text-foreground md:text-5xl">Let’s make your next Urban Café visit effortless.</h1>
+          <h1 className="text-4xl font-semibold text-foreground md:text-5xl">
+            Let’s make your next Urban Café visit effortless.
+          </h1>
           <p className="max-w-3xl text-base text-muted-foreground">
-            Whether you’re ordering breakfast for the office, tracking a rider, or planning a celebration, our team is a message away. Reach us anytime—we love hearing from our guests.
+            Whether you’re ordering breakfast for the office, tracking a rider, or planning a
+            celebration, our team is a message away. Reach us anytime—we love hearing from our
+            guests.
           </p>
           <div className="flex flex-wrap justify-center gap-3">
             <Button size="lg" asChild>
@@ -62,7 +66,9 @@ export default function ContactPage(): JSX.Element {
           {quickLinks.map((card) => (
             <Card key={card.title} className="h-full">
               <CardHeader className="space-y-3">
-                <span className="inline-flex size-11 items-center justify-center rounded-2xl bg-brand-muted">{card.icon}</span>
+                <span className="inline-flex size-11 items-center justify-center rounded-2xl bg-brand-muted">
+                  {card.icon}
+                </span>
                 <div className="space-y-1">
                   <h2 className="text-xl font-semibold text-foreground">{card.title}</h2>
                   <p className="text-sm text-muted-foreground">{card.subtitle}</p>
@@ -86,7 +92,8 @@ export default function ContactPage(): JSX.Element {
           <div className="space-y-4">
             <h2 className="text-2xl font-semibold text-foreground">Send us a note</h2>
             <p className="text-sm text-muted-foreground">
-              Share your question, celebration plans, or feedback and we’ll reply within one business day.
+              Share your question, celebration plans, or feedback and we’ll reply within one
+              business day.
             </p>
             <ContactForm />
           </div>
@@ -97,7 +104,8 @@ export default function ContactPage(): JSX.Element {
                 <ClockIcon className="size-5 text-primary" aria-hidden />
                 <h3 className="text-xl font-semibold text-foreground">Service hours</h3>
                 <p className="text-sm text-muted-foreground">
-                  Daily 7:00am – 9:00pm. Riders are on standby throughout peak breakfast and evening slots.
+                  Daily 7:00am – 9:00pm. Riders are on standby throughout peak breakfast and evening
+                  slots.
                 </p>
               </CardHeader>
             </Card>
@@ -105,11 +113,10 @@ export default function ContactPage(): JSX.Element {
               <CardHeader className="space-y-2">
                 <MapPinIcon className="size-5 text-primary" aria-hidden />
                 <h3 className="text-xl font-semibold text-foreground">Visit the café</h3>
+                <p className="text-sm text-muted-foreground">{brand.support.headquarters}</p>
                 <p className="text-sm text-muted-foreground">
-                  {brand.support.headquarters}
-                </p>
-                <p className="text-sm text-muted-foreground">
-                  Stop by for signature roasts, limited-edition pastries, and a chat with our baristas.
+                  Stop by for signature roasts, limited-edition pastries, and a chat with our
+                  baristas.
                 </p>
               </CardHeader>
             </Card>
@@ -117,7 +124,8 @@ export default function ContactPage(): JSX.Element {
               <CardHeader className="space-y-2">
                 <h3 className="text-xl font-semibold text-foreground">Need an admin account?</h3>
                 <p className="text-sm text-muted-foreground">
-                  Operations leads can request demo or trial access to manage staff invites and café settings.
+                  Operations leads can request demo or trial access to manage staff invites and café
+                  settings.
                 </p>
               </CardHeader>
               <CardContent>
@@ -132,4 +140,3 @@ export default function ContactPage(): JSX.Element {
     </SiteShell>
   );
 }
-

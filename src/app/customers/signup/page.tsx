@@ -16,11 +16,7 @@ import { Input } from "@/components/ui/input";
 import { brand } from "@/config/brand";
 import { useUserLocation } from "@/hooks/use-user-location";
 import { isWithinBusia } from "@/lib/geofence";
-import {
-  getActiveLabel,
-  getActiveLocation,
-  useCustomerLocationStore,
-} from "@/store/location";
+import { getActiveLabel, getActiveLocation, useCustomerLocationStore } from "@/store/location";
 
 const FALLBACK: LatLngTuple = [-0.0607, 34.2855];
 
@@ -29,9 +25,7 @@ export default function CustomerSignupPage(): JSX.Element {
   const [locationFeedback, setLocationFeedback] = useState<string | null>(null);
 
   const defaultLocation = useCustomerLocationStore((state) => state.defaultLocation);
-  const defaultLabel = useCustomerLocationStore((state) => state.defaultLabel);
   const customLocation = useCustomerLocationStore((state) => state.customLocation);
-  const customLabel = useCustomerLocationStore((state) => state.customLabel);
   const setDefaultLocation = useCustomerLocationStore((state) => state.setDefaultLocation);
   const setCustomLocation = useCustomerLocationStore((state) => state.setCustomLocation);
   const clearCustomLocation = useCustomerLocationStore((state) => state.clearCustomLocation);
@@ -39,7 +33,9 @@ export default function CustomerSignupPage(): JSX.Element {
   const activeLocation = useCustomerLocationStore(getActiveLocation);
   const activeLabel = useCustomerLocationStore(getActiveLabel);
 
-  const { coords, status, error, requestLocation } = useUserLocation({ fallback: defaultLocation ?? FALLBACK });
+  const { coords, status, error, requestLocation } = useUserLocation({
+    fallback: defaultLocation ?? FALLBACK,
+  });
 
   useEffect(() => {
     if (status === "idle") {
@@ -56,10 +52,7 @@ export default function CustomerSignupPage(): JSX.Element {
     }
   }, [coords, customLocation, setCustomLocation, setDefaultLocation, status]);
 
-  const pinLabel = useMemo(
-    () => formatCoord(activeLocation),
-    [activeLocation],
-  );
+  const pinLabel = useMemo(() => formatCoord(activeLocation), [activeLocation]);
 
   const handleSelect = (coords: LatLngTuple, label: string) => {
     if (!isWithinBusia(coords)) {
@@ -88,9 +81,12 @@ export default function CustomerSignupPage(): JSX.Element {
     <SiteShell>
       <section className="border-b border-border bg-brand-surface/60 py-12">
         <div className="mx-auto flex w-full max-w-5xl flex-col gap-3 px-4 text-center">
-          <h1 className="text-4xl font-semibold text-foreground md:text-5xl">Create your {brand.shortName} account</h1>
+          <h1 className="text-4xl font-semibold text-foreground md:text-5xl">
+            Create your {brand.shortName} account
+          </h1>
           <p className="text-base text-muted-foreground">
-            Save favourites, track deliveries, and unlock rewards every time you order from Urban Café.
+            Save favourites, track deliveries, and unlock rewards every time you order from Urban
+            Café.
           </p>
         </div>
       </section>
@@ -101,20 +97,27 @@ export default function CustomerSignupPage(): JSX.Element {
             <CardHeader>
               <h2 className="text-2xl font-semibold text-foreground">Tell us about you</h2>
               <p className="text-sm text-muted-foreground">
-                We&apos;ll use these details to personalise recommendations and make checkout faster.
+                We&apos;ll use these details to personalise recommendations and make checkout
+                faster.
               </p>
             </CardHeader>
             <CardContent>
               <form className="space-y-4" onSubmit={onSubmit}>
                 <div className="grid gap-4 md:grid-cols-2">
                   <div>
-                    <label htmlFor="firstName" className="mb-1 block text-xs font-semibold uppercase text-muted-foreground">
+                    <label
+                      htmlFor="firstName"
+                      className="mb-1 block text-xs font-semibold uppercase text-muted-foreground"
+                    >
                       First name
                     </label>
                     <Input id="firstName" name="firstName" placeholder="Mary" required />
                   </div>
                   <div>
-                    <label htmlFor="lastName" className="mb-1 block text-xs font-semibold uppercase text-muted-foreground">
+                    <label
+                      htmlFor="lastName"
+                      className="mb-1 block text-xs font-semibold uppercase text-muted-foreground"
+                    >
                       Last name
                     </label>
                     <Input id="lastName" name="lastName" placeholder="Atieno" required />
@@ -122,13 +125,25 @@ export default function CustomerSignupPage(): JSX.Element {
                 </div>
                 <div className="grid gap-4 md:grid-cols-2">
                   <div>
-                    <label htmlFor="email" className="mb-1 block text-xs font-semibold uppercase text-muted-foreground">
+                    <label
+                      htmlFor="email"
+                      className="mb-1 block text-xs font-semibold uppercase text-muted-foreground"
+                    >
                       Email
                     </label>
-                    <Input id="email" name="email" type="email" placeholder="you@example.com" required />
+                    <Input
+                      id="email"
+                      name="email"
+                      type="email"
+                      placeholder="you@example.com"
+                      required
+                    />
                   </div>
                   <div>
-                    <label htmlFor="phone" className="mb-1 block text-xs font-semibold uppercase text-muted-foreground">
+                    <label
+                      htmlFor="phone"
+                      className="mb-1 block text-xs font-semibold uppercase text-muted-foreground"
+                    >
                       Phone number
                     </label>
                     <Input id="phone" name="phone" type="tel" placeholder="07xx xxx xxx" required />
@@ -155,22 +170,32 @@ export default function CustomerSignupPage(): JSX.Element {
                     onChange={handleMapChange}
                     height={240}
                   />
-                  <div className="text-xs text-muted-foreground">
-                    Pin coordinates: {pinLabel}
-                  </div>
+                  <div className="text-xs text-muted-foreground">Pin coordinates: {pinLabel}</div>
                   <input type="hidden" name="deliveryLatitude" value={activeLocation[0]} />
                   <input type="hidden" name="deliveryLongitude" value={activeLocation[1]} />
                   <input type="hidden" name="deliveryLabel" value={activeLabel ?? ""} />
                 </div>
                 <div className="grid gap-4 md:grid-cols-2">
                   <div>
-                    <label htmlFor="password" className="mb-1 block text-xs font-semibold uppercase text-muted-foreground">
+                    <label
+                      htmlFor="password"
+                      className="mb-1 block text-xs font-semibold uppercase text-muted-foreground"
+                    >
                       Password
                     </label>
-                    <Input id="password" name="password" type="password" placeholder="Create a strong password" required />
+                    <Input
+                      id="password"
+                      name="password"
+                      type="password"
+                      placeholder="Create a strong password"
+                      required
+                    />
                   </div>
                   <div>
-                    <label htmlFor="confirmPassword" className="mb-1 block text-xs font-semibold uppercase text-muted-foreground">
+                    <label
+                      htmlFor="confirmPassword"
+                      className="mb-1 block text-xs font-semibold uppercase text-muted-foreground"
+                    >
                       Confirm password
                     </label>
                     <Input
@@ -194,7 +219,8 @@ export default function CustomerSignupPage(): JSX.Element {
                   <div className="flex items-start gap-3 rounded-2xl border border-primary/40 bg-primary/10 p-4 text-sm text-muted-foreground">
                     <CheckCircle2Icon className="mt-1 size-4 text-primary" aria-hidden />
                     <p>
-                      We&apos;ve captured your details for the demo experience. In production, this will create your customer profile and send a verification email.
+                      We&apos;ve captured your details for the demo experience. In production, this
+                      will create your customer profile and send a verification email.
                     </p>
                   </div>
                 ) : null}
@@ -217,7 +243,11 @@ export default function CustomerSignupPage(): JSX.Element {
               <CardHeader className="space-y-3">
                 <h3 className="text-xl font-semibold text-foreground">Need help?</h3>
                 <p className="text-sm text-muted-foreground">
-                  Already registered? Head to the <Link href="/auth" className="font-semibold text-primary">sign-in page</Link> or contact our support team for assistance.
+                  Already registered? Head to the{" "}
+                  <Link href="/auth" className="font-semibold text-primary">
+                    sign-in page
+                  </Link>{" "}
+                  or contact our support team for assistance.
                 </p>
               </CardHeader>
             </Card>
@@ -226,7 +256,8 @@ export default function CustomerSignupPage(): JSX.Element {
                 <ShieldCheckIcon className="size-6 text-primary" aria-hidden />
                 <h3 className="text-xl font-semibold text-foreground">Your data stays protected</h3>
                 <p className="text-sm text-muted-foreground">
-                  {brand.shortName} uses secure authentication, encryption at rest, and privacy-first defaults. Only you and authorised staff can access your profile.
+                  {brand.shortName} uses secure authentication, encryption at rest, and
+                  privacy-first defaults. Only you and authorised staff can access your profile.
                 </p>
               </CardHeader>
             </Card>

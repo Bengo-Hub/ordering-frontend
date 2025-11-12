@@ -16,7 +16,11 @@ const mockShiftAssignments = [
 ];
 
 const mockRouteAlerts = [
-  { id: "ALT-1", message: "Heavy rains expected near Busia Market between 4-6pm.", severity: "medium" },
+  {
+    id: "ALT-1",
+    message: "Heavy rains expected near Busia Market between 4-6pm.",
+    severity: "medium",
+  },
   { id: "ALT-2", message: "Road maintenance on Kisoko Rd. Expect detours.", severity: "high" },
 ];
 
@@ -28,8 +32,12 @@ export default function RiderDashboardPage(): JSX.Element {
       <SiteShell>
         <div className="mx-auto my-12 flex w-full max-w-6xl flex-col gap-8 px-4">
           <header className="flex flex-col gap-1">
-            <p className="text-sm font-semibold uppercase tracking-wide text-brand-emphasis">Rider console</p>
-            <h1 className="text-3xl font-semibold text-foreground">Welcome back, {user?.fullName ?? "Rider"}.</h1>
+            <p className="text-sm font-semibold uppercase tracking-wide text-brand-emphasis">
+              Rider console
+            </p>
+            <h1 className="text-3xl font-semibold text-foreground">
+              Welcome back, {user?.fullName ?? "Rider"}.
+            </h1>
             <p className="text-sm text-muted-foreground">
               Stay on top of assigned routes, delivery KPIs, and safety alerts for Busia township.
             </p>
@@ -86,7 +94,9 @@ export default function RiderDashboardPage(): JSX.Element {
                         {formatRelativeTime(shift.start)} · {shift.status}
                       </p>
                     </div>
-                    <span className="text-xs uppercase tracking-wide text-brand-emphasis">Busia central</span>
+                    <span className="text-xs uppercase tracking-wide text-brand-emphasis">
+                      Busia central
+                    </span>
                   </div>
                 ))}
               </CardContent>
@@ -119,4 +129,3 @@ export default function RiderDashboardPage(): JSX.Element {
     </RequireAuth>
   );
 }
-

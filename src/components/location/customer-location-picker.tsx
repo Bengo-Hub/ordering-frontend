@@ -9,7 +9,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { useUserLocation } from "@/hooks/use-user-location";
 import { isWithinBusia } from "@/lib/geofence";
-import { getActiveLabel, getActiveLocation, useCustomerLocationStore } from "@/store/location";
+import { getActiveLocation, useCustomerLocationStore } from "@/store/location";
 
 const FALLBACK: LatLngTuple = [-0.0607, 34.2855];
 
@@ -22,7 +22,9 @@ export function CustomerLocationPicker(): JSX.Element {
   const setCustomLocation = useCustomerLocationStore((state) => state.setCustomLocation);
   const clearCustomLocation = useCustomerLocationStore((state) => state.clearCustomLocation);
 
-  const { coords, status, error, requestLocation } = useUserLocation({ fallback: defaultLocation ?? FALLBACK });
+  const { coords, status, error, requestLocation } = useUserLocation({
+    fallback: defaultLocation ?? FALLBACK,
+  });
   const [feedback, setFeedback] = useState<string | null>(null);
 
   useEffect(() => {
@@ -41,7 +43,6 @@ export function CustomerLocationPicker(): JSX.Element {
   }, [coords, customLocation, setCustomLocation, setDefaultLocation, status]);
 
   const activeLocation = useCustomerLocationStore(getActiveLocation);
-  const activeLabel = useCustomerLocationStore(getActiveLabel);
 
   const pinLabel = useMemo(() => formatCoord(activeLocation), [activeLocation]);
 
@@ -67,11 +68,14 @@ export function CustomerLocationPicker(): JSX.Element {
     <Card className="h-full">
       <CardHeader className="space-y-3">
         <div className="flex flex-col gap-1">
-          <p className="text-xs font-semibold uppercase tracking-wide text-primary/80">Delivery location</p>
+          <p className="text-xs font-semibold uppercase tracking-wide text-primary/80">
+            Delivery location
+          </p>
           <h2 className="text-2xl font-semibold text-foreground">Choose where we deliver</h2>
         </div>
         <p className="text-sm text-muted-foreground">
-          We save a default pin from your current location. Drag the marker or search for a Busia landmark to refine your preferred drop-off point.
+          We save a default pin from your current location. Drag the marker or search for a Busia
+          landmark to refine your preferred drop-off point.
         </p>
       </CardHeader>
       <CardContent className="space-y-4">

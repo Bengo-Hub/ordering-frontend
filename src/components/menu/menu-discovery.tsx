@@ -25,7 +25,11 @@ const dietaryFilters: Array<{ value: DietaryTag; label: string; icon: React.Reac
   { value: "vegetarian", label: "Vegetarian", icon: <SproutIcon className="size-4" aria-hidden /> },
   { value: "glutenFree", label: "Gluten Free", icon: <WheatIcon className="size-4" aria-hidden /> },
   { value: "spicy", label: "Spicy", icon: <FilterIcon className="size-4" aria-hidden /> },
-  { value: "chefSpecial", label: "Chef Special", icon: <ChefHatIcon className="size-4" aria-hidden /> },
+  {
+    value: "chefSpecial",
+    label: "Chef Special",
+    icon: <ChefHatIcon className="size-4" aria-hidden />,
+  },
 ];
 
 const mockMenu: MenuItem[] = [
@@ -100,16 +104,16 @@ export function MenuDiscovery() {
   }, [activeCategory, activeDietary, search]);
 
   return (
-    <section className="border-t border-border bg-card py-16  ">
+    <section className="border-t border-border bg-card py-16">
       <div className="mx-auto flex w-full max-w-6xl flex-col gap-8 px-4">
-        <div className="flex flex-col gap-6 rounded-3xl border border-border bg-brand-surface/40 p-6 shadow-sm   md:flex-row md:items-center md:justify-between">
+        <div className="flex flex-col gap-6 rounded-3xl border border-border bg-brand-surface/40 p-6 shadow-sm md:flex-row md:items-center md:justify-between">
           <div className="flex-1 space-y-2">
-            <h2 className="text-3xl font-semibold text-foreground ">
+            <h2 className="text-3xl font-semibold text-foreground">
               Browse the {activeCategory === "All" ? "full menu" : activeCategory.toLowerCase()}
             </h2>
             <p className="text-sm text-muted-foreground">
-              Filter by dietary preference, explore chef specials, and build your cart seamlessly. All menu
-              content syncs with the cafe dashboard and inventory services in real time.
+              Filter by dietary preference, explore chef specials, and build your cart seamlessly.
+              All menu content syncs with the cafe dashboard and inventory services in real time.
             </p>
           </div>
           <div className="w-full max-w-md">
@@ -117,7 +121,10 @@ export function MenuDiscovery() {
               Search menu items
             </label>
             <div className="relative">
-              <SearchIcon className="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" aria-hidden />
+              <SearchIcon
+                className="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground"
+                aria-hidden
+              />
               <Input
                 id="menu-search"
                 placeholder="Search dishes, ingredients, or categories"
@@ -140,7 +147,7 @@ export function MenuDiscovery() {
               className={cn(
                 activeCategory === category
                   ? "bg-brand text-brand-contrast shadow-soft"
-                  : "border-border text-muted-foreground hover:border-brand-emphasis hover:text-brand-emphasis  text-muted-foreground",
+                  : "border-border text-muted-foreground hover:border-brand-emphasis hover:text-brand-emphasis",
               )}
             >
               {category}
@@ -164,7 +171,7 @@ export function MenuDiscovery() {
                   "inline-flex items-center gap-1 rounded-full border px-3 py-1 text-xs font-medium transition-colors",
                   isActive
                     ? "border-brand-emphasis bg-brand-emphasis/10 text-brand-emphasis"
-                    : "border-border text-muted-foreground hover:border-brand-emphasis hover:text-brand-emphasis  text-muted-foreground",
+                    : "border-border text-muted-foreground hover:border-brand-emphasis hover:text-brand-emphasis",
                 )}
               >
                 {filter.icon}
@@ -176,21 +183,21 @@ export function MenuDiscovery() {
 
         <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
           {filteredItems.length === 0 ? (
-            <div className="col-span-full rounded-3xl border border-dashed border-border bg-card p-8 text-center  ">
-              <p className="text-sm text-muted-foreground text-muted-foreground">
-                No menu items match the current filters. Try clearing a dietary preference or adjusting your
-                search.
+            <div className="col-span-full rounded-3xl border border-dashed border-border bg-card p-8 text-center">
+              <p className="text-sm text-muted-foreground">
+                No menu items match the current filters. Try clearing a dietary preference or
+                adjusting your search.
               </p>
             </div>
           ) : (
             filteredItems.map((item) => (
               <article
                 key={item.id}
-                className="flex h-full flex-col justify-between rounded-3xl border border-border bg-card p-6 shadow-sm transition hover:-translate-y-1 hover:shadow-lg  "
+                className="flex h-full flex-col justify-between rounded-3xl border border-border bg-card p-6 shadow-sm transition hover:-translate-y-1 hover:shadow-lg"
               >
                 <div className="space-y-3">
                   <header className="flex items-start justify-between gap-3">
-                    <h3 className="text-lg font-semibold text-foreground ">{item.name}</h3>
+                    <h3 className="text-lg font-semibold text-foreground">{item.name}</h3>
                     {item.feature === "recommended" ? (
                       <span className="rounded-full bg-brand-muted px-3 py-1 text-xs font-medium text-brand-emphasis">
                         Recommended
@@ -205,7 +212,7 @@ export function MenuDiscovery() {
                   <p className="text-sm text-muted-foreground">{item.description}</p>
                 </div>
                 <footer className="mt-6 flex items-center justify-between text-sm">
-                  <span className="font-semibold text-foreground ">{item.price}</span>
+                  <span className="font-semibold text-foreground">{item.price}</span>
                   <div className="flex flex-wrap gap-1">
                     {item.dietary.map((tag) => (
                       <span
@@ -225,4 +232,3 @@ export function MenuDiscovery() {
     </section>
   );
 }
-

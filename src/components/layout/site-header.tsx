@@ -181,7 +181,9 @@ export function SiteHeader() {
                   href={{ pathname: link.href }}
                   className={cn(
                     "rounded-xl px-3 py-2 text-sm font-medium transition-colors hover:bg-muted hover:text-primary",
-                    activeHref.startsWith(link.href) ? "bg-muted text-primary" : "text-muted-foreground",
+                    activeHref.startsWith(link.href)
+                      ? "bg-muted text-primary"
+                      : "text-muted-foreground",
                   )}
                 >
                   {link.label}

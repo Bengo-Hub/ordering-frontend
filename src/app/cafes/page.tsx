@@ -26,28 +26,28 @@ const cafeFeatures = [
 export default function CafesPage() {
   return (
     <SiteShell>
-      <section className="border-b border-border bg-brand-muted/40 py-16  ">
+      <section className="border-b border-border bg-brand-muted/40 py-16">
         <div className="mx-auto flex w-full max-w-5xl flex-col gap-6 px-4 text-center">
-          <h1 className="text-4xl font-semibold text-foreground  md:text-5xl">
+          <h1 className="text-4xl font-semibold text-foreground md:text-5xl">
             Cafe dashboards that stay in lockstep with operations.
           </h1>
           <p className="mx-auto max-w-3xl text-base text-muted-foreground">
-            Provide cafe teams with actionable insights and seamless menu management while the backend enforces
-            data integrity, inventory sync, and treasury settlements.
+            Provide cafe teams with actionable insights and seamless menu management while the
+            backend enforces data integrity, inventory sync, and treasury settlements.
           </p>
         </div>
       </section>
-      <section className="bg-card py-16 ">
+      <section className="bg-card py-16">
         <div className="mx-auto grid w-full max-w-6xl gap-8 px-4 md:grid-cols-3">
           {cafeFeatures.map((feature) => (
             <article
               key={feature.title}
-              className="rounded-3xl border border-border bg-card p-8 shadow-sm  "
+              className="rounded-3xl border border-border bg-card p-8 shadow-sm"
             >
               <div className="mb-5 inline-flex size-12 items-center justify-center rounded-2xl bg-brand-muted">
                 {feature.icon}
               </div>
-              <h2 className="text-2xl font-semibold text-foreground ">{feature.title}</h2>
+              <h2 className="text-2xl font-semibold text-foreground">{feature.title}</h2>
               <p className="mt-3 text-sm text-muted-foreground">{feature.description}</p>
             </article>
           ))}
@@ -56,4 +56,3 @@ export default function CafesPage() {
     </SiteShell>
   );
 }
-

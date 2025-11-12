@@ -17,7 +17,10 @@ export function ThemeToggle(): JSX.Element {
 
   if (!mounted) {
     return (
-      <div className="flex items-center gap-1 rounded-full border border-border bg-card/60 p-1 opacity-0" aria-hidden>
+      <div
+        className="flex items-center gap-1 rounded-full border border-border bg-card/60 p-1 opacity-0"
+        aria-hidden
+      >
         <Button type="button" size="icon" variant="ghost">
           <SunIcon className="size-4" />
         </Button>

@@ -3,7 +3,15 @@
 import type { LatLngTuple, LeafletEventHandlerFnMap } from "leaflet";
 import L from "leaflet";
 import { useEffect, useMemo, useState } from "react";
-import { MapContainer, Marker, Polyline, Popup, TileLayer, useMap, useMapEvents } from "react-leaflet";
+import {
+  MapContainer,
+  Marker,
+  Polyline,
+  Popup,
+  TileLayer,
+  useMap,
+  useMapEvents,
+} from "react-leaflet";
 
 import { cn } from "@/lib/utils";
 
@@ -129,11 +137,19 @@ export function LocationMapInner({
           url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
         />
         <SetViewOnChange center={center} />
-        {polyline ? <Polyline positions={polyline} color="#f36a0c" weight={4} opacity={0.7} /> : null}
-        {interactive && onChange ? <DraggableMarker position={center} onChange={onChange} interactive /> : null}
+        {polyline ? (
+          <Polyline positions={polyline} color="#f36a0c" weight={4} opacity={0.7} />
+        ) : null}
+        {interactive && onChange ? (
+          <DraggableMarker position={center} onChange={onChange} interactive />
+        ) : null}
         {!interactive && value ? <Marker position={value} icon={markerIcon} /> : null}
         {markers.map((marker) => (
-          <Marker key={`${marker.position[0]}-${marker.position[1]}-${marker.label ?? "marker"}`} position={marker.position} icon={markerIcon}>
+          <Marker
+            key={`${marker.position[0]}-${marker.position[1]}-${marker.label ?? "marker"}`}
+            position={marker.position}
+            icon={markerIcon}
+          >
             {marker.label ? <Popup>{marker.label}</Popup> : null}
           </Marker>
         ))}

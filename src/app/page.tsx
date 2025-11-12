@@ -58,17 +58,20 @@ const categories = [
 
 const testimonials = [
   {
-    quote: "My lunch arrives hot and on time every day. Tracking keeps me in the loop the whole way.",
+    quote:
+      "My lunch arrives hot and on time every day. Tracking keeps me in the loop the whole way.",
     author: "Mary A.",
     role: "Customer in Busia CBD",
   },
   {
-    quote: "Our office orders three times a week—great variety and the riders are always professional.",
+    quote:
+      "Our office orders three times a week—great variety and the riders are always professional.",
     author: "Kevin O.",
     role: "Office manager",
   },
   {
-    quote: "Checkout is simple, and support was quick to respond when I needed help. Highly recommend.",
+    quote:
+      "Checkout is simple, and support was quick to respond when I needed help. Highly recommend.",
     author: "Noreen K.",
     role: "Repeat customer",
   },
@@ -105,13 +108,23 @@ export default function HomePage(): JSX.Element {
                 Where Busia’s favourite cafés meet fast, transparent delivery.
               </h1>
               <p className="mt-4 max-w-xl text-lg text-muted-foreground">
-                Explore local menus, customise your order, and follow every update in real time. Fresh food, happy riders, delighted customers.
+                Explore local menus, customise your order, and follow every update in real time.
+                Fresh food, happy riders, delighted customers.
               </p>
               <div className="mt-6 flex flex-wrap gap-3">
-                <Button size="lg" className="shadow-soft transition duration-300 hover:-translate-y-0.5 hover:shadow-lg" asChild>
+                <Button
+                  size="lg"
+                  className="shadow-soft transition duration-300 hover:-translate-y-0.5 hover:shadow-lg"
+                  asChild
+                >
                   <Link href="/menu">Start an order</Link>
                 </Button>
-                <Button variant="secondary" size="lg" className="transition duration-300 hover:-translate-y-0.5" asChild>
+                <Button
+                  variant="secondary"
+                  size="lg"
+                  className="transition duration-300 hover:-translate-y-0.5"
+                  asChild
+                >
                   <Link href={{ pathname: "/customers/signup" }}>Create account</Link>
                 </Button>
                 <Button
@@ -122,7 +135,12 @@ export default function HomePage(): JSX.Element {
                 >
                   <Link href={{ pathname: "/riders/signup" }}>Become a rider</Link>
                 </Button>
-                <Button variant="ghost" size="lg" className="transition duration-300 hover:-translate-y-0.5 hover:bg-muted" asChild>
+                <Button
+                  variant="ghost"
+                  size="lg"
+                  className="transition duration-300 hover:-translate-y-0.5 hover:bg-muted"
+                  asChild
+                >
                   <Link href="/delivery">Track order</Link>
                 </Button>
               </div>
@@ -158,7 +176,10 @@ export default function HomePage(): JSX.Element {
             </h2>
             <div className="grid gap-6 md:grid-cols-3">
               {valueProps.map((item) => (
-                <Card key={item.title} className="transition duration-300 hover:-translate-y-1 hover:shadow-lg">
+                <Card
+                  key={item.title}
+                  className="transition duration-300 hover:-translate-y-1 hover:shadow-lg"
+                >
                   <CardHeader className="flex flex-col items-center gap-4">
                     <Image src={item.icon} alt={item.title} width={72} height={72} />
                     <h3 className="text-xl font-semibold text-card-foreground">{item.title}</h3>
@@ -179,7 +200,10 @@ export default function HomePage(): JSX.Element {
             </h2>
             <div className="grid gap-6 md:grid-cols-3">
               {howItWorks.map((step, index) => (
-                <Card key={step.title} className="transition duration-300 hover:-translate-y-1 hover:shadow-lg">
+                <Card
+                  key={step.title}
+                  className="transition duration-300 hover:-translate-y-1 hover:shadow-lg"
+                >
                   <CardHeader className="flex flex-col items-center gap-4">
                     <span className="rounded-full bg-brand-muted px-3 py-1 text-xs font-semibold uppercase tracking-wide text-brand-emphasis">
                       Step {index + 1}
@@ -208,7 +232,9 @@ export default function HomePage(): JSX.Element {
                   className="bg-gradient-to-br from-brand-muted/60 to-background transition duration-300 hover:-translate-y-1 hover:shadow-lg"
                 >
                   <CardHeader className="space-y-2">
-                    <p className="text-xs font-semibold uppercase tracking-wide text-primary/80">{cat.description}</p>
+                    <p className="text-xs font-semibold uppercase tracking-wide text-primary/80">
+                      {cat.description}
+                    </p>
                     <h3 className="text-lg font-semibold text-foreground">{cat.name}</h3>
                   </CardHeader>
                 </Card>
@@ -225,12 +251,19 @@ export default function HomePage(): JSX.Element {
         <section className="border-t border-border bg-background py-12">
           <div className="mx-auto w-full max-w-6xl px-4">
             <div className="mb-8 text-center">
-              <p className="text-sm font-semibold uppercase tracking-wide text-primary">What customers say</p>
-              <h2 className="text-3xl font-semibold text-foreground md:text-4xl">Trusted by the community</h2>
+              <p className="text-sm font-semibold uppercase tracking-wide text-primary">
+                What customers say
+              </p>
+              <h2 className="text-3xl font-semibold text-foreground md:text-4xl">
+                Trusted by the community
+              </h2>
             </div>
             <div className="grid gap-6 md:grid-cols-3">
               {testimonials.map((t) => (
-                <Card key={t.author} className="transition duration-300 hover:-translate-y-1 hover:shadow-lg">
+                <Card
+                  key={t.author}
+                  className="transition duration-300 hover:-translate-y-1 hover:shadow-lg"
+                >
                   <CardContent className="space-y-4 pt-6 text-sm text-muted-foreground">
                     <p className="italic">“{t.quote}”</p>
                     <div className="space-y-1 text-sm font-semibold text-card-foreground">
@@ -248,12 +281,15 @@ export default function HomePage(): JSX.Element {
           <div className="mx-auto grid w-full max-w-6xl gap-8 px-4 md:grid-cols-2">
             <Card className="transition duration-300 hover:-translate-y-1 hover:shadow-lg">
               <CardHeader className="space-y-3">
-                <span className="text-xs font-semibold uppercase tracking-wide text-brand-emphasis">Riders</span>
+                <span className="text-xs font-semibold uppercase tracking-wide text-brand-emphasis">
+                  Riders
+                </span>
                 <h2 className="text-3xl font-semibold text-foreground">Verified rider network</h2>
               </CardHeader>
               <CardContent className="space-y-4 text-sm text-muted-foreground">
                 <p>
-                  Submit your KYC details and motorbike documents. Once approved, you’ll receive real-time jobs, navigation assistance, and treasury-backed payouts.
+                  Submit your KYC details and motorbike documents. Once approved, you’ll receive
+                  real-time jobs, navigation assistance, and treasury-backed payouts.
                 </p>
                 <ul className="space-y-2">
                   <li>• National ID, proof of residency, and updated bike photo required</li>
@@ -272,12 +308,15 @@ export default function HomePage(): JSX.Element {
             </Card>
             <Card className="transition duration-300 hover:-translate-y-1 hover:shadow-lg">
               <CardHeader className="space-y-3">
-                <span className="text-xs font-semibold uppercase tracking-wide text-brand-emphasis">Customers</span>
+                <span className="text-xs font-semibold uppercase tracking-wide text-brand-emphasis">
+                  Customers
+                </span>
                 <h2 className="text-3xl font-semibold text-foreground">Order with confidence</h2>
               </CardHeader>
               <CardContent className="space-y-4 text-sm text-muted-foreground">
                 <p>
-                  Explore curated menus, earn loyalty rewards, and keep tabs on your delivery with live updates. Reorder your favourites in a tap.
+                  Explore curated menus, earn loyalty rewards, and keep tabs on your delivery with
+                  live updates. Reorder your favourites in a tap.
                 </p>
                 <ul className="space-y-2">
                   <li>• Dietary tags and seasonal specials highlighted for quick browsing</li>
@@ -299,12 +338,14 @@ export default function HomePage(): JSX.Element {
 
         <section className="border-t border-border bg-brand-surface/60 py-12">
           <div className="mx-auto w-full max-w-4xl px-4">
-            <h2 className="mb-8 text-center text-3xl font-semibold text-foreground md:text-4xl">Frequently asked</h2>
+            <h2 className="mb-8 text-center text-3xl font-semibold text-foreground md:text-4xl">
+              Frequently asked
+            </h2>
             <div className="space-y-4">
               {faqs.map((item) => (
                 <details
                   key={item.q}
-                  className="group rounded-3xl border border-border bg-card p-6 transition duration-300 hover:-translate-y-1 hover:shadow-lg  "
+                  className="group rounded-3xl border border-border bg-card p-6 transition duration-300 hover:-translate-y-1 hover:shadow-lg"
                 >
                   <summary className="cursor-pointer list-none text-base font-semibold text-foreground outline-none transition group-open:text-primary">
                     {item.q}
@@ -323,14 +364,20 @@ export default function HomePage(): JSX.Element {
                 Ready to order? Your favourite cafés are just a tap away.
               </h2>
               <p className="text-sm text-muted-foreground">
-                Start your first order in minutes and enjoy fresh meals with complete transparency from preparation to drop-off.
+                Start your first order in minutes and enjoy fresh meals with complete transparency
+                from preparation to drop-off.
               </p>
             </CardHeader>
             <CardContent className="flex flex-wrap justify-center gap-3">
               <Button size="lg" className="hover:-translate-y-0.5 hover:shadow-lg" asChild>
                 <Link href="/menu">Start an order</Link>
               </Button>
-              <Button variant="outline" size="lg" className="hover:-translate-y-0.5 hover:border-brand-emphasis" asChild>
+              <Button
+                variant="outline"
+                size="lg"
+                className="hover:-translate-y-0.5 hover:border-brand-emphasis"
+                asChild
+              >
                 <Link href="/auth">Sign in</Link>
               </Button>
             </CardContent>

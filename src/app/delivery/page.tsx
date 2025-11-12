@@ -32,7 +32,13 @@ const deliveryHighlights = [
   },
 ];
 
-const demoTimeline = ["Order placed", "Being prepared", "Picked up by rider", "En route", "Delivered"];
+const demoTimeline = [
+  "Order placed",
+  "Being prepared",
+  "Picked up by rider",
+  "En route",
+  "Delivered",
+];
 
 const cafeLocation: LatLngTuple = [-0.0612, 34.2851];
 const customerLocation: LatLngTuple = [-0.0569, 34.2915];
@@ -56,7 +62,10 @@ export default function DeliveryPage() {
     event.preventDefault();
     if (!trackingCode) return;
     // Simulate a tracking result. In production this would query the backend.
-    const simulatedStep = Math.min(demoTimeline.length - 1, Math.max(0, trackingCode.length % demoTimeline.length));
+    const simulatedStep = Math.min(
+      demoTimeline.length - 1,
+      Math.max(0, trackingCode.length % demoTimeline.length),
+    );
     setActiveStep(simulatedStep);
   };
 
@@ -64,12 +73,13 @@ export default function DeliveryPage() {
     <SiteShell>
       <section className="border-b border-border bg-brand-muted/60 py-16">
         <div className="mx-auto flex w-full max-w-5xl flex-col gap-6 px-4 text-center">
-          <h1 className="text-4xl font-semibold text-foreground  md:text-5xl">
+          <h1 className="text-4xl font-semibold text-foreground md:text-5xl">
             Delivery visibility, built into every screen.
           </h1>
           <p className="mx-auto max-w-3xl text-base text-muted-foreground">
-            {brand.shortName} unifies rider updates, notification signals, and treasury payouts, ensuring every
-            delivery milestone stays in sync across customers, cafes, and administrators.
+            {brand.shortName} unifies rider updates, notification signals, and treasury payouts,
+            ensuring every delivery milestone stays in sync across customers, cafes, and
+            administrators.
           </p>
           <form onSubmit={onTrack} className="mx-auto flex w-full max-w-xl items-center gap-3">
             <Input
@@ -82,10 +92,10 @@ export default function DeliveryPage() {
           </form>
         </div>
       </section>
-      <section className="bg-card py-16 ">
+      <section className="bg-card py-16">
         <div className="mx-auto grid w-full max-w-6xl gap-8 px-4 md:grid-cols-[1.1fr_0.9fr] md:items-start">
           <div className="space-y-6">
-            <h2 className="text-2xl font-semibold text-foreground ">Track your order</h2>
+            <h2 className="text-2xl font-semibold text-foreground">Track your order</h2>
             <ol className="space-y-3">
               {demoTimeline.map((label, idx) => {
                 const reached = activeStep !== null && idx <= activeStep;
@@ -100,7 +110,9 @@ export default function DeliveryPage() {
                   >
                     <span
                       className={`inline-flex size-6 items-center justify-center rounded-full text-xs font-semibold ${
-                        reached ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground"
+                        reached
+                          ? "bg-primary text-primary-foreground"
+                          : "bg-muted text-muted-foreground"
                       }`}
                       aria-hidden
                     >
@@ -108,7 +120,9 @@ export default function DeliveryPage() {
                     </span>
                     <span>{label}</span>
                     {reached && idx === activeStep ? (
-                      <span className="ml-auto text-xs font-medium text-brand-emphasis">Current</span>
+                      <span className="ml-auto text-xs font-medium text-brand-emphasis">
+                        Current
+                      </span>
                     ) : null}
                   </li>
                 );
@@ -126,7 +140,8 @@ export default function DeliveryPage() {
               zoom={15}
             />
             <p className="text-sm text-muted-foreground">
-              Follow every hand-off. The live rider location, current ETA, and courier details display here once your order is en route.
+              Follow every hand-off. The live rider location, current ETA, and courier details
+              display here once your order is en route.
             </p>
             <div className="text-xs text-muted-foreground">
               Tip: Keep notifications enabled to get proactive updates when your rider is nearby.
@@ -144,7 +159,7 @@ export default function DeliveryPage() {
               <div className="mb-5 inline-flex size-12 items-center justify-center rounded-2xl bg-brand-muted">
                 {highlight.icon}
               </div>
-              <h2 className="text-2xl font-semibold text-foreground ">{highlight.title}</h2>
+              <h2 className="text-2xl font-semibold text-foreground">{highlight.title}</h2>
               <p className="mt-3 text-sm text-muted-foreground">{highlight.description}</p>
             </article>
           ))}
@@ -153,4 +168,3 @@ export default function DeliveryPage() {
     </SiteShell>
   );
 }
-

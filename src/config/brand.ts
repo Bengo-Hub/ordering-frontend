@@ -1,10 +1,4 @@
-type PaletteKey =
-  | "primary"
-  | "emphasis"
-  | "contrast"
-  | "muted"
-  | "surface"
-  | "dark";
+type PaletteKey = "primary" | "emphasis" | "contrast" | "muted" | "surface" | "dark";
 
 const HEX_COLOR_REGEX = /^#?(?:[0-9a-fA-F]{6})$/;
 
@@ -61,12 +55,11 @@ const brandDescription =
   "Unified urban cafe ordering experience with localized content, loyalty rewards, and integrated treasury & notification workflows.";
 const supportEmail =
   process.env.NEXT_PUBLIC_BRAND_SUPPORT_EMAIL?.trim() || "support@codevertexitsolutions.com";
-const supportPhone =
-  process.env.NEXT_PUBLIC_BRAND_SUPPORT_PHONE?.trim() || "+254 743 793 901";
+const supportPhone = process.env.NEXT_PUBLIC_BRAND_SUPPORT_PHONE?.trim() || "+254 743 793 901";
 const headquarters =
-  process.env.NEXT_PUBLIC_BRAND_HQ?.trim() || "Oginga Road, Pioneer House, Second Floor, Kisumu, Kenya";
-const logo =
-  process.env.NEXT_PUBLIC_BRAND_LOGO_URL?.trim() || "/logo.jpg";
+  process.env.NEXT_PUBLIC_BRAND_HQ?.trim() ||
+  "Oginga Road, Pioneer House, Second Floor, Kisumu, Kenya";
+const logo = process.env.NEXT_PUBLIC_BRAND_LOGO_URL?.trim() || "/logo.jpg";
 
 // TODO: Replace static defaults with backend-managed "look & feel" settings once admin tooling is wired.
 export const brand = {
@@ -99,4 +92,3 @@ export const brand = {
 } as const;
 
 export type BrandConfig = typeof brand;
-

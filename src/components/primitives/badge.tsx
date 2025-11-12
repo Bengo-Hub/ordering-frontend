@@ -13,4 +13,3 @@ export function Badge({ className, variant = "default", ...props }: BadgeProps) 
         : "inline-flex items-center rounded-full border border-brand-emphasis px-3 py-1 text-xs font-semibold text-brand-emphasis";
   return <span className={cn(styles, className)} {...props} />;
 }
-

@@ -2,7 +2,7 @@ name: Build and Deploy Food Delivery Frontend
 
 on:
   push:
-    branches: [ main ]
+    branches: [main]
 
 jobs:
   deploy:

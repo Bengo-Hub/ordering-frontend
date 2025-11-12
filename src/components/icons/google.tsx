@@ -22,4 +22,3 @@ export function GoogleIcon(props: React.SVGAttributes<SVGElement>) {
     </svg>
   );
 }
-

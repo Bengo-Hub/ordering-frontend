@@ -10,7 +10,7 @@ export default function MenuPage() {
   return (
     <SiteShell>
       <section className="border-b border-border bg-brand-surface/60 py-16">
-        <div className="mx-auto grid w/full max-w-6xl gap-10 px-4 md:grid-cols-[1.1fr_0.9fr] md:items-start">
+        <div className="w/full mx-auto grid max-w-6xl gap-10 px-4 md:grid-cols-[1.1fr_0.9fr] md:items-start">
           <div className="space-y-6">
             <span className="inline-flex items-center gap-2 rounded-full bg-brand-emphasis/10 px-3 py-1 text-xs font-semibold uppercase tracking-wide text-brand-emphasis">
               <ShoppingCartIcon className="size-3.5" aria-hidden /> Menu & Ordering
@@ -19,9 +19,9 @@ export default function MenuPage() {
               Curated menus crafted for {brand.shortName} patrons.
             </h1>
             <p className="max-w-2xl text-base text-muted-foreground">
-              Browse seasonal dishes, personalize dietary filters, and sync your cart across web, PWA, and mobile
-              clients. Availability is managed in real time by cafe operations and the food-delivery backend
-              services.
+              Browse seasonal dishes, personalize dietary filters, and sync your cart across web,
+              PWA, and mobile clients. Availability is managed in real time by cafe operations and
+              the food-delivery backend services.
             </p>
             <div className="flex flex-wrap gap-3">
               <Button size="lg" asChild>
@@ -52,4 +52,3 @@ export default function MenuPage() {
     </SiteShell>
   );
 }
-

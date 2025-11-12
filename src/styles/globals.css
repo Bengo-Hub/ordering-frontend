@@ -4,7 +4,9 @@
 
 :root {
   color-scheme: light dark;
-  font-feature-settings: "liga" 1, "kern" 1;
+  font-feature-settings:
+    "liga" 1,
+    "kern" 1;
   text-rendering: optimizeLegibility;
   --brand-primary: 107 42 27;
   --brand-emphasis: 243 106 12;
@@ -32,7 +34,7 @@ html {
 body {
   background-color: hsl(var(--background));
   color: hsl(var(--foreground));
-  @apply min-h-screen transition-colors duration-150 ease-out antialiased;
+  @apply min-h-screen antialiased transition-colors duration-150 ease-out;
 }
 
 img,
@@ -53,14 +55,12 @@ a {
 
 a:focus-visible,
 button:focus-visible {
-  @apply outline-none ring-2 ring-brand-emphasis ring-offset-2 ring-offset-brand-muted ;
+  @apply outline-none ring-2 ring-brand-emphasis ring-offset-2 ring-offset-brand-muted;
 }
 
 ::selection {
   @apply bg-brand-emphasis text-brand-contrast;
 }
-
-
 
 @layer base {
   :root {
@@ -117,8 +117,6 @@ button:focus-visible {
     --chart-5: 42 78% 60%;
   }
 }
-
-
 
 @layer base {
   * {

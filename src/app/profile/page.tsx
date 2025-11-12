@@ -109,15 +109,29 @@ function ProfileCard(): JSX.Element {
       <CardContent>
         <form className="space-y-4" onSubmit={onSubmit}>
           <div>
-            <label className="block text-xs font-semibold uppercase text-muted-foreground">Full name</label>
-            <Input value={fullName} onChange={(event) => setFullName(event.target.value)} required />
+            <label className="block text-xs font-semibold uppercase text-muted-foreground">
+              Full name
+            </label>
+            <Input
+              value={fullName}
+              onChange={(event) => setFullName(event.target.value)}
+              required
+            />
           </div>
           <div>
-            <label className="block text-xs font-semibold uppercase text-muted-foreground">Phone</label>
-            <Input value={phone ?? ""} onChange={(event) => setPhone(event.target.value)} placeholder="+254 7xx xxx xxx" />
+            <label className="block text-xs font-semibold uppercase text-muted-foreground">
+              Phone
+            </label>
+            <Input
+              value={phone ?? ""}
+              onChange={(event) => setPhone(event.target.value)}
+              placeholder="+254 7xx xxx xxx"
+            />
           </div>
           <div>
-            <label className="block text-xs font-semibold uppercase text-muted-foreground">Email</label>
+            <label className="block text-xs font-semibold uppercase text-muted-foreground">
+              Email
+            </label>
             <Input value={user?.email ?? ""} disabled />
           </div>
           <Button type="submit" className="w-full">
@@ -162,7 +176,11 @@ function SecurityCard(): JSX.Element {
           <p className="text-sm text-muted-foreground">
             Protect your account with an additional code when signing in.
           </p>
-          <Button variant={twoFactorEnabled ? "outline" : "primary"} className="mt-3" onClick={() => void toggleTwoFactor()}>
+          <Button
+            variant={twoFactorEnabled ? "outline" : "primary"}
+            className="mt-3"
+            onClick={() => void toggleTwoFactor()}
+          >
             {twoFactorEnabled ? "Disable 2FA" : "Enable 2FA"}
           </Button>
         </div>
@@ -185,11 +203,13 @@ function PreferencesCard(): JSX.Element {
   const updatePreferences = useAuthStore((state) => state.updatePreferences);
   const { setTheme: setUiTheme } = useTheme();
   const [theme, setTheme] = useState(user?.preferences.theme ?? "system");
-  const [notificationPrefs, setNotificationPrefs] = useState(user?.preferences.notifications ?? {
-    email: true,
-    sms: false,
-    push: true,
-  });
+  const [notificationPrefs, setNotificationPrefs] = useState(
+    user?.preferences.notifications ?? {
+      email: true,
+      sms: false,
+      push: true,
+    },
+  );
 
   useEffect(() => {
     if (!user) return;
@@ -214,14 +234,18 @@ function PreferencesCard(): JSX.Element {
       <CardContent>
         <form className="space-y-4" onSubmit={onSubmit}>
           <div>
-            <label className="block text-xs font-semibold uppercase text-muted-foreground">Default theme</label>
+            <label className="block text-xs font-semibold uppercase text-muted-foreground">
+              Default theme
+            </label>
             <div className="mt-2 flex gap-2">
               {(["light", "dark", "system"] as const).map((value) => (
                 <button
                   key={value}
                   type="button"
                   className={`flex-1 rounded-xl border px-3 py-2 text-sm capitalize ${
-                    theme === value ? "border-brand-emphasis bg-brand-emphasis/10 text-brand-emphasis" : "border-border text-muted-foreground"
+                    theme === value
+                      ? "border-brand-emphasis bg-brand-emphasis/10 text-brand-emphasis"
+                      : "border-border text-muted-foreground"
                   }`}
                   onClick={() => setTheme(value)}
                 >
@@ -231,13 +255,17 @@ function PreferencesCard(): JSX.Element {
             </div>
           </div>
           <div>
-            <label className="block text-xs font-semibold uppercase text-muted-foreground">Notifications</label>
+            <label className="block text-xs font-semibold uppercase text-muted-foreground">
+              Notifications
+            </label>
             <div className="mt-3 space-y-2">
               {(["email", "sms", "push"] as const).map((channel) => (
                 <label
                   key={channel}
                   className={`flex items-center justify-between rounded-xl border px-3 py-2 text-sm ${
-                    notificationPrefs[channel] ? "border-brand-emphasis bg-brand-emphasis/10 text-brand-emphasis" : "border-border text-muted-foreground"
+                    notificationPrefs[channel]
+                      ? "border-brand-emphasis bg-brand-emphasis/10 text-brand-emphasis"
+                      : "border-border text-muted-foreground"
                   }`}
                 >
                   <span className="capitalize">{channel}</span>
@@ -265,7 +293,11 @@ function PreferencesCard(): JSX.Element {
   );
 }
 
-function LoyaltyCard({ summary }: { summary: { points: number; tier: string; coupons: number } | null }): JSX.Element {
+function LoyaltyCard({
+  summary,
+}: {
+  summary: { points: number; tier: string; coupons: number } | null;
+}): JSX.Element {
   return (
     <Card className="lg:col-span-1">
       <CardHeader>
@@ -314,13 +346,17 @@ function OrdersCard({ orders }: { orders: OrderSummary[] }): JSX.Element {
       </CardHeader>
       <CardContent className="space-y-3">
         {orders.length === 0 ? (
-          <p className="text-sm text-muted-foreground">Recent orders appear here once you start purchasing.</p>
+          <p className="text-sm text-muted-foreground">
+            Recent orders appear here once you start purchasing.
+          </p>
         ) : (
           orders.map((order) => (
             <div key={order.id} className="rounded-xl border border-border bg-muted/20 p-4">
               <p className="text-sm font-semibold text-foreground">Order {order.id}</p>
               <p className="text-xs text-muted-foreground">Status: {order.status}</p>
-              <p className="text-xs text-muted-foreground">Total: KES {order.total.toLocaleString()}</p>
+              <p className="text-xs text-muted-foreground">
+                Total: KES {order.total.toLocaleString()}
+              </p>
             </div>
           ))
         )}
@@ -328,4 +364,3 @@ function OrdersCard({ orders }: { orders: OrderSummary[] }): JSX.Element {
     </Card>
   );
 }
-

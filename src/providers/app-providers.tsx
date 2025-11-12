@@ -2,12 +2,14 @@
 
 import { useEffect, useState, type PropsWithChildren } from "react";
 
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { QueryClientProvider } from "@tanstack/react-query";
 import { ReactQueryDevtools } from "@tanstack/react-query-devtools";
 import { ThemeProvider } from "next-themes";
 
 import { createQueryClient } from "@/lib/query-client";
 import { useAuthStore } from "@/store/auth";
+
+import type { QueryClient } from "@tanstack/react-query";
 
 export function AppProviders({ children }: PropsWithChildren) {
   const [queryClient] = useState<QueryClient>(() => createQueryClient());
@@ -22,7 +24,9 @@ export function AppProviders({ children }: PropsWithChildren) {
     <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
       <QueryClientProvider client={queryClient}>
         {children}
-        {showDevtools ? <ReactQueryDevtools initialIsOpen={false} buttonPosition="bottom-right" /> : null}
+        {showDevtools ? (
+          <ReactQueryDevtools initialIsOpen={false} buttonPosition="bottom-right" />
+        ) : null}
       </QueryClientProvider>
     </ThemeProvider>
   );

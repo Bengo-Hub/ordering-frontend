@@ -1,4 +1,5 @@
 import { create } from "zustand";
+import type { AxiosError } from "axios";
 
 import { attachAuthTokenGetter } from "@/lib/api/base";
 import {
@@ -8,6 +9,7 @@ import {
   fetchProfile,
   loginWithEmail,
   logout as apiLogout,
+  refreshSession,
   updatePreferences,
   updateProfile,
   updateSecurity,
@@ -43,14 +45,13 @@ interface AuthState {
   refreshOrders: () => Promise<void>;
 }
 
-function applyAuthResponse(set: (value: Partial<AuthState>) => void, response: AuthResponse, orders?: OrderSummary[]) {
+function applyAuthResponse(set: (value: Partial<AuthState>) => void, response: AuthResponse) {
   persistSession(response.session);
   set({
     status: "authenticated",
     session: response.session,
     user: response.user,
     error: null,
-    ...(orders ? { orders } : {}),
   });
 }
 
@@ -63,6 +64,52 @@ async function hydrateOrders(set: (value: Partial<AuthState>) => void) {
     console.warn("Failed to hydrate orders", error);
     set({ orders: [] });
     return [];
+  }
+}
+
+function isAxiosAuthError(error: unknown): error is AxiosError {
+  return typeof error === "object" && error !== null && (error as AxiosError).isAxiosError === true;
+}
+
+function extractStatus(error: unknown): number | undefined {
+  if (isAxiosAuthError(error)) {
+    return error.response?.status;
+  }
+  return undefined;
+}
+
+async function tryRefreshSession(
+  set: (value: Partial<AuthState>) => void,
+  get: () => AuthState,
+  error: unknown,
+): Promise<boolean> {
+  const status = extractStatus(error);
+  if (status !== 401 && status !== 403) {
+    return false;
+  }
+
+  const session = get().session;
+  if (!session?.refreshToken) {
+    return false;
+  }
+
+  try {
+    set({ status: "loading", error: null });
+    const refreshed = await refreshSession({ refreshToken: session.refreshToken });
+    applyAuthResponse(set, refreshed);
+    await hydrateOrders(set);
+    return true;
+  } catch (refreshError) {
+    console.error("Session refresh failed", refreshError);
+    persistSession(null);
+    set({
+      status: "idle",
+      user: null,
+      session: null,
+      orders: [],
+      error: "Session expired. Please sign in again.",
+    });
+    return true;
   }
 }
 
@@ -82,12 +129,21 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     try {
       set({ status: "loading", error: null });
       const response = await fetchProfile();
-      const orders = await hydrateOrders(set);
-      applyAuthResponse(set, response, orders);
+      applyAuthResponse(set, response);
+      await hydrateOrders(set);
     } catch (error) {
+      if (await tryRefreshSession(set, get, error)) {
+        return;
+      }
       console.warn("Auth initialization failed", error);
       persistSession(null);
-      set({ status: "idle", user: null, session: null, error: "Session expired. Please sign in again." });
+      set({
+        status: "idle",
+        user: null,
+        session: null,
+        error: "Session expired. Please sign in again.",
+        orders: [],
+      });
     }
   },
 
@@ -95,8 +151,8 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     set({ status: "loading", error: null });
     try {
       const response = await loginWithEmail(input);
-      const orders = await hydrateOrders(set);
-      applyAuthResponse(set, response, orders);
+      applyAuthResponse(set, response);
+      await hydrateOrders(set);
     } catch (error) {
       console.error("Email login failed", error);
       set({ status: "error", error: "Unable to sign in with the provided credentials." });
@@ -108,7 +164,8 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     set({ status: "loading", error: null });
     try {
       const redirect =
-        redirectUri ?? (typeof window !== "undefined" ? `${window.location.origin}/auth/callback` : "");
+        redirectUri ??
+        (typeof window !== "undefined" ? `${window.location.origin}/auth/callback` : "");
       const { url } = await beginGoogleOAuth({ role, redirectUri: redirect });
       if (typeof window !== "undefined") {
         window.location.href = url;
@@ -124,8 +181,8 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     set({ status: "loading", error: null });
     try {
       const response = await completeGoogleOAuth({ code, state });
-      const orders = await hydrateOrders(set);
-      applyAuthResponse(set, response, orders);
+      applyAuthResponse(set, response);
+      await hydrateOrders(set);
     } catch (error) {
       console.error("Google OAuth completion failed", error);
       set({ status: "error", error: "Google sign-in failed. Try another method." });

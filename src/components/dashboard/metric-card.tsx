@@ -13,7 +13,14 @@ interface MetricCardProps {
   footer?: ReactNode;
 }
 
-export function MetricCard({ title, value, deltaLabel, deltaValue, icon, footer }: MetricCardProps) {
+export function MetricCard({
+  title,
+  value,
+  deltaLabel,
+  deltaValue,
+  icon,
+  footer,
+}: MetricCardProps) {
   return (
     <Card className="flex flex-col justify-between">
       <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
@@ -32,4 +39,3 @@ export function MetricCard({ title, value, deltaLabel, deltaValue, icon, footer 
     </Card>
   );
 }
-

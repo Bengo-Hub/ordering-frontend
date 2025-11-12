@@ -26,4 +26,3 @@ export function persistSession(session: SessionTokens | null) {
     console.warn("Failed to persist auth session", error);
   }
 }
-

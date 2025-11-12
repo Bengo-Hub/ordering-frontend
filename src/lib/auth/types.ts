@@ -3,19 +3,34 @@ export type UserRole = "customer" | "rider" | "staff" | "admin" | "superadmin";
 export type Permission =
   | "orders:view"
   | "orders:manage"
+  | "orders:refund"
+  | "catalog:view"
+  | "catalog:manage"
+  | "payments:view"
+  | "payments:manage"
+  | "logistics:view"
+  | "logistics:dispatch"
+  | "operations:kitchen"
+  | "operations:inventory"
   | "profile:update"
   | "preferences:update"
   | "loyalty:view"
   | "loyalty:redeem"
+  | "notifications:view"
   | "notifications:manage"
+  | "analytics:view"
+  | "analytics:export"
   | "riders:onboard"
   | "staff:invite"
+  | "support:view"
+  | "support:manage"
   | "admin:manage";
 
 export interface SessionTokens {
   accessToken: string;
   refreshToken: string;
   expiresAt: string;
+  sessionId: string;
 }
 
 export interface NotificationPreferences {

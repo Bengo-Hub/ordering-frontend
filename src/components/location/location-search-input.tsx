@@ -84,7 +84,8 @@ export function LocationSearchInput({
         if (!response.ok) {
           throw new Error("Unable to reach location service.");
         }
-        const data: Array<{ lat: string; lon: string; display_name: string }> = await response.json();
+        const data: Array<{ lat: string; lon: string; display_name: string }> =
+          await response.json();
         const mapped: Suggestion[] = data
           .map((item) => ({
             label: item.display_name,
@@ -129,7 +130,9 @@ export function LocationSearchInput({
 
   return (
     <div className="space-y-2">
-      <label className="block text-xs font-semibold uppercase tracking-wide text-muted-foreground">{label}</label>
+      <label className="block text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+        {label}
+      </label>
       <div className="relative z-30">
         <Input
           value={query}
@@ -140,7 +143,10 @@ export function LocationSearchInput({
           aria-label={label}
         />
         {(isSearching || status === "loading") && (
-          <Loader2Icon className="absolute right-3 top-1/2 size-4 -translate-y-1/2 animate-spin text-muted-foreground" aria-hidden />
+          <Loader2Icon
+            className="absolute right-3 top-1/2 size-4 -translate-y-1/2 animate-spin text-muted-foreground"
+            aria-hidden
+          />
         )}
         {onClear && canClear ? (
           <Button
@@ -183,7 +189,14 @@ export function LocationSearchInput({
       {helperMessage ? <p className="text-xs text-muted-foreground">{helperMessage}</p> : null}
       <div className="flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
         <span>
-          Status: {status === "resolved" ? "location detected" : status === "loading" ? "locating" : status === "error" ? "location unavailable" : "idle"}
+          Status:{" "}
+          {status === "resolved"
+            ? "location detected"
+            : status === "loading"
+              ? "locating"
+              : status === "error"
+                ? "location unavailable"
+                : "idle"}
         </span>
       </div>
     </div>

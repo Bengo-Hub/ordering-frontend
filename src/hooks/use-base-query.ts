@@ -1,8 +1,8 @@
 import {
-    useQuery,
-    type QueryKey,
-    type UseQueryOptions,
-    type UseQueryResult,
+  useQuery,
+  type QueryKey,
+  type UseQueryOptions,
+  type UseQueryResult,
 } from "@tanstack/react-query";
 import type { AxiosRequestConfig } from "axios";
 
@@ -18,7 +18,10 @@ export function createBaseFetcher<TResponse>(config: AxiosRequestConfig): () => 
 export function useBaseQuery<TResponse>(
   queryKey: QueryKey,
   config: AxiosRequestConfig,
-  options?: Omit<UseQueryOptions<TResponse, BaseApiError, TResponse, QueryKey>, "queryKey" | "queryFn">,
+  options?: Omit<
+    UseQueryOptions<TResponse, BaseApiError, TResponse, QueryKey>,
+    "queryKey" | "queryFn"
+  >,
 ): UseQueryResult<TResponse, BaseApiError> {
   return useQuery({
     queryKey,

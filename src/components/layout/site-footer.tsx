@@ -13,8 +13,8 @@ const footerLinks = [
 
 export function SiteFooter() {
   return (
-    <footer className="border-t border-border bg-card/80 py-10  /80">
-      <div className="mx-auto flex w-full max-w-6xl flex-col gap-6 px-4 text-sm text-muted-foreground text-muted-foreground md:flex-row md:items-center md:justify-between">
+    <footer className="border-t border-border bg-card/80 py-10">
+      <div className="mx-auto flex w-full max-w-6xl flex-col gap-6 px-4 text-sm text-muted-foreground md:flex-row md:items-center md:justify-between">
         <div>
           <p>
             &copy; {new Date().getFullYear()} {brand.name}. All rights reserved.
@@ -25,7 +25,11 @@ export function SiteFooter() {
         </div>
         <nav className="flex flex-wrap gap-4">
           {footerLinks.map((link) => (
-            <Link key={link.href} href={link.href as any} className="hover:text-brand-emphasis">
+            <Link
+              key={link.href}
+              href={{ pathname: link.href }}
+              className="hover:text-brand-emphasis"
+            >
               {link.label}
             </Link>
           ))}

@@ -23,4 +23,3 @@ export function SiteShell({ children, className, mainClassName }: SiteShellProps
     </div>
   );
 }
-

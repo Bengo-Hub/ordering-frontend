@@ -19,10 +19,15 @@ export default function CustomerDashboardPage(): JSX.Element {
       <SiteShell>
         <div className="mx-auto my-12 flex w-full max-w-6xl flex-col gap-8 px-4">
           <header className="flex flex-col gap-1">
-            <p className="text-sm font-semibold uppercase tracking-wide text-brand-emphasis">Customer dashboard</p>
-            <h1 className="text-3xl font-semibold text-foreground">Hello {user?.fullName ?? "there"}, ready to dine?</h1>
+            <p className="text-sm font-semibold uppercase tracking-wide text-brand-emphasis">
+              Customer dashboard
+            </p>
+            <h1 className="text-3xl font-semibold text-foreground">
+              Hello {user?.fullName ?? "there"}, ready to dine?
+            </h1>
             <p className="text-sm text-muted-foreground">
-              Track your delivery pipeline, loyalty journey, and saved delivery preferences from one place.
+              Track your delivery pipeline, loyalty journey, and saved delivery preferences from one
+              place.
             </p>
           </header>
 
@@ -30,7 +35,11 @@ export default function CustomerDashboardPage(): JSX.Element {
             <AuthorizationGate permissions={["orders:view"]}>
               <MetricCard
                 title="Active orders"
-                value={orders.filter((order) => ["pending", "preparing", "enroute"].includes(order.status)).length}
+                value={
+                  orders.filter((order) =>
+                    ["pending", "preparing", "enroute"].includes(order.status),
+                  ).length
+                }
                 deltaLabel="Last 30 days"
                 deltaValue={orders.length.toString()}
                 icon={<UtensilsIcon className="size-4 text-brand-emphasis" aria-hidden />}
@@ -75,7 +84,9 @@ export default function CustomerDashboardPage(): JSX.Element {
               </CardHeader>
               <CardContent className="space-y-4">
                 {orders.length === 0 ? (
-                  <p className="text-sm text-muted-foreground">Place your first order to see real-time delivery updates!</p>
+                  <p className="text-sm text-muted-foreground">
+                    Place your first order to see real-time delivery updates!
+                  </p>
                 ) : (
                   orders.map((order) => (
                     <div
@@ -85,11 +96,19 @@ export default function CustomerDashboardPage(): JSX.Element {
                       <div>
                         <p className="font-semibold text-foreground">Order {order.id}</p>
                         <p className="text-xs text-muted-foreground">
-                          Placed {formatDateTime(order.placedAt, { day: "2-digit", month: "short", hour: "2-digit", minute: "2-digit" })}
+                          Placed{" "}
+                          {formatDateTime(order.placedAt, {
+                            day: "2-digit",
+                            month: "short",
+                            hour: "2-digit",
+                            minute: "2-digit",
+                          })}
                         </p>
                       </div>
                       <div className="text-right">
-                        <p className="text-xs uppercase tracking-wide text-muted-foreground">Status</p>
+                        <p className="text-xs uppercase tracking-wide text-muted-foreground">
+                          Status
+                        </p>
                         <p className="text-sm font-medium text-brand-emphasis">{order.status}</p>
                       </div>
                     </div>
@@ -103,4 +122,3 @@ export default function CustomerDashboardPage(): JSX.Element {
     </RequireAuth>
   );
 }
-

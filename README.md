@@ -26,15 +26,15 @@ NEXT_PUBLIC_SEGMENT_WRITE_KEY=...
 
 Helpful scripts:
 
-| Script            | Purpose                                |
-| ----------------- | -------------------------------------- |
-| `pnpm dev`        | Run Next.js locally with HMR            |
-| `pnpm build`      | Type-check and compile production build |
-| `pnpm start`      | Start the production server             |
-| `pnpm lint`       | ESLint flat config over `src/`          |
-| `pnpm test`       | Execute Vitest test suites              |
-| `pnpm typecheck`  | Run `tsc --noEmit`                      |
-| `pnpm storybook`* | (Add-on) Launch component workbench     |
+| Script             | Purpose                                 |
+| ------------------ | --------------------------------------- |
+| `pnpm dev`         | Run Next.js locally with HMR            |
+| `pnpm build`       | Type-check and compile production build |
+| `pnpm start`       | Start the production server             |
+| `pnpm lint`        | ESLint flat config over `src/`          |
+| `pnpm test`        | Execute Vitest test suites              |
+| `pnpm typecheck`   | Run `tsc --noEmit`                      |
+| `pnpm storybook`\* | (Add-on) Launch component workbench     |
 
 \*Storybook scaffolding is ready; add stories in `src/components/**/*.stories.tsx`.
 

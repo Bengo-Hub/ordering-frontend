@@ -37,7 +37,7 @@ export function ContactForm() {
     },
   });
 
-  const onSubmit = async (values: ContactRequest) => {
+  const onSubmit = async (_values: ContactRequest) => {
     setStatus("submitting");
     try {
       // Placeholder request – replace with baseapi call when the backend endpoint is ready.
@@ -56,37 +56,60 @@ export function ContactForm() {
       className="space-y-5 rounded-3xl border border-border bg-card p-8 shadow-soft"
     >
       <div>
-        <label htmlFor="name" className="block text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+        <label
+          htmlFor="name"
+          className="block text-xs font-semibold uppercase tracking-wide text-muted-foreground"
+        >
           Name
         </label>
         <Input id="name" autoComplete="name" placeholder="Your name" {...register("name")} />
-        {errors.name ? (
-          <p className="mt-1 text-xs text-red-500">{errors.name.message}</p>
-        ) : null}
+        {errors.name ? <p className="mt-1 text-xs text-red-500">{errors.name.message}</p> : null}
       </div>
 
       <div>
-        <label htmlFor="email" className="block text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+        <label
+          htmlFor="email"
+          className="block text-xs font-semibold uppercase tracking-wide text-muted-foreground"
+        >
           Email
         </label>
-        <Input id="email" type="email" autoComplete="email" placeholder="you@company.com" {...register("email")} />
-        {errors.email ? (
-          <p className="mt-1 text-xs text-red-500">{errors.email.message}</p>
-        ) : null}
+        <Input
+          id="email"
+          type="email"
+          autoComplete="email"
+          placeholder="you@company.com"
+          {...register("email")}
+        />
+        {errors.email ? <p className="mt-1 text-xs text-red-500">{errors.email.message}</p> : null}
       </div>
 
       <div>
-        <label htmlFor="company" className="block text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+        <label
+          htmlFor="company"
+          className="block text-xs font-semibold uppercase tracking-wide text-muted-foreground"
+        >
           Company (optional)
         </label>
-        <Input id="company" autoComplete="organization" placeholder="Your cafe or organisation" {...register("company")} />
+        <Input
+          id="company"
+          autoComplete="organization"
+          placeholder="Your cafe or organisation"
+          {...register("company")}
+        />
       </div>
 
       <div>
-        <label htmlFor="message" className="block text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+        <label
+          htmlFor="message"
+          className="block text-xs font-semibold uppercase tracking-wide text-muted-foreground"
+        >
           How can we help?
         </label>
-        <Textarea id="message" placeholder="Share a bit about your needs, timeline, or current tooling." {...register("message")} />
+        <Textarea
+          id="message"
+          placeholder="Share a bit about your needs, timeline, or current tooling."
+          {...register("message")}
+        />
         {errors.message ? (
           <p className="mt-1 text-xs text-red-500">{errors.message.message}</p>
         ) : null}
@@ -96,7 +119,11 @@ export function ContactForm() {
         <p
           className={cn(
             "text-xs font-medium",
-            status === "success" ? "text-emerald-600" : status === "error" ? "text-red-500" : "text-muted-foreground",
+            status === "success"
+              ? "text-emerald-600"
+              : status === "error"
+                ? "text-red-500"
+                : "text-muted-foreground",
           )}
         >
           {status === "success"
@@ -119,4 +146,3 @@ export function ContactForm() {
     </form>
   );
 }
-

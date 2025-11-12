@@ -62,13 +62,10 @@ export default function AuthPage(): JSX.Element {
             Sign in securely
           </h1>
           <p className="text-base text-muted-foreground">
-            Select the experience that matches your role. Google OAuth flows redirect through our secure backend.
+            Select the experience that matches your role. Google OAuth flows redirect through our
+            secure backend.
           </p>
-          {error ? (
-            <span className="text-sm font-medium text-destructive">
-              {error}
-            </span>
-          ) : null}
+          {error ? <span className="text-sm font-medium text-destructive">{error}</span> : null}
         </div>
       </section>
 
@@ -147,7 +144,10 @@ function CustomerSignIn({ isLoading }: SignInProps): JSX.Element {
       </Button>
       <form className="space-y-4" onSubmit={onSubmit}>
         <div>
-          <label htmlFor="customerEmail" className="block text-xs font-semibold uppercase text-muted-foreground">
+          <label
+            htmlFor="customerEmail"
+            className="block text-xs font-semibold uppercase text-muted-foreground"
+          >
             Email
           </label>
           <Input
@@ -160,7 +160,10 @@ function CustomerSignIn({ isLoading }: SignInProps): JSX.Element {
           />
         </div>
         <div>
-          <label htmlFor="customerPassword" className="block text-xs font-semibold uppercase text-muted-foreground">
+          <label
+            htmlFor="customerPassword"
+            className="block text-xs font-semibold uppercase text-muted-foreground"
+          >
             Password
           </label>
           <Input
@@ -199,8 +202,8 @@ function RiderSignIn({ isLoading }: SignInProps): JSX.Element {
       <div className="space-y-2">
         <h2 className="text-2xl font-semibold text-card-foreground">Rider sign in</h2>
         <p className="text-sm text-muted-foreground">
-          Use your onboarding credentials or Google account to manage assigned routes and delivery proof.
-          Need to apply?{" "}
+          Use your onboarding credentials or Google account to manage assigned routes and delivery
+          proof. Need to apply?{" "}
           <Link href={{ pathname: "/riders/signup" }} className="font-semibold text-primary">
             Start rider onboarding
           </Link>
@@ -219,7 +222,10 @@ function RiderSignIn({ isLoading }: SignInProps): JSX.Element {
       </Button>
       <form className="space-y-4" onSubmit={onSubmit}>
         <div>
-          <label htmlFor="riderEmail" className="block text-xs font-semibold uppercase text-muted-foreground">
+          <label
+            htmlFor="riderEmail"
+            className="block text-xs font-semibold uppercase text-muted-foreground"
+          >
             Email
           </label>
           <Input
@@ -232,7 +238,10 @@ function RiderSignIn({ isLoading }: SignInProps): JSX.Element {
           />
         </div>
         <div>
-          <label htmlFor="riderPassword" className="block text-xs font-semibold uppercase text-muted-foreground">
+          <label
+            htmlFor="riderPassword"
+            className="block text-xs font-semibold uppercase text-muted-foreground"
+          >
             Password
           </label>
           <Input
@@ -271,7 +280,8 @@ function StaffPortalSignIn({ isLoading }: SignInProps): JSX.Element {
       <div className="space-y-2">
         <h2 className="text-2xl font-semibold text-card-foreground">Staff portal</h2>
         <p className="text-sm text-muted-foreground">
-          Use your invitation email and one-time passcode shared by the superuser. Admin and merchant admin share the same role.
+          Use your invitation email and one-time passcode shared by the superuser. Admin and
+          merchant admin share the same role.
         </p>
       </div>
       <form className="space-y-4" onSubmit={onSubmit}>
@@ -312,7 +322,10 @@ function StaffPortalSignIn({ isLoading }: SignInProps): JSX.Element {
           </label>
         </div>
         <div>
-          <label htmlFor="staffEmail" className="block text-xs font-semibold uppercase text-muted-foreground">
+          <label
+            htmlFor="staffEmail"
+            className="block text-xs font-semibold uppercase text-muted-foreground"
+          >
             Email
           </label>
           <Input
@@ -325,7 +338,10 @@ function StaffPortalSignIn({ isLoading }: SignInProps): JSX.Element {
           />
         </div>
         <div>
-          <label htmlFor="staffCode" className="block text-xs font-semibold uppercase text-muted-foreground">
+          <label
+            htmlFor="staffCode"
+            className="block text-xs font-semibold uppercase text-muted-foreground"
+          >
             Invitation code
           </label>
           <Input
@@ -346,4 +362,3 @@ function StaffPortalSignIn({ isLoading }: SignInProps): JSX.Element {
     </div>
   );
 }
-
