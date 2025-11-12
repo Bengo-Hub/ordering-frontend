@@ -7,6 +7,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) 
 ## [Unreleased]
 
 ### Added
+
 - Reusable Leaflet map component with Busia geofence, location autocomplete, and Zustand stores for customer/rider default pins.
 - Customer signup and menu flows with map-based delivery address selection and current-location detection.
 - Rider onboarding defaults to current location with draggable map pin capture and coordinate submission.
@@ -18,11 +19,16 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) 
 - Role-gated dashboards for customer, rider, and staff roles with reusable authorization guards and metric cards.
 - Full-stack user management module with RBAC-aware Zustand store, OAuth2 (Google) initiation/callback handlers, session persistence, and account/profile dashboards.
 - Google-branded sign-in buttons with official iconography across customer and rider flows.
+- Axios-based identity service wired to backend `/v1/auth`, `/v1/users`, and `/v1/customers/orders/summary` endpoints with refresh-token rotation and fallback mock data.
 
 ### Changed
+
 - Overhauled landing, about, contact, menu, delivery, cafés, and loyalty pages with consistent light/dark theming and customer-first copy.
 - Refined header/footer navigation, mobile drawer, and theme toggle for accessibility and responsiveness.
 - Header now surfaces authenticated account shortcuts and logout, with profile page managing security, loyalty, and preferences.
+- Authentication flows now rely exclusively on backend endpoints (email/password, OAuth, refresh, profile updates); mock fallbacks have been removed to keep environments aligned.
 
 ### Removed
+
 - Deprecated merchant placeholder pages in favour of streamlined public sitemap.
+- Legacy mock authentication utilities (`src/lib/auth/mock.ts`) and simulated API branches.
