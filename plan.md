@@ -19,7 +19,7 @@
 
 - Integrate brand configuration, logo management, and copy overrides with backend admin APIs (`look_and_feel` settings).
 - Persist customer/rider address books via backend location services, including reverse geocoding and Busia geofence validation on the server, keyed by shared `tenant_slug` and outlet identifiers.
-- Wire rider onboarding form to backend KYC workflow service, which in turn relays data to `logistics-service`; frontend stores only references returned from the owning service, waiting for webhook confirmation before updating UI state.
+- Wire rider onboarding form directly to `logistics-service` APIs (`POST /v1/{tenant}/fleet-members`); frontend stores only references returned from logistics-service, waiting for webhook confirmation before updating UI state. **All rider/fleet/driver logic is centralized in logistics-service—cafe-backend does not handle rider data.**
 - Connect merchant/staff invite flows to tenancy provisioning once backend tenancy endpoints are live.
 - Surface subscription/license management UI: plan comparison, usage metrics (orders/riders), upgrade/downgrade flows, renewal notices, and invoice history powered by the new subscription APIs.
 - Build admin settings for integration credentials (POS gateway, treasury, notifications), API key rotation, and backup/restore requests once backend configuration endpoints are exposed; surface cross-service linkage (logistics riders, inventory stock, POS outlets) using a unified tenant/outlet selector and webhook-driven status updates.
@@ -36,27 +36,33 @@
    - Cart, promo codes, loyalty balance display, multi-address checkout with payment orchestration (via treasury APIs).
    - Real-time order tracker (map view, status timeline), push/SMS opt-in, order history & reordering.
    - Account management, language toggle, support ticket initiation.
-   - _Backend alignment: [Sprint 3 – Orders & Cart](../food-delivery-backend/plan.md#sprint-3--orders--cart-weeks-6-7) & [Sprint 4 – Payments Core](../food-delivery-backend/plan.md#sprint-4--payments-core-weeks-8-9)._
+   - _Backend alignment: [Sprint 3 – Orders & Cart](../cafe-backend/plan.md#sprint-3--orders--cart-weeks-6-7) & [Sprint 4 – Payments Core](../cafe-backend/plan.md#sprint-4--payments-core-weeks-8-9)._
 2. **Customer Mobile App (React Native) (Priority 2)**
    - Mirrors web functionality with mobile-native navigation (React Navigation), biometric login, deep linking from SMS/Push.
    - Offline cart retention, network status awareness, background geolocation permissions management.
-   - _Backend alignment: [Sprint 5 – Fulfilment & Dispatch](../food-delivery-backend/plan.md#sprint-5--fulfilment--dispatch-weeks-10-11)._
+   - _Backend alignment: [Sprint 5 – Fulfilment & Dispatch](../cafe-backend/plan.md#sprint-5--fulfilment--dispatch-weeks-10-11)._
 3. **Rider Mobile App (Priority 3)**
-   - Shift sign-in, order queue with accept/decline, turn-by-turn navigation via Mapbox/Google SDK, proof of delivery (photo, code).
-   - Earnings dashboard, daily summary, issue reporting.
-   - _Backend alignment: [Sprint 5 – Fulfilment & Dispatch](../food-delivery-backend/plan.md#sprint-5--fulfilment--dispatch-weeks-10-11) & [Sprint 4 – Payments Core](../food-delivery-backend/plan.md#sprint-4--payments-core-weeks-8-9)._
+   - **All rider app functionality is powered by `logistics-service` APIs directly.** Frontend consumes logistics-service endpoints for shift management, task queue, navigation, proof of delivery, and earnings.
+   - Shift sign-in: `POST /v1/{tenant}/fleet-members/{id}/shifts` (logistics-service)
+   - Order queue: `GET /v1/{tenant}/tasks?fleet_member_id={id}&status=assigned` (logistics-service)
+   - Task accept/decline: `POST /v1/{tenant}/tasks/{id}/accept` or `/decline` (logistics-service)
+   - Turn-by-turn navigation: Use Mapbox/Google SDK with route data from logistics-service
+   - Proof of delivery: `POST /v1/{tenant}/tasks/{id}/complete` with PoD artifacts (logistics-service)
+   - Earnings dashboard: Query `GET /v1/{tenant}/fleet-members/{id}/earnings` (logistics-service) or consume treasury-app payout events
+   - Daily summary, issue reporting: All via logistics-service APIs
+   - _Backend alignment: [Sprint 5 – Order Fulfilment & Logistics Integration](../cafe-backend/plan.md#sprint-5--order-fulfilment--logistics-integration-weeks-10-11) & logistics-service sprint files._
 4. **Cafe Dashboard (Priority 3)**
    - Order queue management, kitchen display mode, stock-out actions, driver assignment overrides.
    - Menu CRUD, price scheduling, promotion builder, operations analytics snapshots.
-   - _Backend alignment: [Sprint 2 – Catalog & Localization](../food-delivery-backend/plan.md#sprint-2--catalog--localization-weeks-4-5) & [Sprint 7 – Analytics, Compliance & Hardening](../food-delivery-backend/plan.md#sprint-7--analytics-compliance--hardening-weeks-14-15)._
+   - _Backend alignment: [Sprint 2 – Catalog & Localization](../cafe-backend/plan.md#sprint-2--catalog--localization-weeks-4-5) & [Sprint 7 – Analytics, Compliance & Hardening](../cafe-backend/plan.md#sprint-7--analytics-compliance--hardening-weeks-14-15)._
 5. **Admin Console (Priority 4)**
    - Global monitoring (map of active orders/riders), user management, marketing campaign launcher, SLA dashboards.
    - Configuration panels for notification templates, payment/tax rules, multi-outlet management, and subscription/license controls (plan selection, renewal scheduling, feature toggles).
-   - _Backend alignment: [Sprint 6 – Notifications & Ops](../food-delivery-backend/plan.md#sprint-6--notifications--ops-weeks-12-13) & [Sprint 7 – Analytics, Compliance & Hardening](../food-delivery-backend/plan.md#sprint-7--analytics-compliance--hardening-weeks-14-15)._
+   - _Backend alignment: [Sprint 6 – Notifications & Ops](../cafe-backend/plan.md#sprint-6--notifications--ops-weeks-12-13) & [Sprint 7 – Analytics, Compliance & Hardening](../cafe-backend/plan.md#sprint-7--analytics-compliance--hardening-weeks-14-15)._
 6. **POS & External Integrations Console (Priority 4)**
    - Manage POS connectors (cafe POS, ecommerce POS, kitchen display) with credential inputs, connection health, sync history, and per-location mapping.
    - Display integration alerts from treasury/notifications services (e.g. failed payouts, SMS quota) with quick remediation actions.
-   - _Backend alignment: [POS & External Sales Integrations](../food-delivery-backend/plan.md#pos--external-sales-integrations-priority-3) & configuration APIs in [Cross-Cutting Concerns](../food-delivery-backend/plan.md#cross-cutting-concerns)._
+   - _Backend alignment: [POS & External Sales Integrations](../cafe-backend/plan.md#pos--external-sales-integrations-priority-3) & configuration APIs in [Cross-Cutting Concerns](../cafe-backend/plan.md#cross-cutting-concerns)._
 
 ## Experience Structure
 
@@ -69,17 +75,17 @@
   - Browse → menu detail → cart → checkout (support prepay or COD) → order confirmation.
   - Real-time order tracking view with status timeline and map.
   - Profile area for address management (default & custom pins), saved payment methods, loyalty, and receipts.
-  - _Backend references: [Sprint 3 – Orders & Cart](../food-delivery-backend/plan.md#sprint-3--orders--cart-weeks-6-7), [Sprint 4 – Payments Core](../food-delivery-backend/plan.md#sprint-4--payments-core-weeks-8-9)._
+  - _Backend references: [Sprint 3 – Orders & Cart](../cafe-backend/plan.md#sprint-3--orders--cart-weeks-6-7), [Sprint 4 – Payments Core](../cafe-backend/plan.md#sprint-4--payments-core-weeks-8-9)._
 - **Driver App Group:**
   - Shift management (clock-in/out), order queue, navigation hand-off, proof of delivery capture.
   - Earnings dashboard with payouts sourced from `treasury-app`, payout history, and tax document downloads.
-  - _Backend references: [Sprint 5 – Fulfilment & Dispatch](../food-delivery-backend/plan.md#sprint-5--fulfilment--dispatch-weeks-10-11) & treasury integrations in [Payments & Treasury Integration](../food-delivery-backend/plan.md#payments--treasury-integration-priority-3)._
+  - _Backend references: [Sprint 5 – Fulfilment & Dispatch](../cafe-backend/plan.md#sprint-5--fulfilment--dispatch-weeks-10-11) & treasury integrations in [Payments & Treasury Integration](../cafe-backend/plan.md#payments--treasury-integration-priority-3)._
 - **Admin/Staff Portal:**
   - Multi-tenant dashboard to manage orders, inventory, riders, staff schedules, and promotions.
   - SLA monitoring, escalation workflows, manual adjustments synced with treasury settlements, and license usage indicators (limits for riders/orders) with upgrade CTAs.
   - Notification rule builder hooked into `notifications-app` for templated campaigns and alerts.
   - POS integration workspace for mapping POS outlets to cafes, monitoring sync status, and triggering manual imports via `pos-service` APIs backed by the shared outlet registry (no duplicate outlet tables in frontend or backend).
-  - _Backend references: [Sprint 6 – Notifications & Ops](../food-delivery-backend/plan.md#sprint-6--notifications--ops-weeks-12-13) & [Sprint 7 – Analytics, Compliance & Hardening](../food-delivery-backend/plan.md#sprint-7--analytics-compliance--hardening-weeks-14-15)._
+  - _Backend references: [Sprint 6 – Notifications & Ops](../cafe-backend/plan.md#sprint-6--notifications--ops-weeks-12-13) & [Sprint 7 – Analytics, Compliance & Hardening](../cafe-backend/plan.md#sprint-7--analytics-compliance--hardening-weeks-14-15)._
 
 > Refer to [`docs/information-architecture-checklist.md`](docs/information-architecture-checklist.md) when auditing wireframes to ensure each experience group is covered.
 
@@ -94,7 +100,7 @@
 - **Testing & Quality:** Vitest + Testing Library, Detox/E2E for mobile, Playwright for PWA, Percy visual testing.
 - **Analytics:** Segment/Amplitude instrumentation, consent-aware tracking toggles.
   - Theming tokens now hydrate from CSS variables; upcoming backend sync will persist look & feel per tenant.
-  - _Backend alignment: Observability & analytics hooks tie into [Cross-Cutting Concerns – Observability](../food-delivery-backend/plan.md#cross-cutting-concerns)._
+  - _Backend alignment: Observability & analytics hooks tie into [Cross-Cutting Concerns – Observability](../cafe-backend/plan.md#cross-cutting-concerns)._
 
 ## Cross-Cutting Concerns
 
@@ -108,15 +114,21 @@
 
 ## Integration Points
 
-- **Backend APIs:** Strict contract via OpenAPI, shared TypeScript types (tRPC or openapi-typescript) to avoid drift, with webhook callbacks driving state updates rather than polling.
+- **Backend APIs:** Strict contract via OpenAPI, shared TypeScript types (tRPC or openapi-typescript) to avoid drift, with webhook callbacks driving state updates rather than polling. **Note: Rider/fleet/driver APIs are consumed directly from `logistics-service`, not from cafe-backend.**
 - **`notifications-app`:** Subscription management UI, template preview, user channel preferences, and consumption of notification delivery receipts for in-app status chips, all scoped by the shared tenant/outlet keys and delivered via signed webhooks.
 - **`treasury-app`:** Payment status webhooks, rider/cafe wallet balances, payout visibility, and surface of treasury settlement timelines inside the operations dashboards (no polling).
 - **`auth-service`:** SSO flows, session refresh, device management UI, tenant/role claim hydration for client-side guards. Tenant discovery webhooks ensure downstream services have current metadata after login.
 - **`inventory-service`:** Stock availability indicators, substitution recommendations, low-stock alerts for cafe dashboards, recipe depletion insights, referencing canonical inventory IDs (no local duplicates) delivered through subscription webhooks.
-- **`logistics-service`:** Live driver location feed, ETA updates, reroute notifications, proof-of-delivery evidence viewing, including rider onboarding status sourced from logistics via task update callbacks.
+- **`logistics-service`:** **All rider, driver, fleet, and delivery task functionality is centralized here.** Frontend consumes logistics-service APIs directly for:
+  - Live driver location feed (WebSocket/SSE streams)
+  - ETA updates and reroute notifications
+  - Proof-of-delivery evidence viewing
+  - Rider onboarding status and verification
+  - Task creation, assignment, and status updates
+  - Fleet member queries and availability checks
 - **`pos-service`:** Outlet mapping, POS ticket reconciliation, and settlement summaries surfaced within admin dashboards based on settlement webhooks (no polling).
 - **Push Providers:** Firebase Cloud Messaging for Android/web, Apple Push Notifications, plus SMS fallback toggles.
-  - _Backend alignment: See [External Integrations & Dependencies](../food-delivery-backend/plan.md#external-integrations--dependencies) in the backend plan._
+  - _Backend alignment: See [External Integrations & Dependencies](../cafe-backend/plan.md#external-integrations--dependencies) in the backend plan._
 
 ## Known Gaps
 
@@ -132,21 +144,21 @@
    - Implement identity bootstrap: RBAC role/permission model, auth store scaffolding, Google OAuth wiring from frontend to backend contracts (stubs until APIs ready). ✔
    - Deliverables shipped: base layout, theming tokens, auth state container, component primitives reused across marketing pages.
    - Next: none (move focus to Sprint 1).
-   - _Backend link: [Sprint 0 – Foundation](../food-delivery-backend/plan.md#sprint-0--foundation-week-1)._
+   - _Backend link: [Sprint 0 – Foundation](../cafe-backend/plan.md#sprint-0--foundation-week-1)._
 2. **Sprint 1 – Customer Web MVP (Weeks 2-3)** — _Status: 🚧 In Progress_
    - Completed: Marketing landing page overhaul, About/Contact/Delivery/Menu/Loyalty/Cafés pages, role-aware auth hub, customer & rider signup flows, address picker with geofence, responsive header/footer, protected dashboards (`src/app/page.tsx`, `src/app/menu/page.tsx`, `src/app/customers/signup/page.tsx`, `src/components/location/*`, `src/store/auth.ts`, `src/app/profile/page.tsx`, `src/app/dashboard/*`).
    - Outstanding: Product detail view, cart & promo codes, loyalty balance UI, checkout scaffolding, extend axios services to catalog/orders/payment APIs beyond identity.
    - Next sprint tasks: build menu detail route, cart drawer, TanStack Query hooks for menu/catalog once backend contract is ready, wire customer location store into future checkout.
-   - _Backend link: [Sprint 1 – Identity & Access](../food-delivery-backend/plan.md#sprint-1--identity--access-management-weeks-2-3) & [Sprint 2 – Catalog & Localization](../food-delivery-backend/plan.md#sprint-2--catalog--localization-weeks-4-5)._
+   - _Backend link: [Sprint 1 – Identity & Access](../cafe-backend/plan.md#sprint-1--identity--access-management-weeks-2-3) & [Sprint 2 – Catalog & Localization](../cafe-backend/plan.md#sprint-2--catalog--localization-weeks-4-5)._
 3. **Sprint 2 – Checkout & Payments UX (Weeks 4-5)** — _Status: ⏳ Not Started_
    - Planned: Checkout form, address management, promo/loyalty handling, payment orchestration UI (treasury integration), order confirmation.
    - Dependencies: baseapi client, treasury APIs, persisted address book from Sprint 1 location store.
    - Next up once Sprint 1 closes: design checkout pages, integrate saved/default addresses from `useCustomerLocationStore`, begin payment method components.
-   - _Backend link: [Sprint 4 – Payments Core](../food-delivery-backend/plan.md#sprint-4--payments-core-weeks-8-9)._
+   - _Backend link: [Sprint 4 – Payments Core](../cafe-backend/plan.md#sprint-4--payments-core-weeks-8-9)._
 4. **Sprint 3 – Real-Time Tracking & Notifications (Weeks 6-7)** — _Status: ⏳ Not Started (early groundwork laid)_
    - Groundwork shipped in Sprint 1: reusable map component and delivery timeline (`src/app/delivery/page.tsx`) ready to consume WebSocket updates.
    - Upcoming: Live order status timeline, WebSocket integration, notification preferences, service worker push support.
-   - _Backend link: [Sprint 5 – Fulfilment & Dispatch](../food-delivery-backend/plan.md#sprint-5--fulfilment--dispatch-weeks-10-11) & [Sprint 6 – Notifications & Ops](../food-delivery-backend/plan.md#sprint-6--notifications--ops-weeks-12-13)._
+   - _Backend link: [Sprint 5 – Fulfilment & Dispatch](../cafe-backend/plan.md#sprint-5--fulfilment--dispatch-weeks-10-11) & [Sprint 6 – Notifications & Ops](../cafe-backend/plan.md#sprint-6--notifications--ops-weeks-12-13)._
 5. **Sprint 4 – Cafe Dashboard (Weeks 8-9)** — _Status: ⏳ Not Started_
    - Cross-sprint dependency: location picker + geofence from Sprint 1 also powers future cart/checkout (Sprint 2) and tracking (Sprint 3).
 
@@ -162,4 +174,4 @@
 ## Runtime Ports & Environments
 
 - **Local development:** consume backend at `http://localhost:4000`, treasury at `http://localhost:4001`, and notifications at `http://localhost:4002` when running services locally.
-- **Cloud deployment:** all backend ingress endpoints terminate on port **4000**, so the frontend uses public DNS (e.g. `https://fooddeliveryapi.codevertexitsolutions.com`) without port suffixes.
+- **Cloud deployment:** all backend ingress endpoints terminate on port **4000**, so the frontend uses public DNS (e.g. `https://cafeapi.codevertexitsolutions.com`) without port suffixes.

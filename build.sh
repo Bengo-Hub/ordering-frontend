@@ -15,9 +15,9 @@ log_success() { echo -e "${GREEN}[SUCCESS]${NC} $1"; }
 log_warn()    { echo -e "${YELLOW}[WARN]${NC} $1"; }
 log_error()   { echo -e "${RED}[ERROR]${NC} $1"; }
 
-APP_NAME=${APP_NAME:-"food-delivery-frontend"}
-NAMESPACE=${NAMESPACE:-"food-delivery"}
-ENV_SECRET_NAME=${ENV_SECRET_NAME:-"food-delivery-frontend-env"}
+APP_NAME=${APP_NAME:-"cafe-frontend"}
+NAMESPACE=${NAMESPACE:-"cafe"}
+ENV_SECRET_NAME=${ENV_SECRET_NAME:-"cafe-frontend-env"}
 DEPLOY=${DEPLOY:-true}
 SETUP_DATABASES=${SETUP_DATABASES:-false}
 
@@ -99,8 +99,8 @@ fi
 if ! kubectl -n "$NAMESPACE" get secret "$ENV_SECRET_NAME" >/dev/null 2>&1; then
   log_warn "Secret $ENV_SECRET_NAME not found - creating placeholder"
   kubectl -n "$NAMESPACE" create secret generic "$ENV_SECRET_NAME" \
-    --from-literal=NEXT_PUBLIC_API_URL="https://fooddeliveryapi.codevertexitsolutions.com" \
-    --from-literal=NEXT_PUBLIC_NOTIFICATIONS_URL="https://notificationsapi.codevertexitsolutions.com" \
+    --from-literal=NEXT_PUBLIC_API_URL="https://cafeapi.codevrtexitsolutions.com" \
+    --from-literal=NEXT_PUBLIC_NOTIFICATIONS_URL="https://notificationsapi.codevrtexitsolutions.com" \
     --from-literal=MAPBOX_TOKEN="set-me" \
     --from-literal=SENTRY_DSN="" || true
 fi

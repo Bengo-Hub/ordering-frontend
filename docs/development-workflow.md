@@ -13,7 +13,7 @@ pnpm install
 pnpm dev
 ```
 
-- Run the backend stack (`food-delivery-backend`, `treasury-app`, `notifications-app`) locally or point `NEXT_PUBLIC_API_URL` to staging.
+- Run the backend stack (`cafe-backend`, `treasury-app`, `notifications-app`) locally or point `NEXT_PUBLIC_API_URL` to staging.
 - Storybook: `pnpm storybook` (runs on port 6006 by default).
 - Tests: `pnpm test` (Vitest), `pnpm test --watch` for TDD flow.
 

@@ -1,6 +1,6 @@
 import type { SessionTokens } from "./types";
 
-const STORAGE_KEY = "food-delivery.session";
+const STORAGE_KEY = "cafe.session";
 
 export function loadSession(): SessionTokens | null {
   if (typeof window === "undefined") return null;

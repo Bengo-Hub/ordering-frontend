@@ -1,7 +1,7 @@
 import { MapPinIcon, ShoppingCartIcon } from "lucide-react";
 
-import { CustomerLocationPicker } from "@/components/location/customer-location-picker";
 import { SiteShell } from "@/components/layout/site-shell";
+import { CustomerLocationPicker } from "@/components/location/customer-location-picker";
 import { MenuDiscovery } from "@/components/menu/menu-discovery";
 import { Button } from "@/components/ui/button";
 import { brand } from "@/config/brand";
@@ -21,7 +21,7 @@ export default function MenuPage() {
             <p className="max-w-2xl text-base text-muted-foreground">
               Browse seasonal dishes, personalize dietary filters, and sync your cart across web,
               PWA, and mobile clients. Availability is managed in real time by cafe operations and
-              the food-delivery backend services.
+              the cafe backend services.
             </p>
             <div className="flex flex-wrap gap-3">
               <Button size="lg" asChild>

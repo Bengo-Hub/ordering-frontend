@@ -2,7 +2,7 @@
 
 Need help with the Food Delivery frontend?
 
-- **Product & UX questions:** Reach out in `#food-delivery-product` (Slack)
+- **Product & UX questions:** Reach out in `#cafe-product` (Slack)
 - **Engineering issues:** Open a GitHub Discussion or contact `frontend@bengobox.com`
 - **Incident response:** Page the on-call engineer via PagerDuty (`Food Delivery Frontend` service)
 - **Security related:** Follow the [security policy](SECURITY.md)
