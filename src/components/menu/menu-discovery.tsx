@@ -4,8 +4,8 @@ import { useMemo, useState } from "react";
 
 import { ChefHatIcon, FilterIcon, SearchIcon, SproutIcon, WheatIcon } from "lucide-react";
 
-import { Button } from "@/components/primitives/button";
-import { Input } from "@/components/primitives/input";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
 
 type DietaryTag = "vegan" | "vegetarian" | "glutenFree" | "spicy" | "chefSpecial";
@@ -142,7 +142,7 @@ export function MenuDiscovery() {
               key={category}
               type="button"
               size="sm"
-              variant={activeCategory === category ? "primary" : "outline"}
+              variant={activeCategory === category ? "default" : "outline"}
               onClick={() => setActiveCategory(category)}
               className={cn(
                 activeCategory === category

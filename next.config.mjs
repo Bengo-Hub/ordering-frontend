@@ -8,7 +8,6 @@ const nextConfig = {
   },
   experimental: {
     typedRoutes: true,
-    instrumentationHook: true,
   },
   output: "standalone",
 };

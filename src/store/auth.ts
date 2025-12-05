@@ -1,14 +1,14 @@
-import { create } from "zustand";
 import type { AxiosError } from "axios";
+import { create } from "zustand";
 
 import { attachAuthTokenGetter } from "@/lib/api/base";
 import {
+  logout as apiLogout,
   beginGoogleOAuth,
   completeGoogleOAuth,
   fetchOrderSummary,
   fetchProfile,
   loginWithEmail,
-  logout as apiLogout,
   refreshSession,
   updatePreferences,
   updateProfile,
@@ -35,7 +35,12 @@ interface AuthState {
   user: UserProfile | null;
   orders: OrderSummary[];
   initialize: () => Promise<void>;
-  loginWithEmail: (input: { email: string; password: string; role: UserRole }) => Promise<void>;
+  loginWithEmail: (input: {
+    email: string;
+    password: string;
+    role: UserRole;
+    tenantSlug?: string;
+  }) => Promise<void>;
   beginGoogleOAuth: (input: { role: UserRole; redirectUri?: string }) => Promise<void>;
   completeGoogleOAuth: (input: { code: string; state?: string | null }) => Promise<void>;
   logout: () => Promise<void>;
@@ -180,7 +185,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
   completeGoogleOAuth: async ({ code, state }) => {
     set({ status: "loading", error: null });
     try {
-      const response = await completeGoogleOAuth({ code, state });
+      const response = await completeGoogleOAuth({ code, state: state ?? null });
       applyAuthResponse(set, response);
       await hydrateOrders(set);
     } catch (error) {

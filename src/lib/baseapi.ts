@@ -26,12 +26,15 @@ export interface BaseApiError {
 
 export function parseApiError(error: unknown): BaseApiError {
   if (axios.isAxiosError(error)) {
-    return {
+    const result: BaseApiError = {
       message: error.response?.data?.message ?? error.message,
       code: error.response?.data?.code ?? error.code,
-      status: error.response?.status,
       details: error.response?.data,
     };
+    if (error.response?.status !== undefined) {
+      result.status = error.response.status;
+    }
+    return result;
   }
 
   return {

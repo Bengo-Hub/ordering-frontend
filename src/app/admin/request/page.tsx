@@ -5,8 +5,8 @@ import { useMemo, useState } from "react";
 import { MailIcon, StoreIcon } from "lucide-react";
 
 import { SiteShell } from "@/components/layout/site-shell";
-import { Button } from "@/components/primitives/button";
-import { Input } from "@/components/primitives/input";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import { brand } from "@/config/brand";
 
 type SubmitState = "idle" | "submitting" | "success";

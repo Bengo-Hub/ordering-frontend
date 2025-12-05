@@ -24,7 +24,7 @@ const mockRouteAlerts = [
   { id: "ALT-2", message: "Road maintenance on Kisoko Rd. Expect detours.", severity: "high" },
 ];
 
-export default function RiderDashboardPage(): JSX.Element {
+export default function RiderDashboardPage() {
   const user = useAuthStore((state) => state.user);
 
   return (

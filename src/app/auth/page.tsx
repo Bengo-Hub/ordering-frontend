@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useMemo, useState, type ReactNode } from "react";
+import { Suspense, useMemo, useState, type ReactNode } from "react";
 
 import { BikeIcon, ShieldCheckIcon, ShoppingBagIcon, UsersIcon } from "lucide-react";
 import { useRouter, useSearchParams } from "next/navigation";
@@ -42,7 +42,7 @@ const tabs: TabConfig[] = [
   },
 ];
 
-export default function AuthPage(): JSX.Element {
+function AuthPageContent() {
   const searchParams = useSearchParams();
   const initialTab = (searchParams.get("tab") as AuthTab | null) ?? "customer";
   const [activeTab, setActiveTab] = useState<AuthTab>(initialTab);
@@ -105,7 +105,7 @@ interface SignInProps {
   isLoading: boolean;
 }
 
-function CustomerSignIn({ isLoading }: SignInProps): JSX.Element {
+function CustomerSignIn({ isLoading }: SignInProps) {
   const loginWithEmail = useAuthStore((s) => s.loginWithEmail);
   const beginGoogleOAuth = useAuthStore((s) => s.beginGoogleOAuth);
   const router = useRouter();
@@ -183,7 +183,7 @@ function CustomerSignIn({ isLoading }: SignInProps): JSX.Element {
   );
 }
 
-function RiderSignIn({ isLoading }: SignInProps): JSX.Element {
+function RiderSignIn({ isLoading }: SignInProps) {
   const loginWithEmail = useAuthStore((s) => s.loginWithEmail);
   const beginGoogleOAuth = useAuthStore((s) => s.beginGoogleOAuth);
   const router = useRouter();
@@ -261,7 +261,7 @@ function RiderSignIn({ isLoading }: SignInProps): JSX.Element {
   );
 }
 
-function StaffPortalSignIn({ isLoading }: SignInProps): JSX.Element {
+function StaffPortalSignIn({ isLoading }: SignInProps) {
   const loginWithEmail = useAuthStore((s) => s.loginWithEmail);
   const router = useRouter();
   const [role, setRole] = useState<"staff" | "admin">("staff");
@@ -360,5 +360,13 @@ function StaffPortalSignIn({ isLoading }: SignInProps): JSX.Element {
         </p>
       </form>
     </div>
+  );
+}
+
+export default function AuthPage() {
+  return (
+    <Suspense fallback={<div>Loading...</div>}>
+      <AuthPageContent />
+    </Suspense>
   );
 }

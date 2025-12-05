@@ -4,8 +4,8 @@ import { BanknoteIcon, ClipboardCheckIcon, MegaphoneIcon, UsersIcon } from "luci
 
 import { AuthorizationGate } from "@/components/auth/authorization-gate";
 import { RequireAuth } from "@/components/auth/require-auth";
-import { SiteShell } from "@/components/layout/site-shell";
 import { MetricCard } from "@/components/dashboard/metric-card";
+import { SiteShell } from "@/components/layout/site-shell";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { formatDateTime } from "@/lib/datetime";
 import { useAuthStore } from "@/store/auth";
@@ -31,7 +31,7 @@ const mockStaffActivity = [
   },
 ];
 
-export default function StaffDashboardPage(): JSX.Element {
+export default function StaffDashboardPage() {
   const user = useAuthStore((state) => state.user);
 
   return (

@@ -34,7 +34,7 @@ const quickLinks = [
   },
 ];
 
-export default function ContactPage(): JSX.Element {
+export default function ContactPage() {
   return (
     <SiteShell>
       <section className="border-b border-border bg-brand-surface/60 py-16">
@@ -88,11 +88,11 @@ export default function ContactPage(): JSX.Element {
       </section>
 
       <section className="bg-background py-16">
-        <div className="mx-auto grid w-full max-w-6xl gap-10 px-4 lg:grid-cols-[1.1fr_0.9fr]">
+        <div className="mx-auto grid w-full max-w-6xl gap-10 px-4 lg:grid-cols-[1.3fr_0.7fr] xl:grid-cols-[1.4fr_0.6fr]">
           <div className="space-y-4">
             <h2 className="text-2xl font-semibold text-foreground">Send us a note</h2>
-            <p className="text-sm text-muted-foreground">
-              Share your question, celebration plans, or feedback and we’ll reply within one
+            <p className="text-sm leading-relaxed text-muted-foreground">
+              Share your question, celebration plans, or feedback and we&apos;ll reply within one
               business day.
             </p>
             <ContactForm />
@@ -103,7 +103,7 @@ export default function ContactPage(): JSX.Element {
               <CardHeader className="space-y-2">
                 <ClockIcon className="size-5 text-primary" aria-hidden />
                 <h3 className="text-xl font-semibold text-foreground">Service hours</h3>
-                <p className="text-sm text-muted-foreground">
+                <p className="text-sm leading-relaxed text-muted-foreground">
                   Daily 7:00am – 9:00pm. Riders are on standby throughout peak breakfast and evening
                   slots.
                 </p>
@@ -113,8 +113,10 @@ export default function ContactPage(): JSX.Element {
               <CardHeader className="space-y-2">
                 <MapPinIcon className="size-5 text-primary" aria-hidden />
                 <h3 className="text-xl font-semibold text-foreground">Visit the café</h3>
-                <p className="text-sm text-muted-foreground">{brand.support.headquarters}</p>
-                <p className="text-sm text-muted-foreground">
+                <p className="text-sm leading-relaxed text-muted-foreground">
+                  {brand.support.headquarters}
+                </p>
+                <p className="text-sm leading-relaxed text-muted-foreground">
                   Stop by for signature roasts, limited-edition pastries, and a chat with our
                   baristas.
                 </p>
@@ -123,7 +125,7 @@ export default function ContactPage(): JSX.Element {
             <Card>
               <CardHeader className="space-y-2">
                 <h3 className="text-xl font-semibold text-foreground">Need an admin account?</h3>
-                <p className="text-sm text-muted-foreground">
+                <p className="text-sm leading-relaxed text-muted-foreground">
                   Operations leads can request demo or trial access to manage staff invites and café
                   settings.
                 </p>

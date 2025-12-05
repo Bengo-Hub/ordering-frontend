@@ -77,7 +77,7 @@ const experiences = [
   },
 ];
 
-export default function AboutPage(): JSX.Element {
+export default function AboutPage() {
   return (
     <SiteShell>
       <section className="border-b border-border bg-brand-surface/60 py-16">
@@ -183,20 +183,20 @@ export default function AboutPage(): JSX.Element {
               </Card>
             ))}
           </div>
-          <div className="flex flex-wrap items-center justify-between gap-4 rounded-3xl border border-border bg-card px-6 py-6">
-            <div className="space-y-1">
+          <div className="flex flex-col gap-6 rounded-3xl border border-border bg-card px-6 py-6 md:flex-row md:items-center md:justify-between">
+            <div className="flex-1 space-y-1">
               <p className="text-sm font-semibold uppercase tracking-wide text-primary/80">
                 Ready for your next visit?
               </p>
               <h3 className="text-2xl font-semibold text-foreground">
                 Taste the difference at {brand.shortName}
               </h3>
-              <p className="text-sm text-muted-foreground md:max-w-2xl">
-                Order online for doorstep delivery or stop by our café to say hello. We can’t wait
-                to serve you.
+              <p className="text-sm leading-relaxed text-muted-foreground md:max-w-2xl">
+                Order online for doorstep delivery or stop by our café to say hello. We can&apos;t
+                wait to serve you.
               </p>
             </div>
-            <div className="flex flex-wrap gap-3">
+            <div className="flex shrink-0 flex-wrap gap-3">
               <Button size="lg" asChild>
                 <a href="/menu">Start an order</a>
               </Button>

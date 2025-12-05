@@ -18,7 +18,7 @@ import { isWithinBusia } from "@/lib/geofence";
 
 const BUSIA_CENTER: LatLngTuple = [-0.0607, 34.2855];
 
-export default function RiderSignupPage(): JSX.Element {
+export default function RiderSignupPage() {
   const [submitted, setSubmitted] = useState(false);
   const [pin, setPin] = useState<LatLngTuple>(BUSIA_CENTER);
   const [pinFeedback, setPinFeedback] = useState<string | null>(null);
@@ -48,6 +48,19 @@ export default function RiderSignupPage(): JSX.Element {
 
   const onSubmit = (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
+    // TODO: Check tenant has logistics service enabled
+    // For now, redirect to logistics-service UI for rider onboarding
+    const tenantSlug = typeof window !== "undefined" 
+      ? localStorage.getItem("tenantSlug") || "codevertex" 
+      : "codevertex";
+    const returnUrl = typeof window !== "undefined" 
+      ? encodeURIComponent(window.location.href) 
+      : "";
+    const logisticsUrl = `https://logistics.codevertexitsolutions.com/${tenantSlug}/riders/onboard${returnUrl ? `?return_url=${returnUrl}` : ""}`;
+    
+    if (typeof window !== "undefined") {
+      window.location.href = logisticsUrl;
+    }
     setSubmitted(true);
   };
 
@@ -246,7 +259,7 @@ export default function RiderSignupPage(): JSX.Element {
 
                 <div className="space-y-3">
                   <Button type="submit" className="w-full" disabled={submitted}>
-                    {submitted ? "Application received" : "Submit onboarding request"}
+                    {submitted ? "Redirecting..." : "Continue to Rider Onboarding"}
                   </Button>
                   <Button variant="outline" className="w-full justify-center" asChild>
                     <Link href="/auth#rider">Already approved? Sign in</Link>
@@ -256,8 +269,7 @@ export default function RiderSignupPage(): JSX.Element {
                   <div className="flex items-start gap-3 rounded-2xl border border-primary/40 bg-primary/10 p-4 text-sm text-muted-foreground">
                     <ClipboardCheckIcon className="mt-1 size-4 text-primary" aria-hidden />
                     <p>
-                      Thanks for registering. Our operations team will review your documents and
-                      reach out within 48 hours with next steps.
+                      Redirecting to logistics service to complete your rider registration...
                     </p>
                   </div>
                 ) : null}

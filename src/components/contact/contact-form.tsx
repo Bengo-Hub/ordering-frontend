@@ -7,8 +7,8 @@ import { Loader2Icon } from "lucide-react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 
-import { Button } from "@/components/primitives/button";
-import { Input, Textarea } from "@/components/primitives/input";
+import { Button } from "@/components/ui/button";
+import { Input, Textarea } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
 
 const contactSchema = z.object({

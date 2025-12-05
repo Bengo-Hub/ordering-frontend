@@ -15,7 +15,7 @@ import { Input } from "@/components/ui/input";
 import type { OrderSummary } from "@/lib/auth/types";
 import { useAuthStore } from "@/store/auth";
 
-export default function ProfilePage(): JSX.Element {
+export default function ProfilePage() {
   const user = useAuthStore((state) => state.user);
   const orders = useAuthStore((state) => state.orders);
   const status = useAuthStore((state) => state.status);
@@ -82,7 +82,7 @@ export default function ProfilePage(): JSX.Element {
   );
 }
 
-function ProfileCard(): JSX.Element {
+function ProfileCard() {
   const user = useAuthStore((state) => state.user);
   const updateProfile = useAuthStore((state) => state.updateProfile);
   const [fullName, setFullName] = useState(user?.fullName ?? "");
@@ -143,7 +143,7 @@ function ProfileCard(): JSX.Element {
   );
 }
 
-function SecurityCard(): JSX.Element {
+function SecurityCard() {
   const user = useAuthStore((state) => state.user);
   const updateSecurity = useAuthStore((state) => state.updateSecurity);
   const [twoFactorEnabled, setTwoFactorEnabled] = useState(user?.twoFactorEnabled ?? false);
@@ -177,7 +177,7 @@ function SecurityCard(): JSX.Element {
             Protect your account with an additional code when signing in.
           </p>
           <Button
-            variant={twoFactorEnabled ? "outline" : "primary"}
+            variant={twoFactorEnabled ? "outline" : "default"}
             className="mt-3"
             onClick={() => void toggleTwoFactor()}
           >
@@ -198,7 +198,7 @@ function SecurityCard(): JSX.Element {
   );
 }
 
-function PreferencesCard(): JSX.Element {
+function PreferencesCard() {
   const user = useAuthStore((state) => state.user);
   const updatePreferences = useAuthStore((state) => state.updatePreferences);
   const { setTheme: setUiTheme } = useTheme();
@@ -297,7 +297,7 @@ function LoyaltyCard({
   summary,
 }: {
   summary: { points: number; tier: string; coupons: number } | null;
-}): JSX.Element {
+}) {
   return (
     <Card className="lg:col-span-1">
       <CardHeader>
@@ -335,7 +335,7 @@ function LoyaltyCard({
   );
 }
 
-function OrdersCard({ orders }: { orders: OrderSummary[] }): JSX.Element {
+function OrdersCard({ orders }: { orders: OrderSummary[] }) {
   return (
     <Card className="lg:col-span-1">
       <CardHeader>

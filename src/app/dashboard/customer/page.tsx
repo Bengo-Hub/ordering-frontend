@@ -10,7 +10,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { formatDateTime } from "@/lib/datetime";
 import { useAuthStore } from "@/store/auth";
 
-export default function CustomerDashboardPage(): JSX.Element {
+export default function CustomerDashboardPage() {
   const user = useAuthStore((state) => state.user);
   const orders = useAuthStore((state) => state.orders);
 

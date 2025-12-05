@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect } from "react";
+import { Suspense, useEffect } from "react";
 
 import { useRouter, useSearchParams } from "next/navigation";
 
@@ -9,7 +9,7 @@ import { Button } from "@/components/ui/button";
 import { userHasRole } from "@/lib/auth/permissions";
 import { useAuthStore } from "@/store/auth";
 
-export default function AuthCallbackPage(): JSX.Element {
+function AuthCallbackContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const code = searchParams?.get("code");
@@ -67,5 +67,13 @@ export default function AuthCallbackPage(): JSX.Element {
       </p>
       <p className="text-xs text-muted-foreground">Status: {status}</p>
     </div>
+  );
+}
+
+export default function AuthCallbackPage() {
+  return (
+    <Suspense fallback={<div>Loading...</div>}>
+      <AuthCallbackContent />
+    </Suspense>
   );
 }

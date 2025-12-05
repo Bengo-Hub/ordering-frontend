@@ -8,6 +8,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) 
 
 ### Added
 
+- **Landing page revamp** (Dec 2025): Modern, mobile-first responsive design with SEO optimization, engaging content sections (hero, stats, value props, how it works, categories, features, testimonials, FAQs), and conversion-focused CTAs.
 - Reusable Leaflet map component with Busia geofence, location autocomplete, and Zustand stores for customer/rider default pins.
 - Customer signup and menu flows with map-based delivery address selection and current-location detection.
 - Rider onboarding defaults to current location with draggable map pin capture and coordinate submission.
@@ -23,6 +24,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) 
 
 ### Changed
 
+- **Component structure consolidation** (Dec 2025): Removed `components/primitives/` duplication, standardized all components to use `@/components/ui/` following shadcn/ui best practices. Updated all imports across the codebase.
+- **Landing page completely revamped** (Dec 2025): Mobile-first responsive design optimized for all devices (phones, tablets, POS gadgets, laptops, dektops), comprehensive SEO metadata, engaging content with smooth animations, and professional design.
 - Overhauled landing, about, contact, menu, delivery, cafés, and loyalty pages with consistent light/dark theming and customer-first copy.
 - Refined header/footer navigation, mobile drawer, and theme toggle for accessibility and responsiveness.
 - Header now surfaces authenticated account shortcuts and logout, with profile page managing security, loyalty, and preferences.

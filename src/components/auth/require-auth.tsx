@@ -45,14 +45,14 @@ export function RequireAuth({
 
   useEffect(() => {
     if (status === "authenticated" && user) {
-      const permitted = userCanAccess(user, {
-        roles,
-        permissions,
-        roleOperator,
-        permissionOperator,
-      });
+      const accessParams: Parameters<typeof userCanAccess>[1] = {};
+      if (roles) accessParams.roles = roles;
+      if (permissions) accessParams.permissions = permissions;
+      if (roleOperator) accessParams.roleOperator = roleOperator;
+      if (permissionOperator) accessParams.permissionOperator = permissionOperator;
+      const permitted = userCanAccess(user, accessParams);
       if (!permitted) {
-        router.replace(redirectTo ?? "/");
+        router.replace((redirectTo ?? "/") as Parameters<typeof router.replace>[0]);
       }
       return;
     }
@@ -83,7 +83,12 @@ export function RequireAuth({
     return null;
   }
 
-  const canAccess = userCanAccess(user, { roles, permissions, roleOperator, permissionOperator });
+  const accessParams2: Parameters<typeof userCanAccess>[1] = {};
+  if (roles) accessParams2.roles = roles;
+  if (permissions) accessParams2.permissions = permissions;
+  if (roleOperator) accessParams2.roleOperator = roleOperator;
+  if (permissionOperator) accessParams2.permissionOperator = permissionOperator;
+  const canAccess = userCanAccess(user, accessParams2);
   if (!canAccess) {
     return <>{denialFallback}</>;
   }

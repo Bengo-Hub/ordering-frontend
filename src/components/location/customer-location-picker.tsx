@@ -13,7 +13,7 @@ import { getActiveLocation, useCustomerLocationStore } from "@/store/location";
 
 const FALLBACK: LatLngTuple = [-0.0607, 34.2855];
 
-export function CustomerLocationPicker(): JSX.Element {
+export function CustomerLocationPicker() {
   const defaultLocation = useCustomerLocationStore((state) => state.defaultLocation);
   const defaultLabel = useCustomerLocationStore((state) => state.defaultLabel);
   const customLocation = useCustomerLocationStore((state) => state.customLocation);

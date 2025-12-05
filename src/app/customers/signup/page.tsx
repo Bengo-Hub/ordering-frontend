@@ -20,7 +20,7 @@ import { getActiveLabel, getActiveLocation, useCustomerLocationStore } from "@/s
 
 const FALLBACK: LatLngTuple = [-0.0607, 34.2855];
 
-export default function CustomerSignupPage(): JSX.Element {
+export default function CustomerSignupPage() {
   const [submitted, setSubmitted] = useState(false);
   const [locationFeedback, setLocationFeedback] = useState<string | null>(null);
 

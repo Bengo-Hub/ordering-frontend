@@ -12,8 +12,19 @@ export async function loginWithEmail(input: {
   email: string;
   password: string;
   role: UserRole;
+  tenantSlug?: string;
 }): Promise<AuthResponse> {
-  const { data } = await api.post<AuthResponse>("auth/login", input);
+  // Get tenant_slug from input or localStorage
+  const tenantSlug =
+    input.tenantSlug ||
+    (typeof window !== "undefined"
+      ? localStorage.getItem("tenantSlug") || "codevertex"
+      : "codevertex");
+
+  const { data } = await api.post<AuthResponse>("auth/login", {
+    ...input,
+    tenant_slug: tenantSlug,
+  });
   return data;
 }
 

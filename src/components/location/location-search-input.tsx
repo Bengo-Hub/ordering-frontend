@@ -89,7 +89,7 @@ export function LocationSearchInput({
         const mapped: Suggestion[] = data
           .map((item) => ({
             label: item.display_name,
-            coords: [parseFloat(item.lat), parseFloat(item.lon)],
+            coords: [parseFloat(item.lat), parseFloat(item.lon)] as [number, number],
           }))
           .filter((item) => isWithinBusia(item.coords));
         setSuggestions(mapped);
