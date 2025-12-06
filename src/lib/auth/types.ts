@@ -1,4 +1,4 @@
-export type UserRole = "customer" | "rider" | "staff" | "admin" | "superadmin";
+export type UserRole = "customer" | "rider" | "staff" | "admin" | "superuser";
 
 export type Permission =
   | "orders:view"

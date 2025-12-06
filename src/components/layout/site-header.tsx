@@ -31,7 +31,7 @@ const publicLinks: NavLink[] = [
 const roleDashboards: NavLink[] = [
   { href: "/dashboard/customer", label: "My dashboard", roles: ["customer"] },
   { href: "/dashboard/rider", label: "Rider console", roles: ["rider"] },
-  { href: "/dashboard/staff", label: "Staff workspace", roles: ["staff", "admin", "superadmin"] },
+  { href: "/dashboard/staff", label: "Staff workspace", roles: ["staff", "admin", "superuser"] },
 ];
 
 export function SiteHeader() {

@@ -1,28 +1,33 @@
-import type { SessionTokens } from "./types";
+import type { SessionTokens, UserProfile } from "./types";
 
-const STORAGE_KEY = "cafe.session";
+const STORAGE_KEY = "cafe.auth";
 
-export function loadSession(): SessionTokens | null {
-  if (typeof window === "undefined") return null;
+interface AuthState {
+  session: SessionTokens | null;
+  user: UserProfile | null;
+}
+
+export function loadAuthState(): AuthState {
+  if (typeof window === "undefined") return { session: null, user: null };
   try {
     const raw = window.localStorage.getItem(STORAGE_KEY);
-    if (!raw) return null;
-    return JSON.parse(raw) as SessionTokens;
+    if (!raw) return { session: null, user: null };
+    return JSON.parse(raw) as AuthState;
   } catch (error) {
-    console.warn("Failed to load auth session", error);
-    return null;
+    console.warn("Failed to load auth state", error);
+    return { session: null, user: null };
   }
 }
 
-export function persistSession(session: SessionTokens | null) {
+export function persistAuthState(state: AuthState) {
   if (typeof window === "undefined") return;
   try {
-    if (!session) {
+    if (!state.session) {
       window.localStorage.removeItem(STORAGE_KEY);
       return;
     }
-    window.localStorage.setItem(STORAGE_KEY, JSON.stringify(session));
+    window.localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
   } catch (error) {
-    console.warn("Failed to persist auth session", error);
+    console.warn("Failed to persist auth state", error);
   }
 }

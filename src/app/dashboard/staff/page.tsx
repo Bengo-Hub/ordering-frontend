@@ -35,7 +35,7 @@ export default function StaffDashboardPage() {
   const user = useAuthStore((state) => state.user);
 
   return (
-    <RequireAuth roles={["staff", "admin", "superadmin"]} permissions={["orders:view"]}>
+    <RequireAuth roles={["staff", "admin", "superuser"]} permissions={["orders:view"]}>
       <SiteShell>
         <div className="mx-auto my-12 flex w-full max-w-6xl flex-col gap-8 px-4">
           <header className="flex flex-col gap-1">

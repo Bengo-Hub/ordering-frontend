@@ -21,6 +21,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) 
 - Full-stack user management module with RBAC-aware Zustand store, OAuth2 (Google) initiation/callback handlers, session persistence, and account/profile dashboards.
 - Google-branded sign-in buttons with official iconography across customer and rider flows.
 - Axios-based identity service wired to backend `/v1/auth`, `/v1/users`, and `/v1/customers/orders/summary` endpoints with refresh-token rotation and fallback mock data.
+- Google OAuth callback handler with profile completion redirection for missing information.
+- Frontend role standardization to `superuser` (aligning with backend).
 
 ### Changed
 

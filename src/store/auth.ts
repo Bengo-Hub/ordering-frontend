@@ -14,7 +14,7 @@ import {
   updateProfile,
   updateSecurity,
 } from "@/lib/auth/api";
-import { loadSession, persistSession } from "@/lib/auth/session";
+import { loadAuthState, persistAuthState } from "@/lib/auth/session";
 import type {
   AuthResponse,
   OrderSummary,
@@ -25,6 +25,7 @@ import type {
   UserProfile,
   UserRole,
 } from "@/lib/auth/types";
+import { toast } from "@/lib/toast";
 
 type AuthStatus = "idle" | "loading" | "authenticated" | "error";
 
@@ -51,13 +52,14 @@ interface AuthState {
 }
 
 function applyAuthResponse(set: (value: Partial<AuthState>) => void, response: AuthResponse) {
-  persistSession(response.session);
-  set({
-    status: "authenticated",
+  const newState = {
+    status: "authenticated" as const,
     session: response.session,
     user: response.user,
     error: null,
-  });
+  };
+  persistAuthState(newState);
+  set(newState);
 }
 
 async function hydrateOrders(set: (value: Partial<AuthState>) => void) {
@@ -83,12 +85,24 @@ function extractStatus(error: unknown): number | undefined {
   return undefined;
 }
 
+function clearSession(set: (value: Partial<AuthState>) => void) {
+  persistAuthState({ session: null, user: null });
+  set({
+    status: "idle",
+    user: null,
+    session: null,
+    orders: [],
+    error: null,
+  });
+}
+
 async function tryRefreshSession(
   set: (value: Partial<AuthState>) => void,
   get: () => AuthState,
   error: unknown,
 ): Promise<boolean> {
   const status = extractStatus(error);
+  // Only try refresh on 401 or 403
   if (status !== 401 && status !== 403) {
     return false;
   }
@@ -106,31 +120,31 @@ async function tryRefreshSession(
     return true;
   } catch (refreshError) {
     console.error("Session refresh failed", refreshError);
-    persistSession(null);
-    set({
-      status: "idle",
-      user: null,
-      session: null,
-      orders: [],
-      error: "Session expired. Please sign in again.",
-    });
-    return true;
+    clearSession(set);
+    toast.error("Session expired. Please sign in again.");
+    return true; // We handled it by clearing session
   }
 }
 
 export const useAuthStore = create<AuthState>((set, get) => ({
+  ...loadAuthState(), // Initialize from local storage
   status: "idle",
   error: null,
-  session: loadSession(),
-  user: null,
   orders: [],
 
   initialize: async () => {
-    const session = get().session;
+    const { session, user } = get();
+    // If we have a session but no user, or if we just want to verify session validity
     if (!session) {
       set({ status: "idle", user: null, error: null, orders: [] });
       return;
     }
+
+    // Optimistically set authenticated if we have user and session
+    if (user && session) {
+      set({ status: "authenticated" });
+    }
+
     try {
       set({ status: "loading", error: null });
       const response = await fetchProfile();
@@ -140,15 +154,23 @@ export const useAuthStore = create<AuthState>((set, get) => ({
       if (await tryRefreshSession(set, get, error)) {
         return;
       }
-      console.warn("Auth initialization failed", error);
-      persistSession(null);
-      set({
-        status: "idle",
-        user: null,
-        session: null,
-        error: "Session expired. Please sign in again.",
-        orders: [],
-      });
+
+      const status = extractStatus(error);
+      // If it's a 401/403 and refresh failed (or wasn't tried), clear session
+      if (status === 401 || status === 403) {
+        console.warn("Auth initialization failed with 401/403", error);
+        clearSession(set);
+        toast.error("Session expired. Please sign in again.");
+      } else {
+        // For other errors (network, etc), keep the local session but maybe show a warning
+        console.warn("Auth initialization failed (non-fatal)", error);
+        // Don't clear session, allow "offline" access if data is cached
+        if (user && session) {
+          set({ status: "authenticated" }); // Fallback to authenticated
+        } else {
+          set({ status: "error", error: "Connection failed" });
+        }
+      }
     }
   },
 
@@ -158,9 +180,11 @@ export const useAuthStore = create<AuthState>((set, get) => ({
       const response = await loginWithEmail(input);
       applyAuthResponse(set, response);
       await hydrateOrders(set);
+      toast.success("Welcome back!");
     } catch (error) {
       console.error("Email login failed", error);
       set({ status: "error", error: "Unable to sign in with the provided credentials." });
+      toast.error("Login failed. Please check your credentials.");
       throw error;
     }
   },
@@ -177,7 +201,8 @@ export const useAuthStore = create<AuthState>((set, get) => ({
       }
     } catch (error) {
       console.error("Failed to initiate Google OAuth", error);
-      set({ status: "error", error: "Unable to start Google sign-in. Try again later." });
+      set({ status: "error", error: "Unable to start Google sign-in." });
+      toast.error("Failed to start Google sign-in.");
       throw error;
     }
   },
@@ -188,21 +213,25 @@ export const useAuthStore = create<AuthState>((set, get) => ({
       const response = await completeGoogleOAuth({ code, state: state ?? null });
       applyAuthResponse(set, response);
       await hydrateOrders(set);
+      toast.success("Successfully signed in with Google.");
     } catch (error) {
       console.error("Google OAuth completion failed", error);
-      set({ status: "error", error: "Google sign-in failed. Try another method." });
-      throw error;
+      set({ status: "error", error: "Google sign-in failed." });
+      toast.error("Google sign-in failed. Please try again.");
+      throw error; // Re-throw so UI can handle if needed
     }
   },
 
   logout: async () => {
     try {
       await apiLogout();
+      toast.success("Signed out successfully.");
     } catch (error) {
       console.warn("Error during logout", error);
+      // Force logout even if API call fails
+      toast.info("Signed out.");
     } finally {
-      persistSession(null);
-      set({ user: null, session: null, status: "idle", error: null, orders: [] });
+      clearSession(set);
     }
   },
 
@@ -211,9 +240,11 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     try {
       const response = await updateProfile(input);
       applyAuthResponse(set, response);
+      toast.success("Profile updated successfully.");
     } catch (error) {
       console.error("Profile update failed", error);
       set({ status: "error", error: "Could not update profile right now." });
+      toast.error("Failed to update profile.");
       throw error;
     }
   },
@@ -223,9 +254,11 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     try {
       const response = await updatePreferences(input);
       applyAuthResponse(set, response);
+      toast.success("Preferences updated.");
     } catch (error) {
       console.error("Preferences update failed", error);
       set({ status: "error", error: "Could not update preferences right now." });
+      toast.error("Failed to update preferences.");
       throw error;
     }
   },
@@ -235,9 +268,11 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     try {
       const response = await updateSecurity(input);
       applyAuthResponse(set, response);
+      toast.success("Security settings updated.");
     } catch (error) {
       console.error("Security update failed", error);
       set({ status: "error", error: "Unable to update security settings." });
+      toast.error("Failed to update security settings.");
       throw error;
     }
   },

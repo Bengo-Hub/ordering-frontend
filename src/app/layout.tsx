@@ -3,6 +3,7 @@ import type { Metadata, Viewport } from "next";
 import { Inter, Playfair_Display as PlayfairDisplay } from "next/font/google";
 import type { CSSProperties } from "react";
 
+import { Toaster } from "@/components/ui/sonner";
 import { brand } from "@/config/brand";
 import { cn } from "@/lib/utils";
 import { AppProviders } from "@/providers/app-providers";
@@ -60,7 +61,10 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
         style={brandCssVariables as CSSProperties}
         className={cn(inter.variable, display.variable, "font-sans antialiased")}
       >
-        <AppProviders>{children}</AppProviders>
+        <AppProviders>
+          {children}
+          <Toaster />
+        </AppProviders>
       </body>
     </html>
   );

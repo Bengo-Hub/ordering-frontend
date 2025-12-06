@@ -38,7 +38,7 @@ export default function ProfilePage() {
   }, [user]);
 
   return (
-    <RequireAuth roles={["customer", "rider", "staff", "admin", "superadmin"]}>
+    <RequireAuth roles={["customer", "rider", "staff", "admin", "superuser"]}>
       <SiteShell>
         <div className="mx-auto my-12 flex w-full max-w-6xl flex-col gap-6 px-4">
           <div className="flex flex-wrap items-start justify-between gap-4">
@@ -242,11 +242,10 @@ function PreferencesCard() {
                 <button
                   key={value}
                   type="button"
-                  className={`flex-1 rounded-xl border px-3 py-2 text-sm capitalize ${
-                    theme === value
+                  className={`flex-1 rounded-xl border px-3 py-2 text-sm capitalize ${theme === value
                       ? "border-brand-emphasis bg-brand-emphasis/10 text-brand-emphasis"
                       : "border-border text-muted-foreground"
-                  }`}
+                    }`}
                   onClick={() => setTheme(value)}
                 >
                   {value}
@@ -262,11 +261,10 @@ function PreferencesCard() {
               {(["email", "sms", "push"] as const).map((channel) => (
                 <label
                   key={channel}
-                  className={`flex items-center justify-between rounded-xl border px-3 py-2 text-sm ${
-                    notificationPrefs[channel]
+                  className={`flex items-center justify-between rounded-xl border px-3 py-2 text-sm ${notificationPrefs[channel]
                       ? "border-brand-emphasis bg-brand-emphasis/10 text-brand-emphasis"
                       : "border-border text-muted-foreground"
-                  }`}
+                    }`}
                 >
                   <span className="capitalize">{channel}</span>
                   <input

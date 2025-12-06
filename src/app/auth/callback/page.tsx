@@ -30,7 +30,13 @@ function AuthCallbackContent() {
 
   useEffect(() => {
     if (status === "authenticated" && user) {
-      const destination = userHasRole(user, ["staff", "admin", "superadmin"])
+      // Redirect to profile completion if critical info is missing
+      if (!user.phone) {
+        router.replace("/profile");
+        return;
+      }
+
+      const destination = userHasRole(user, ["staff", "admin", "superuser"])
         ? "/dashboard/staff"
         : userHasRole(user, ["rider"])
           ? "/dashboard/rider"
