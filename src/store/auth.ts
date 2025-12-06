@@ -143,6 +143,10 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     // Optimistically set authenticated if we have user and session
     if (user && session) {
       set({ status: "authenticated" });
+      // Skip profile fetch to prevent session clearing on every page load
+      // Hydrate orders in the background without blocking
+      hydrateOrders(set);
+      return;
     }
 
     try {
