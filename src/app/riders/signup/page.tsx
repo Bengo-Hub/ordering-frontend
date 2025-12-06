@@ -50,14 +50,13 @@ export default function RiderSignupPage() {
     event.preventDefault();
     // TODO: Check tenant has logistics service enabled
     // For now, redirect to logistics-service UI for rider onboarding
-    const tenantSlug = typeof window !== "undefined" 
-      ? localStorage.getItem("tenantSlug") || "codevertex" 
-      : "codevertex";
-    const returnUrl = typeof window !== "undefined" 
-      ? encodeURIComponent(window.location.href) 
-      : "";
+    const tenantSlug =
+      typeof window !== "undefined"
+        ? localStorage.getItem("tenantSlug") || "codevertex"
+        : "codevertex";
+    const returnUrl = typeof window !== "undefined" ? encodeURIComponent(window.location.href) : "";
     const logisticsUrl = `https://logistics.codevertexitsolutions.com/${tenantSlug}/riders/onboard${returnUrl ? `?return_url=${returnUrl}` : ""}`;
-    
+
     if (typeof window !== "undefined") {
       window.location.href = logisticsUrl;
     }
@@ -268,9 +267,7 @@ export default function RiderSignupPage() {
                 {submitted ? (
                   <div className="flex items-start gap-3 rounded-2xl border border-primary/40 bg-primary/10 p-4 text-sm text-muted-foreground">
                     <ClipboardCheckIcon className="mt-1 size-4 text-primary" aria-hidden />
-                    <p>
-                      Redirecting to logistics service to complete your rider registration...
-                    </p>
+                    <p>Redirecting to logistics service to complete your rider registration...</p>
                   </div>
                 ) : null}
               </form>

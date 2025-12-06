@@ -242,10 +242,11 @@ function PreferencesCard() {
                 <button
                   key={value}
                   type="button"
-                  className={`flex-1 rounded-xl border px-3 py-2 text-sm capitalize ${theme === value
+                  className={`flex-1 rounded-xl border px-3 py-2 text-sm capitalize ${
+                    theme === value
                       ? "border-brand-emphasis bg-brand-emphasis/10 text-brand-emphasis"
                       : "border-border text-muted-foreground"
-                    }`}
+                  }`}
                   onClick={() => setTheme(value)}
                 >
                   {value}
@@ -261,10 +262,11 @@ function PreferencesCard() {
               {(["email", "sms", "push"] as const).map((channel) => (
                 <label
                   key={channel}
-                  className={`flex items-center justify-between rounded-xl border px-3 py-2 text-sm ${notificationPrefs[channel]
+                  className={`flex items-center justify-between rounded-xl border px-3 py-2 text-sm ${
+                    notificationPrefs[channel]
                       ? "border-brand-emphasis bg-brand-emphasis/10 text-brand-emphasis"
                       : "border-border text-muted-foreground"
-                    }`}
+                  }`}
                 >
                   <span className="capitalize">{channel}</span>
                   <input
