@@ -30,8 +30,8 @@ jobs:
           echo "ENV_SECRET_NAME=food-delivery-frontend-env" >> $GITHUB_ENV
           echo "REGISTRY_SERVER=docker.io" >> $GITHUB_ENV
           echo "REGISTRY_NAMESPACE=codevertex" >> $GITHUB_ENV
-          echo "VALUES_FILE_PATH=apps/food-delivery-frontend/values.yaml" >> $GITHUB_ENV
-          echo "APP_NAME=food-delivery-frontend" >> $GITHUB_ENV
+          echo "VALUES_FILE_PATH=apps/cafe-frontend/values.yaml" >> $GITHUB_ENV
+          echo "APP_NAME=cafe-frontend" >> $GITHUB_ENV
 
       - name: Run production deployment
         env:
@@ -49,8 +49,8 @@ jobs:
           ENV_SECRET_NAME: food-delivery-frontend-env
           REGISTRY_SERVER: docker.io
           REGISTRY_NAMESPACE: codevertex
-          VALUES_FILE_PATH: apps/food-delivery-frontend/values.yaml
-          APP_NAME: food-delivery-frontend
+          VALUES_FILE_PATH: apps/cafe-frontend/values.yaml
+          APP_NAME: cafe-frontend
           GIT_USER: ${{ secrets.GIT_USER || 'Food Delivery Bot' }}
           GIT_EMAIL: ${{ secrets.GIT_EMAIL || 'dev@bengobox.com' }}
         run: |
@@ -66,7 +66,7 @@ jobs:
           REGISTRY_NAMESPACE: codevertex
         run: |
           set -e
-          IMAGE_REPO="${REGISTRY_SERVER}/${REGISTRY_NAMESPACE}/food-delivery-frontend"
+          IMAGE_REPO="${REGISTRY_SERVER}/${REGISTRY_NAMESPACE}/cafe-frontend"
           SHORT_SHA=${GITHUB_SHA::8}
           echo "Tagging ${IMAGE_REPO}:${SHORT_SHA} as :latest"
           echo "$REGISTRY_PASSWORD" | docker login "$REGISTRY_SERVER" -u "$REGISTRY_USERNAME" --password-stdin
@@ -79,7 +79,7 @@ jobs:
         env:
           KUBE_CONFIG_B64: ${{ secrets.KUBE_CONFIG }}
           NS: food-delivery
-          APP_NAME: food-delivery-frontend
+          APP_NAME: cafe-frontend
         run: |
           if [ -z "${KUBE_CONFIG_B64}" ]; then
             echo "⏭️ Skipping ArgoCD check - no KUBE_CONFIG available"
@@ -117,8 +117,8 @@ jobs:
           mkdir -p ~/.kube
           echo "$KUBE_CONFIG_B64" | base64 -d > ~/.kube/config
 
-          if kubectl get deployment food-delivery-frontend-app -n ${NS} >/dev/null 2>&1; then
-            kubectl rollout status deployment/food-delivery-frontend-app -n ${NS} --timeout=300s
+          if kubectl get deployment cafe-frontend-app -n ${NS} >/dev/null 2>&1; then
+            kubectl rollout status deployment/cafe-frontend-app -n ${NS} --timeout=300s
             HOSTS=$(kubectl get ingress -n ${NS} -o jsonpath='{.items[*].spec.rules[*].host}' | tr ' ' '\n' | grep -E 'fooddeliveryapp' || true)
             if [ -n "$HOSTS" ]; then
               for H in $HOSTS; do
