@@ -99,8 +99,8 @@ fi
 if ! kubectl -n "$NAMESPACE" get secret "$ENV_SECRET_NAME" >/dev/null 2>&1; then
   log_warn "Secret $ENV_SECRET_NAME not found - creating placeholder"
   kubectl -n "$NAMESPACE" create secret generic "$ENV_SECRET_NAME" \
-    --from-literal=NEXT_PUBLIC_API_URL="https://cafeapi.codevertexitsolutions.com" \
-    --from-literal=NEXT_PUBLIC_NOTIFICATIONS_URL="https://notificationsapi.codevertexitsolutions.com" \
+    --from-literal=NEXT_PUBLIC_API_URL="https://orderapi.codevertexitsolutions.com" \
+    --from-literal=NEXT_PUBLIC_NOTIFICATIONS_URL="https://notifications.codevertexitsolutions.com" \
     --from-literal=MAPBOX_TOKEN="set-me" \
     --from-literal=SENTRY_DSN="" || true
 fi
