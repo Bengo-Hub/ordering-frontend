@@ -27,31 +27,44 @@ jobs:
           echo "SETUP_DATABASES=false" >> $GITHUB_ENV
           echo "DB_TYPES=none" >> $GITHUB_ENV
           echo "NAMESPACE=food-delivery" >> $GITHUB_ENV
-          echo "ENV_SECRET_NAME=food-delivery-frontend-env" >> $GITHUB_ENV
+          echo "ENV_SECRET_NAME=ordering-frontend-env" >> $GITHUB_ENV
           echo "REGISTRY_SERVER=docker.io" >> $GITHUB_ENV
           echo "REGISTRY_NAMESPACE=codevertex" >> $GITHUB_ENV
-          echo "VALUES_FILE_PATH=apps/cafe-frontend/values.yaml" >> $GITHUB_ENV
-          echo "APP_NAME=cafe-frontend" >> $GITHUB_ENV
+          echo "VALUES_FILE_PATH=apps/ordering-frontend/values.yaml" >> $GITHUB_ENV
+          echo "APP_NAME=ordering-frontend" >> $GITHUB_ENV
+
+      - name: Debug available secrets
+        run: |
+          echo "Checking which tokens are available..."
+          [[ -n "${{ secrets.GH_PAT }}" ]] && echo "✅ GH_PAT is set" || echo "❌ GH_PAT not found"
+          [[ -n "${{ secrets.GIT_SECRET }}" ]] && echo "✅ GIT_SECRET is set" || echo "❌ GIT_SECRET not found"
+          [[ -n "${{ secrets.GIT_TOKEN }}" ]] && echo "✅ GIT_TOKEN is set" || echo "❌ GIT_TOKEN not found"
+          [[ -n "${{ secrets.GITHUB_TOKEN }}" ]] && echo "✅ GITHUB_TOKEN is set (default)" || echo "❌ GITHUB_TOKEN not found"
+          echo "Note: GH_PAT or GIT_SECRET required for cross-repo push to devops-k8s"
 
       - name: Run production deployment
         env:
           KUBE_CONFIG: ${{ secrets.KUBE_CONFIG }}
-          GIT_TOKEN: ${{ secrets.GIT_TOKEN }}
+          # GitHub tokens for cross-repo push (priority order in build.sh)
           GH_PAT: ${{ secrets.GH_PAT }}
           GIT_SECRET: ${{ secrets.GIT_SECRET }}
+          GIT_TOKEN: ${{ secrets.GIT_TOKEN }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          # Registry credentials
           REGISTRY_USERNAME: ${{ secrets.REGISTRY_USERNAME }}
           REGISTRY_PASSWORD: ${{ secrets.REGISTRY_PASSWORD }}
           GITHUB_SHA: ${{ github.sha }}
+          # Deployment configuration
           DEPLOY: true
           SETUP_DATABASES: false
           DB_TYPES: none
           NAMESPACE: food-delivery
-          ENV_SECRET_NAME: food-delivery-frontend-env
+          ENV_SECRET_NAME: ordering-frontend-env
           REGISTRY_SERVER: docker.io
           REGISTRY_NAMESPACE: codevertex
-          VALUES_FILE_PATH: apps/cafe-frontend/values.yaml
-          APP_NAME: cafe-frontend
-          GIT_USER: ${{ secrets.GIT_USER || 'Food Delivery Bot' }}
+          VALUES_FILE_PATH: apps/ordering-frontend/values.yaml
+          APP_NAME: ordering-frontend
+          GIT_USER: ${{ secrets.GIT_USER || 'Ordering Bot' }}
           GIT_EMAIL: ${{ secrets.GIT_EMAIL || 'dev@bengobox.com' }}
         run: |
           chmod +x build.sh
@@ -66,7 +79,7 @@ jobs:
           REGISTRY_NAMESPACE: codevertex
         run: |
           set -e
-          IMAGE_REPO="${REGISTRY_SERVER}/${REGISTRY_NAMESPACE}/cafe-frontend"
+          IMAGE_REPO="${REGISTRY_SERVER}/${REGISTRY_NAMESPACE}/ordering-frontend"
           SHORT_SHA=${GITHUB_SHA::8}
           echo "Tagging ${IMAGE_REPO}:${SHORT_SHA} as :latest"
           echo "$REGISTRY_PASSWORD" | docker login "$REGISTRY_SERVER" -u "$REGISTRY_USERNAME" --password-stdin
@@ -79,7 +92,7 @@ jobs:
         env:
           KUBE_CONFIG_B64: ${{ secrets.KUBE_CONFIG }}
           NS: food-delivery
-          APP_NAME: cafe-frontend
+          APP_NAME: ordering-frontend
         run: |
           if [ -z "${KUBE_CONFIG_B64}" ]; then
             echo "⏭️ Skipping ArgoCD check - no KUBE_CONFIG available"
@@ -117,8 +130,8 @@ jobs:
           mkdir -p ~/.kube
           echo "$KUBE_CONFIG_B64" | base64 -d > ~/.kube/config
 
-          if kubectl get deployment cafe-frontend-app -n ${NS} >/dev/null 2>&1; then
-            kubectl rollout status deployment/cafe-frontend-app -n ${NS} --timeout=300s
+          if kubectl get deployment ordering-frontend-app -n ${NS} >/dev/null 2>&1; then
+            kubectl rollout status deployment/ordering-frontend-app -n ${NS} --timeout=300s
             HOSTS=$(kubectl get ingress -n ${NS} -o jsonpath='{.items[*].spec.rules[*].host}' | tr ' ' '\n' | grep -E 'fooddeliveryapp' || true)
             if [ -n "$HOSTS" ]; then
               for H in $HOSTS; do

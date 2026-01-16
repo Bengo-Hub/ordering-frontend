@@ -15,9 +15,9 @@ log_success() { echo -e "${GREEN}[SUCCESS]${NC} $1"; }
 log_warn()    { echo -e "${YELLOW}[WARN]${NC} $1"; }
 log_error()   { echo -e "${RED}[ERROR]${NC} $1"; }
 
-APP_NAME=${APP_NAME:-"cafe-frontend"}
-NAMESPACE=${NAMESPACE:-"cafe"}
-ENV_SECRET_NAME=${ENV_SECRET_NAME:-"cafe-frontend-env"}
+APP_NAME=${APP_NAME:-"ordering-frontend"}
+NAMESPACE=${NAMESPACE:-"food-delivery"}
+ENV_SECRET_NAME=${ENV_SECRET_NAME:-"ordering-frontend-env"}
 DEPLOY=${DEPLOY:-true}
 SETUP_DATABASES=${SETUP_DATABASES:-false}
 
@@ -29,8 +29,8 @@ DEVOPS_REPO=${DEVOPS_REPO:-"Bengo-Hub/devops-k8s"}
 DEVOPS_DIR=${DEVOPS_DIR:-"$HOME/devops-k8s"}
 VALUES_FILE_PATH=${VALUES_FILE_PATH:-"apps/${APP_NAME}/values.yaml"}
 
-GIT_EMAIL=${GIT_EMAIL:-"titusowuor30@gmail.com"}
-GIT_USER=${GIT_USER:-"Titus Owuor"}
+GIT_EMAIL=${GIT_EMAIL:-"dev@bengobox.com"}
+GIT_USER=${GIT_USER:-"Ordering Bot"}
 TRIVY_ECODE=${TRIVY_ECODE:-0}
 
 if [[ -z ${GITHUB_SHA:-} ]]; then
@@ -99,39 +99,68 @@ fi
 if ! kubectl -n "$NAMESPACE" get secret "$ENV_SECRET_NAME" >/dev/null 2>&1; then
   log_warn "Secret $ENV_SECRET_NAME not found - creating placeholder"
   kubectl -n "$NAMESPACE" create secret generic "$ENV_SECRET_NAME" \
-    --from-literal=NEXT_PUBLIC_API_URL="https://cafeapi.codevrtexitsolutions.com" \
-    --from-literal=NEXT_PUBLIC_NOTIFICATIONS_URL="https://notificationsapi.codevrtexitsolutions.com" \
+    --from-literal=NEXT_PUBLIC_API_URL="https://cafeapi.codevertexitsolutions.com" \
+    --from-literal=NEXT_PUBLIC_NOTIFICATIONS_URL="https://notificationsapi.codevertexitsolutions.com" \
     --from-literal=MAPBOX_TOKEN="set-me" \
     --from-literal=SENTRY_DSN="" || true
 fi
 
-TOKEN="${GH_PAT:-${GIT_SECRET:-${GITHUB_TOKEN:-}}}"
-CLONE_URL="https://github.com/${DEVOPS_REPO}.git"
-[[ -n $TOKEN ]] && CLONE_URL="https://x-access-token:${TOKEN}@github.com/${DEVOPS_REPO}.git"
+# Update Helm values in devops-k8s repo
+# Resolve token from available sources (priority: GH_PAT > GIT_SECRET > GIT_TOKEN > GITHUB_TOKEN)
+TOKEN="${GH_PAT:-${GIT_SECRET:-${GIT_TOKEN:-${GITHUB_TOKEN:-}}}}"
 
-if [[ ! -d $DEVOPS_DIR ]]; then
-  git clone "$CLONE_URL" "$DEVOPS_DIR" || { log_warn "Unable to clone devops repo"; DEVOPS_DIR=""; }
+if [[ -n "${GH_PAT:-}" ]]; then
+  log_info "Using GH_PAT for git operations"
+elif [[ -n "${GIT_SECRET:-}" ]]; then
+  log_info "Using GIT_SECRET for git operations"
+elif [[ -n "${GIT_TOKEN:-}" ]]; then
+  log_info "Using GIT_TOKEN for git operations"
+elif [[ -n "${GITHUB_TOKEN:-}" ]]; then
+  log_info "Using GITHUB_TOKEN for git operations (may lack cross-repo write)"
+else
+  log_warn "No GitHub token found for devops-k8s update"
 fi
 
-if [[ -n $DEVOPS_DIR && -d $DEVOPS_DIR ]]; then
-  pushd "$DEVOPS_DIR" >/dev/null || true
+if [[ -n "$TOKEN" ]]; then
+  log_info "Updating Helm values in devops-k8s"
+
+  CLONE_URL="https://x-access-token:${TOKEN}@github.com/${DEVOPS_REPO}.git"
+
+  # Clone devops-k8s repo if it doesn't exist
+  if [[ ! -d "$DEVOPS_DIR" ]]; then
+    log_info "Cloning devops-k8s repo..."
+    git clone "$CLONE_URL" "$DEVOPS_DIR" || { log_error "Failed to clone devops-k8s"; exit 1; }
+  fi
+
+  cd "$DEVOPS_DIR"
   git config user.email "$GIT_EMAIL"
   git config user.name "$GIT_USER"
+
+  # Ensure we have the latest changes
   git fetch origin main || true
-  git checkout main || git checkout -b main || true
+  git checkout main || git checkout -b main
+  git reset --hard origin/main
+
   if [[ -f "$VALUES_FILE_PATH" ]]; then
-    IMAGE_REPO_ENV="$IMAGE_REPO" IMAGE_TAG_ENV="$GIT_COMMIT_ID" \
-      yq e -i '.image.repository = strenv(IMAGE_REPO_ENV) | .image.tag = strenv(IMAGE_TAG_ENV)' "$VALUES_FILE_PATH"
+    # Update image tag using yq
+    IMAGE_TAG_ENV="$GIT_COMMIT_ID" yq e -i '.image.tag = env(IMAGE_TAG_ENV)' "$VALUES_FILE_PATH"
+
     git add "$VALUES_FILE_PATH"
-    git commit -m "${APP_NAME}:${GIT_COMMIT_ID} released" || true
-    [[ -n $TOKEN ]] && git push origin HEAD:main || log_warn "Skipped pushing values (no token)"
+    git commit -m "${APP_NAME}:${GIT_COMMIT_ID} released" || log_info "No changes to commit"
+    git pull --rebase origin main || true
+
+    # Push using token
+    if git remote | grep -q push-origin; then git remote remove push-origin || true; fi
+    git remote add push-origin "$CLONE_URL"
+    git push push-origin HEAD:main || log_warn "Failed to push to devops repo"
+    log_success "Helm values updated - ArgoCD will auto-sync"
   else
-    log_warn "${VALUES_FILE_PATH} not found in devops repo"
+    log_warn "Values file not found at ${VALUES_FILE_PATH}"
   fi
-  popd >/dev/null || true
+
+  cd - > /dev/null
+else
+  log_warn "No GitHub token set - skipping devops-k8s update"
 fi
 
-log_info "Deployment summary"
-echo "  Image : ${IMAGE_REPO}:${GIT_COMMIT_ID}"
-echo "  Namespace: ${NAMESPACE}"
-echo "  Deploy   : ${DEPLOY}"
+log_success "Deployment pipeline complete for ${APP_NAME}"
