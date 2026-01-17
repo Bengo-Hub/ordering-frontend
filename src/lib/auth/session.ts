@@ -1,6 +1,6 @@
 import type { SessionTokens, UserProfile } from "./types";
 
-const STORAGE_KEY = "cafe.auth";
+const STORAGE_KEY = "ordering.auth";
 
 interface AuthState {
   session: SessionTokens | null;

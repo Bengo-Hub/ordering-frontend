@@ -38,7 +38,7 @@ export default function ProfilePage() {
   }, [user]);
 
   return (
-    <RequireAuth roles={["customer", "rider", "staff", "admin", "superuser"]}>
+    <RequireAuth roles={["customer"]}>
       <SiteShell>
         <div className="mx-auto my-12 flex w-full max-w-6xl flex-col gap-6 px-4">
           <div className="flex flex-wrap items-start justify-between gap-4">

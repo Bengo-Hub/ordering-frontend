@@ -35,7 +35,7 @@ export default function AdminRequestPage() {
     setState("submitting");
     // Submit via mailto (no backend required yet)
     const to = "codevertexitsolutions@gmail.com";
-    const subject = encodeURIComponent("Admin Account Request – Urban Café Platform");
+    const subject = encodeURIComponent("Admin Account Request – Ordering Platform");
     const href = `mailto:${to}?subject=${subject}&body=${body}`;
     window.location.href = href;
     // Fallback acknowledgment
@@ -77,7 +77,7 @@ export default function AdminRequestPage() {
                 id="org"
                 value={org}
                 onChange={(e) => setOrg(e.target.value)}
-                placeholder="Urban Café"
+                placeholder="Your Organization"
                 required
               />
             </div>
@@ -109,7 +109,7 @@ export default function AdminRequestPage() {
                   type="email"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  placeholder="ops@urbancafe.com"
+                  placeholder={brand.support.email}
                   required
                 />
               </div>
@@ -160,9 +160,9 @@ export default function AdminRequestPage() {
           <aside className="space-y-4 rounded-3xl border border-border bg-brand-surface/40 p-8 text-sm text-muted-foreground shadow-sm">
             <h2 className="text-2xl font-semibold text-foreground">About the platform</h2>
             <p>
-              {brand.shortName} is a unified ordering and delivery platform built for Urban Café,
-              developed and powered by CodeVertex IT Solutions. Admin accounts are intended for
-              organization owners and operations leads.
+              {brand.shortName} is a multi-business ordering platform for online delivery and
+              shipping orders. developed and powered by CodeVertex IT Solutions. Admin accounts are
+              intended for organization owners and operations leads.
             </p>
             <p>
               After your trial, you can upgrade to continue access. Staff users (kitchen, riders,

@@ -77,7 +77,7 @@ export function LocationSearchInput({
         const response = await fetch(`${NOMINATIM_ENDPOINT}?${params.toString()}`, {
           headers: {
             "Accept-Language": "en",
-            "User-Agent": "UrbanCafeApp/1.0 (support@codevertexitsolutions.com)",
+            "User-Agent": "OrderingApp/1.0 (support@codevertexitsolutions.com)",
           },
           signal: controller.signal,
         });

@@ -45,14 +45,14 @@ const getPalette = (): Record<PaletteKey, string> => {
 
 const brandPalette = getPalette();
 
-const brandName = process.env.NEXT_PUBLIC_BRAND_NAME?.trim() || "Urban Café";
-const brandShortName = process.env.NEXT_PUBLIC_BRAND_SHORT_NAME?.trim() || "Urban Café";
+const brandName = process.env.NEXT_PUBLIC_BRAND_NAME?.trim() || "Ordering Platform";
+const brandShortName = process.env.NEXT_PUBLIC_BRAND_SHORT_NAME?.trim() || "Ordering";
 const brandTagline =
   process.env.NEXT_PUBLIC_BRAND_TAGLINE?.trim() ||
-  "Delight customers, empower riders, and keep kitchens in sync. Powered by CodeVertex IT Solutions.";
+  "Online ordering platform for delivery and shipping. Fast, reliable, and integrated.";
 const brandDescription =
   process.env.NEXT_PUBLIC_BRAND_DESCRIPTION?.trim() ||
-  "Unified urban cafe ordering experience with localized content, loyalty rewards, and integrated treasury & notification workflows.";
+  "Multi-business online ordering platform with flexible catalog management, real-time tracking, and seamless payment integration.";
 const supportEmail =
   process.env.NEXT_PUBLIC_BRAND_SUPPORT_EMAIL?.trim() || "support@codevertexitsolutions.com";
 const supportPhone = process.env.NEXT_PUBLIC_BRAND_SUPPORT_PHONE?.trim() || "+254 743 793 901";

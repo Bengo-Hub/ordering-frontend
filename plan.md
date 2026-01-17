@@ -2,20 +2,22 @@
 
 ## Vision & Experience Principles
 
-- Deliver a unified Urban Cafe experience across web (Next.js), PWA, and mobile clients (React Native) with localized (EN/SW) content, offline resilience, and real-time delivery visibility.
-- Uphold brand palette (chocolate brown, orange, white) and accessibility (WCAG 2.1 AA) while ensuring sub-second perceived performance.
-- Leverage shared design tokens and component libraries to keep feature parity between customer, rider, cafe, and admin touchpoints.
+- Deliver a **customer-focused online ordering PWA** (Progressive Web Application) for delivery/shipping orders with mobile-first design, offline support, and real-time order tracking.
+- **Service Boundaries**: This frontend handles **online ordering only**. Rider dashboards redirect to logistics-service, staff/admin dashboards redirect to cafe-website.
+- Uphold brand palette and accessibility (WCAG 2.1 AA) while ensuring sub-second perceived performance on mobile devices.
+- PWA features: Installable, offline menu browsing, push notifications, fast loading, responsive design.
 
-## Recent Progress (November-December 2025)
+## Recent Progress (December 2025)
 
-- **Landing page revamp** (Dec 2025): Complete redesign with modern, mobile-first responsive layout optimized for phones, tablets, and POS gadgets. Added comprehensive SEO metadata, engaging content sections (hero, stats, value props, how it works, categories, features, testimonials, FAQs), and conversion-focused CTAs.
-- **Component structure consolidation** (Dec 2025): Removed `components/primitives/` duplication, standardized all components to use `@/components/ui/` following shadcn/ui best practices. Zero code duplication achieved.
+- **Service Boundary Refactoring** (Dec 2025): Removed rider and staff dashboards from ordering frontend. These now redirect to logistics-service and cafe-website respectively. Ordering frontend is now focused solely on customer-facing online ordering.
+- **PWA Implementation** (Dec 2025): Added Progressive Web App support with manifest.json, service worker, offline caching, and install prompts. Configured Workbox for caching strategies (cache-first for static assets, stale-while-revalidate for menu data, network-first for cart).
+- **Mobile-First Redesign** (Dec 2025): Redesigned menu and layout components for mobile-first experience with responsive breakpoints, touch-friendly buttons (min 44x44px), scrollable horizontal filters, and optimized spacing for small screens.
+- **Landing page revamp**: Complete redesign with modern, mobile-first responsive layout. Removed cafe-specific marketing content, keeping only ordering-focused features.
+- **Component structure consolidation**: Removed `components/primitives/` duplication, standardized all components to use `@/components/ui/` following shadcn/ui best practices.
 - Unified light/dark theming with CSS variables, shadcn components, and mobile-ready navigation/headers/footers.
-- Revamped public marketing surface (landing, about, contact, delivery, menu, loyalty, cafés) with customer-focused storytelling and responsive design.
-- Delivered location-aware experiences: reusable Leaflet map component, Busia geofence, geolocation hooks, and customer/rider address selectors with autocomplete.
-- Implemented role-based auth hub plus polished customer sign-up, rider onboarding (map pin capture), and staff portal entry points using Zustand demo auth.
+- Delivered location-aware experiences: reusable Leaflet map component, geolocation hooks, and customer address selectors with autocomplete.
+- Implemented role-based auth hub with customer sign-up and account management.
 - Wired Sprint 0 identity UX to live backend OAuth/JWT endpoints, with centralized axios services, session refresh logic, and RBAC-aware dashboard guards.
-- Rationalised sitemap—removed placeholder merchant docs—and refreshed contact flows, support CTAs, and CTA copy across the site.
 
 ## Upcoming Focus
 
@@ -45,18 +47,21 @@
 
 ## Client Applications & Feature Scope
 
-1. **Customer Web/PWA (Priority 1)**
+**This Frontend (Ordering Service PWA)**:
+1. **Customer Web/PWA (Primary Focus)** ✅
    - Menu browsing with category filters, dietary tags, search, and personalized recommendations.
-   - Cart, promo codes, loyalty balance display, multi-address checkout with payment orchestration (via treasury APIs).
-   - Real-time order tracker (map view, status timeline), push/SMS opt-in, order history & reordering.
-   - Account management, language toggle, support ticket initiation.
-   - _Backend alignment: [Sprint 3 – Orders & Cart](../cafe-backend/plan.md#sprint-3--orders--cart-weeks-6-7) & [Sprint 4 – Payments Core](../cafe-backend/plan.md#sprint-4--payments-core-weeks-8-9)._
-2. **Customer Mobile App (React Native) (Priority 2)**
-   - Mirrors web functionality with mobile-native navigation (React Navigation), biometric login, deep linking from SMS/Push.
-   - Offline cart retention, network status awareness, background geolocation permissions management.
-   - _Backend alignment: [Sprint 5 – Fulfilment & Dispatch](../cafe-backend/plan.md#sprint-5--fulfilment--dispatch-weeks-10-11)._
-3. **Rider Mobile App (Priority 3)**
-   - **IMPORTANT**: All rider app functionality is powered by `logistics-service` APIs directly. Frontend consumes logistics-service endpoints for shift management, task queue, navigation, proof of delivery, and earnings. **Cafe frontend does NOT interact with cafe-backend for rider data.**
+   - Shopping cart management with item modifiers, variants, and real-time availability.
+   - Checkout with multiple delivery options (ASAP, scheduled), address management, and payment method selection.
+   - Real-time order tracking (map view, status timeline) with WebSocket integration to logistics-service.
+   - Push notifications for order status updates, promotions, and loyalty points.
+   - Customer account management (profile, addresses, payment methods, order history, loyalty).
+   - Offline support: Browse cached menu items, view cart, queue actions for when online.
+   - PWA install prompts and "Add to Home Screen" functionality.
+   - _Backend alignment: [Sprint 3 – Orders & Cart](../ordering-backend/plan.md#sprint-3--orders--cart-weeks-6-7) & [Sprint 4 – Payments Core](../ordering-backend/plan.md#sprint-4--payments-core-weeks-8-9)._
+
+**Other Services (Not Part of This Frontend)**:
+2. **Rider Mobile App** → **logistics-service** (Separate app)
+   - **IMPORTANT**: All rider functionality is powered by `logistics-service` APIs directly. This ordering frontend redirects rider users to logistics-service UI.
    - **Rider Authentication**: Riders authenticate via auth-service (SSO) - same credentials work across all services
    - **Rider Data**: All rider data (profile, documents, KYC, vehicle, shifts, earnings) stored in logistics-service
    - **Standalone Mode**: If tenant only uses logistics-service, rider app works independently without cafe service
@@ -68,26 +73,24 @@
    - Earnings dashboard: Query `GET /v1/{tenant}/fleet-members/{id}/earnings` (logistics-service) or consume treasury-app payout events
    - Daily summary, issue reporting: All via logistics-service APIs
    - _Backend alignment: [Sprint 5 – Order Fulfilment & Logistics Integration](../cafe-backend/plan.md#sprint-5--order-fulfilment--logistics-integration-weeks-10-11) & logistics-service sprint files._
-4. **Cafe Dashboard (Priority 3)**
-   - Order queue management, kitchen display mode, stock-out actions, driver assignment overrides.
-   - Menu CRUD, price scheduling, promotion builder, operations analytics snapshots.
-   - _Backend alignment: [Sprint 2 – Catalog & Localization](../cafe-backend/plan.md#sprint-2--catalog--localization-weeks-4-5) & [Sprint 7 – Analytics, Compliance & Hardening](../cafe-backend/plan.md#sprint-7--analytics-compliance--hardening-weeks-14-15)._
-5. **Admin Console (Priority 4)**
-   - Global monitoring (map of active orders/riders), user management, marketing campaign launcher, SLA dashboards.
-   - Configuration panels for notification templates, payment/tax rules, multi-outlet management, and subscription/license controls (plan selection, renewal scheduling, feature toggles).
-   - _Backend alignment: [Sprint 6 – Notifications & Ops](../cafe-backend/plan.md#sprint-6--notifications--ops-weeks-12-13) & [Sprint 7 – Analytics, Compliance & Hardening](../cafe-backend/plan.md#sprint-7--analytics-compliance--hardening-weeks-14-15)._
-6. **POS & External Integrations Console (Priority 4)**
-   - Manage POS connectors (cafe POS, ecommerce POS, kitchen display) with credential inputs, connection health, sync history, and per-location mapping.
-   - Display integration alerts from treasury/notifications services (e.g. failed payouts, SMS quota) with quick remediation actions.
-   - _Backend alignment: [POS & External Sales Integrations](../cafe-backend/plan.md#pos--external-sales-integrations-priority-3) & configuration APIs in [Cross-Cutting Concerns](../cafe-backend/plan.md#cross-cutting-concerns)._
+3. **Staff/Admin Dashboards** → **cafe-website** (Separate app)
+   - Order queue management, operations analytics, and admin console belong to cafe-website.
+   - This ordering frontend redirects staff/admin users to cafe-website admin dashboard.
+   - _See: [Cafe Website Plan](../../Cafe/cafe-website/docs/plan.md)_
+
+4. **POS Operations** → **pos-service** (Separate service)
+   - POS terminals, cash drawer management, dine-in orders, pickup orders belong to pos-service.
+   - This ordering frontend only handles online delivery/shipping orders.
+   - _See: [POS Service Plan](../../pos-service/pos-api/plan.md)_
 
 ## Experience Structure
 
-- **Public Website:**
-  - Landing page with urban café story, customer & rider CTAs, testimonials, and consistent theming.
-  - `About` page centred on Urban Café’s story, commitments, and community impact.
-  - `Delivery`, `Menu`, `Cafés`, `Loyalty`, and `Contact` pages describe customer value propositions with address-aware components.
-  - `Contact` page provides support channels, café visit info, and lead capture form.
+- **Ordering Platform (This Frontend):**
+  - Landing page with ordering platform value proposition and customer CTAs.
+  - `Menu` page for browsing and selecting items for delivery.
+  - Customer dashboard for order history, tracking, loyalty, and account management.
+  - Profile management for addresses, payment methods, and preferences.
+  - **Note**: Marketing pages (About, Contact, Cafés) belong to cafe-website, not this ordering frontend.
 - **Ordering Journey (Customers):**
   - Browse → menu detail → cart → checkout (support prepay or COD) → order confirmation.
   - Real-time order tracking view with status timeline and map.

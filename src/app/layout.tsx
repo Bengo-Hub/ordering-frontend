@@ -28,13 +28,21 @@ export const metadata: Metadata = {
   description: brand.description,
   applicationName: brand.metadata.applicationName,
   authors: [{ name: brand.name }],
+  manifest: "/manifest.json",
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: "default",
+    title: brand.shortName,
+  },
+  formatDetection: {
+    telephone: false,
+  },
   keywords: [
+    "online ordering",
     "food delivery",
     brand.shortName.toLowerCase(),
-    "next.js",
-    "react",
     "pwa",
-    "tanstack query",
+    "real-time tracking",
   ],
 };
 

@@ -1,0 +1,340 @@
+"use client";
+
+import { ArrowLeft, Clock, Edit2, MapPin, Search } from "lucide-react";
+import { useState } from "react";
+
+import { Button } from "@/components/ui/button";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { Textarea } from "@/components/ui/textarea";
+import { cn } from "@/lib/utils";
+import { useDiningModeStore } from "@/store/dining-mode";
+
+export interface SavedAddress {
+  id: string;
+  label: string;
+  address: string;
+  fullAddress: string;
+  latitude?: number;
+  longitude?: number;
+  buildingType?: string;
+  additionalInfo?: string;
+  aptSuiteFloor?: string;
+  businessName?: string;
+  dropoffOption?: string;
+  deliveryInstructions?: string;
+}
+
+interface LocationDialogProps {
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+}
+
+// Mock saved addresses
+const mockSavedAddresses: SavedAddress[] = [
+  {
+    id: "1",
+    label: "Kinoo Road",
+    address: "Kinoo Rd, Nairobi",
+    fullAddress: "Kinoo Rd, Nairobi, Kenya",
+    latitude: -1.2424,
+    longitude: 36.7498,
+  },
+];
+
+type DialogView = "main" | "edit";
+
+export function LocationDialog({ open, onOpenChange }: LocationDialogProps) {
+  const [view, setView] = useState<DialogView>("main");
+  const [searchQuery, setSearchQuery] = useState("");
+  const [selectedAddress, setSelectedAddress] = useState<SavedAddress | null>(null);
+
+  // Form state for edit view
+  const [buildingType, setBuildingType] = useState("other");
+  const [additionalInfo, setAdditionalInfo] = useState("");
+  const [aptSuiteFloor, setAptSuiteFloor] = useState("");
+  const [businessName, setBusinessName] = useState("");
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  const [dropoffOption, setDropoffOption] = useState("meet_at_door");
+  const [deliveryInstructions, setDeliveryInstructions] = useState("");
+  const [addressLabel, setAddressLabel] = useState("");
+
+  const diningMode = useDiningModeStore((state) => state.mode);
+  const deliveryLocation = useDiningModeStore((state) => state.deliveryLocation);
+  const setDeliveryLocation = useDiningModeStore((state) => state.setDeliveryLocation);
+  const isScheduled = useDiningModeStore((state) => state.isScheduled);
+  const setIsScheduled = useDiningModeStore((state) => state.setIsScheduled);
+
+  const handleSelectAddress = (address: SavedAddress) => {
+    setSelectedAddress(address);
+    setDeliveryLocation({
+      address: address.address,
+      latitude: address.latitude || 0,
+      longitude: address.longitude || 0,
+    });
+  };
+
+  const handleEditAddress = (address: SavedAddress) => {
+    setSelectedAddress(address);
+    setBuildingType(address.buildingType || "other");
+    setAdditionalInfo(address.additionalInfo || "");
+    setAptSuiteFloor(address.aptSuiteFloor || "");
+    setBusinessName(address.businessName || "");
+    setDropoffOption(address.dropoffOption || "meet_at_door");
+    setDeliveryInstructions(address.deliveryInstructions || "");
+    setAddressLabel(address.label || "");
+    setView("edit");
+  };
+
+  const handleSaveAddress = () => {
+    if (selectedAddress) {
+      setDeliveryLocation({
+        address: selectedAddress.address,
+        latitude: selectedAddress.latitude || 0,
+        longitude: selectedAddress.longitude || 0,
+      });
+    }
+    setView("main");
+    onOpenChange(false);
+  };
+
+  const handleBack = () => {
+    setView("main");
+  };
+
+  const handleSchedule = () => {
+    setIsScheduled(!isScheduled);
+  };
+
+  // Reset view when dialog closes
+  const handleOpenChange = (newOpen: boolean) => {
+    if (!newOpen) {
+      setView("main");
+      setSearchQuery("");
+    }
+    onOpenChange(newOpen);
+  };
+
+  return (
+    <Dialog open={open} onOpenChange={handleOpenChange}>
+      <DialogContent className="max-h-[90vh] overflow-y-auto sm:max-w-md">
+        {view === "main" ? (
+          <>
+            <DialogHeader>
+              <DialogTitle className="text-xl font-bold">Addresses</DialogTitle>
+            </DialogHeader>
+
+            {/* Search Input */}
+            <div className="relative mt-2">
+              <Search className="absolute left-3 top-1/2 size-5 -translate-y-1/2 text-muted-foreground" />
+              <Input
+                placeholder="Search for an address"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="h-12 pl-10 text-base"
+              />
+            </div>
+
+            {/* Saved Addresses */}
+            <div className="mt-4">
+              <h3 className="mb-3 text-sm font-semibold text-foreground">Saved addresses</h3>
+              <div className="space-y-1">
+                {mockSavedAddresses.map((address) => (
+                  <div
+                    key={address.id}
+                    className={cn(
+                      "flex items-center justify-between rounded-lg p-3 transition-colors hover:bg-muted",
+                      deliveryLocation?.address === address.address && "bg-muted",
+                    )}
+                  >
+                    <button
+                      onClick={() => handleSelectAddress(address)}
+                      className="flex flex-1 items-center gap-3 text-left"
+                    >
+                      <div className="flex size-10 items-center justify-center rounded-full bg-foreground">
+                        <MapPin className="size-5 text-background" />
+                      </div>
+                      <div>
+                        <p className="font-medium text-foreground">{address.label}</p>
+                        <p className="text-sm text-muted-foreground">{address.address}</p>
+                      </div>
+                    </button>
+                    <button
+                      onClick={() => handleEditAddress(address)}
+                      className="p-2 text-muted-foreground hover:text-foreground"
+                      aria-label="Edit address"
+                    >
+                      <Edit2 className="size-4" />
+                    </button>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* Time Preference */}
+            <div className="mt-6">
+              <h3 className="mb-3 text-sm font-semibold text-foreground">Time preference</h3>
+              <div className="flex items-center justify-between rounded-lg p-3 hover:bg-muted">
+                <div className="flex items-center gap-3">
+                  <Clock className="size-5 text-muted-foreground" />
+                  <span className="font-medium">
+                    {diningMode === "pickup" ? "Pick up now" : "Deliver now"}
+                  </span>
+                </div>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={handleSchedule}
+                  className={cn(isScheduled && "bg-foreground text-background")}
+                >
+                  Schedule
+                </Button>
+              </div>
+            </div>
+          </>
+        ) : (
+          <>
+            {/* Edit Address View */}
+            <DialogHeader className="flex-row items-center gap-2">
+              <button
+                onClick={handleBack}
+                className="rounded-full p-1 hover:bg-muted"
+                aria-label="Go back"
+              >
+                <ArrowLeft className="size-5" />
+              </button>
+              <DialogTitle className="text-xl font-bold">Address info</DialogTitle>
+            </DialogHeader>
+
+            {/* Map Preview */}
+            <div className="relative mt-2 h-32 overflow-hidden rounded-lg bg-muted">
+              <div className="flex size-full items-center justify-center">
+                <div className="text-center">
+                  <MapPin className="mx-auto size-6 text-foreground" />
+                  <button className="mt-1 text-xs text-muted-foreground hover:underline">
+                    Adjust pin
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            {/* Address Display */}
+            <p className="mt-2 text-sm text-muted-foreground">
+              {selectedAddress?.fullAddress || "No address selected"}
+            </p>
+
+            {/* Building Type */}
+            <div className="mt-4 space-y-2">
+              <Label htmlFor="buildingType">Building type</Label>
+              <Select value={buildingType} onValueChange={setBuildingType}>
+                <SelectTrigger id="buildingType">
+                  <SelectValue placeholder="Select building type" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="house">House</SelectItem>
+                  <SelectItem value="apartment">Apartment</SelectItem>
+                  <SelectItem value="office">Office</SelectItem>
+                  <SelectItem value="hotel">Hotel</SelectItem>
+                  <SelectItem value="other">Other</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
+            {/* Additional Address Info */}
+            <div className="mt-4 space-y-2">
+              <Label htmlFor="additionalInfo">Additional address information (required)</Label>
+              <Input
+                id="additionalInfo"
+                placeholder="e.g. Street address, building name"
+                value={additionalInfo}
+                onChange={(e) => setAdditionalInfo(e.target.value)}
+              />
+            </div>
+
+            {/* Apt / Suite / Floor */}
+            <div className="mt-4 space-y-2">
+              <Label htmlFor="aptSuiteFloor">Apt / Suite / Floor</Label>
+              <Input
+                id="aptSuiteFloor"
+                placeholder="e.g. 1208"
+                value={aptSuiteFloor}
+                onChange={(e) => setAptSuiteFloor(e.target.value)}
+              />
+            </div>
+
+            {/* Business / Building Name */}
+            <div className="mt-4 space-y-2">
+              <Label htmlFor="businessName">Business / Building name</Label>
+              <Input
+                id="businessName"
+                placeholder="e.g. Central Tower"
+                value={businessName}
+                onChange={(e) => setBusinessName(e.target.value)}
+              />
+            </div>
+
+            {/* Dropoff Options */}
+            <div className="mt-6">
+              <h3 className="mb-3 font-medium">Dropoff options</h3>
+              <div className="flex items-center justify-between rounded-lg bg-muted/50 p-3">
+                <div className="flex items-center gap-3">
+                  <span className="text-2xl">🚪</span>
+                  <div>
+                    <p className="font-medium">Meet at my door</p>
+                    <button className="text-sm text-green-600 hover:underline">
+                      More options available
+                    </button>
+                  </div>
+                </div>
+                <Button variant="outline" size="sm">
+                  Edit
+                </Button>
+              </div>
+            </div>
+
+            {/* Delivery Instructions */}
+            <div className="mt-4 space-y-2">
+              <Label htmlFor="instructions">Instructions for delivery person</Label>
+              <Textarea
+                id="instructions"
+                placeholder="Example: Please knock instead of using the doorbell"
+                value={deliveryInstructions}
+                onChange={(e) => setDeliveryInstructions(e.target.value)}
+                rows={2}
+              />
+            </div>
+
+            {/* Address Label */}
+            <div className="mt-4 space-y-2">
+              <Label htmlFor="addressLabel">Address label</Label>
+              <Input
+                id="addressLabel"
+                placeholder="Add a label (e.g. school)"
+                value={addressLabel}
+                onChange={(e) => setAddressLabel(e.target.value)}
+              />
+            </div>
+
+            {/* Action Buttons */}
+            <div className="mt-6 flex gap-3">
+              <Button variant="outline" onClick={handleBack} className="flex-1">
+                Back
+              </Button>
+              <Button onClick={handleSaveAddress} className="flex-1">
+                Save
+              </Button>
+            </div>
+          </>
+        )}
+      </DialogContent>
+    </Dialog>
+  );
+}

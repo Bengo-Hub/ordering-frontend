@@ -2,217 +2,435 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { useRouter } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
 
-import { MenuIcon, XIcon } from "lucide-react";
+import {
+  ChevronDown,
+  LogIn,
+  LogOut,
+  MapPin,
+  MenuIcon,
+  Search,
+  ShoppingCart,
+  UserIcon,
+} from "lucide-react";
 
+import { CartDrawer } from "@/components/cart/cart-drawer";
+import { DiningModeToggle } from "@/components/layout/dining-mode-toggle";
+import { LocationDialog } from "@/components/layout/location-dialog";
 import { ThemeToggle } from "@/components/layout/theme-toggle";
+import { UserMenuDrawer } from "@/components/layout/user-menu-drawer";
 import { Button } from "@/components/ui/button";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { brand } from "@/config/brand";
-import { userHasRole } from "@/lib/auth/permissions";
-import type { UserRole } from "@/lib/auth/types";
-import { cn } from "@/lib/utils";
+import { getShortLocationName } from "@/lib/geocoding";
 import { useAuthStore } from "@/store/auth";
+import { useCartStore } from "@/store/cart";
+import { useDiningModeStore } from "@/store/dining-mode";
 
-interface NavLink {
-  href: string;
+type SearchCategory = {
+  id: string;
+  name: string;
   label: string;
-  roles?: UserRole[];
+  emoji?: string;
+};
+
+type Outlet = {
+  id: string;
+  name: string;
+  address: string;
+  distance?: string;
+};
+
+/**
+ * Search categories for multi-business ordering platform.
+ * Top categories shown in search dropdown - matching Uber Eats style.
+ */
+const searchCategories: SearchCategory[] = [
+  { id: "pizza", name: "pizza", label: "Pizza", emoji: "🍕" },
+  { id: "grocery", name: "grocery", label: "Grocery", emoji: "🥬" },
+  { id: "chicken", name: "chicken", label: "Chicken", emoji: "🍗" },
+  { id: "sushi", name: "sushi", label: "Sushi", emoji: "🍣" },
+  { id: "fast-food", name: "fast-food", label: "Fast Food", emoji: "🍟" },
+  { id: "chinese", name: "chinese", label: "Chinese", emoji: "🥡" },
+  { id: "indian", name: "indian", label: "Indian", emoji: "🍛" },
+];
+
+// Mock outlets for search
+const mockOutlets: Outlet[] = [
+  { id: "out_1", name: "Java House, Langata", address: "Rubis, Langata Road", distance: "2.3 km" },
+  { id: "out_2", name: "Urban Loft Cafe", address: "Kinoo Road", distance: "1.2 km" },
+  { id: "out_3", name: "QuickMart Supermarket", address: "Ngong Road", distance: "3.5 km" },
+];
+
+async function fetchOutlets(_latitude: number, _longitude: number): Promise<Outlet[]> {
+  try {
+    // TODO: Replace with actual API call to /api/v1/outlets
+    return mockOutlets;
+  } catch (error) {
+    console.error("Failed to fetch outlets:", error);
+    return mockOutlets;
+  }
 }
 
-const publicLinks: NavLink[] = [
-  { href: "/menu", label: "Menu" },
-  { href: "/delivery", label: "Delivery" },
-  { href: "/about", label: "About" },
-  { href: "/contact", label: "Contact" },
-];
-
-const roleDashboards: NavLink[] = [
-  { href: "/dashboard/customer", label: "My dashboard", roles: ["customer"] },
-  { href: "/dashboard/rider", label: "Rider console", roles: ["rider"] },
-  { href: "/dashboard/staff", label: "Staff workspace", roles: ["staff", "admin", "superuser"] },
-];
-
 export function SiteHeader() {
-  const pathname = usePathname();
-  const [mobileOpen, setMobileOpen] = useState(false);
+  const router = useRouter();
+  const [userMenuOpen, setUserMenuOpen] = useState(false);
+  const [cartOpen, setCartOpen] = useState(false);
+  const [locationDialogOpen, setLocationDialogOpen] = useState(false);
+  const [searchOpen, setSearchOpen] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [activeSearchTab, setActiveSearchTab] = useState("all");
+  const [outlets, setOutlets] = useState<Outlet[]>([]);
+
+  // Store state
   const user = useAuthStore((state) => state.user);
   const logout = useAuthStore((state) => state.logout);
+  const cartItems = useCartStore((state) => state.items);
+  const removeItem = useCartStore((state) => state.removeItem);
+  const updateQuantity = useCartStore((state) => state.updateQuantity);
 
-  const activeHref = useMemo(() => pathname ?? "/", [pathname]);
+  // Dining mode state
+  const diningMode = useDiningModeStore((state) => state.mode);
+  const deliveryLocation = useDiningModeStore((state) => state.deliveryLocation);
+  const setDeliveryLocation = useDiningModeStore((state) => state.setDeliveryLocation);
+  const isScheduled = useDiningModeStore((state) => state.isScheduled);
 
-  const navigation = useMemo(() => {
-    const links = [...publicLinks];
-    roleDashboards.forEach((link) => {
-      if (userHasRole(user, link.roles)) {
-        links.push(link);
-      }
-    });
-    return links;
-  }, [user]);
-
-  useEffect(() => {
-    // Close drawer on route change
-    setMobileOpen(false);
-  }, [pathname]);
-
-  useEffect(() => {
-    // Lock scroll when drawer is open
-    if (mobileOpen) {
-      document.body.style.overflow = "hidden";
-    } else {
-      document.body.style.overflow = "";
+  // Location display
+  const locationDisplay = useMemo(() => {
+    if (diningMode === "pickup") {
+      return "Map location";
     }
-    return () => {
-      document.body.style.overflow = "";
-    };
-  }, [mobileOpen]);
+    return deliveryLocation?.address || "Select location";
+  }, [diningMode, deliveryLocation]);
 
+  const timeDisplay = useMemo(() => {
+    if (diningMode === "pickup") {
+      return isScheduled ? "Scheduled" : "Pick up now";
+    }
+    return isScheduled ? "Scheduled" : "Now";
+  }, [diningMode, isScheduled]);
+
+  // Request geolocation on mount
   useEffect(() => {
-    if (!mobileOpen) return;
-    const onKeyDown = (e: KeyboardEvent) => {
-      if (e.key === "Escape") setMobileOpen(false);
-    };
-    window.addEventListener("keydown", onKeyDown);
-    return () => window.removeEventListener("keydown", onKeyDown);
-  }, [mobileOpen]);
+    if ("geolocation" in navigator && !deliveryLocation) {
+      navigator.geolocation.getCurrentPosition(
+        async (position) => {
+          const { latitude, longitude } = position.coords;
+          const locationName = await getShortLocationName(latitude, longitude);
+          setDeliveryLocation({
+            address: locationName,
+            latitude,
+            longitude,
+          });
+          fetchOutlets(latitude, longitude).then(setOutlets);
+        },
+        (error) => {
+          console.log("Geolocation error:", error);
+        },
+      );
+    }
+  }, [deliveryLocation, setDeliveryLocation]);
 
-  const showBecomeRider = !userHasRole(user, ["rider"]) && !user; // only show for non logged in users
+  // Fetch outlets on mount
+  useEffect(() => {
+    if (outlets.length === 0) {
+      fetchOutlets(0, 0).then(setOutlets);
+    }
+  }, [outlets.length]);
 
   return (
-    <header className="sticky top-0 z-40 border-b border-border bg-card/80 backdrop-blur supports-[backdrop-filter]:bg-card/70">
-      <div className="mx-auto flex h-16 w-full max-w-6xl items-center justify-between px-4">
-        <Link href="/" className="flex items-center gap-2 text-lg font-semibold text-foreground">
-          <span className="relative flex items-center">
-            <Image
-              src={brand.assets.logo}
-              alt={`${brand.name} logo`}
-              width={32}
-              height={32}
-              className="h-8 w-8 rounded-full object-cover"
-              priority
-            />
-          </span>
-          <span>{brand.name}</span>
-        </Link>
-        <nav className="hidden items-center gap-6 text-sm font-medium md:flex">
-          {navigation.map((link) => (
-            <Link
-              key={link.href}
-              href={{ pathname: link.href }}
-              className={cn(
-                "transition-colors hover:text-primary",
-                activeHref.startsWith(link.href) ? "text-primary" : "text-muted-foreground",
-              )}
-            >
-              {link.label}
-            </Link>
-          ))}
-        </nav>
-        <div className="hidden items-center gap-3 md:flex">
-          <ThemeToggle />
-          {showBecomeRider ? (
-            <Button variant="ghost" size="sm" asChild>
-              <Link href="/riders/signup">Become a rider</Link>
-            </Button>
-          ) : null}
-          {user ? (
-            <>
-              <Button variant="outline" size="sm" asChild>
-                <Link href="/profile">My account</Link>
-              </Button>
-              <Button size="sm" onClick={() => void logout()}>
-                Sign out
-              </Button>
-            </>
-          ) : (
-            <Button size="sm" asChild>
-              <Link href="/auth">Sign in</Link>
-            </Button>
-          )}
-        </div>
-        <div className="flex items-center gap-2 md:hidden">
-          <ThemeToggle />
+    <header className="sticky top-0 z-40 border-b border-border bg-background">
+      <div className="mx-auto flex h-16 w-full max-w-full items-center justify-between gap-2 px-3 sm:gap-3 sm:px-4 md:px-6 lg:px-8">
+        {/* Left: Hamburger + Logo */}
+        <div className="flex items-center gap-2 sm:gap-3">
           <button
             type="button"
-            className="inline-flex size-9 items-center justify-center rounded-full border border-border bg-card"
-            aria-label="Open navigation"
-            aria-expanded={mobileOpen}
-            onClick={() => setMobileOpen(true)}
+            className="inline-flex size-9 items-center justify-center rounded-md text-muted-foreground hover:bg-muted hover:text-foreground"
+            aria-label="Open menu"
+            onClick={() => setUserMenuOpen(true)}
           >
             <MenuIcon className="size-5" />
           </button>
+          <Link
+            href="/"
+            className="flex items-center gap-2 text-sm font-bold text-foreground sm:text-base"
+          >
+            <Image
+              src={brand.assets.logo}
+              alt={`${brand.name} logo`}
+              width={28}
+              height={28}
+              className="h-7 w-7 rounded-full object-cover"
+              priority
+            />
+            <span className="hidden sm:inline">{brand.shortName}</span>
+          </Link>
+        </div>
+
+        {/* Center: Delivery/Pickup Toggle + Location + Search (Desktop) */}
+        <div className="hidden flex-1 items-center gap-2 md:flex md:max-w-3xl lg:max-w-4xl lg:gap-3">
+          {/* Delivery/Pickup Toggle */}
+          <DiningModeToggle size="sm" />
+
+          {/* Location Selector */}
+          <button
+            onClick={() => setLocationDialogOpen(true)}
+            className="flex shrink-0 items-center gap-1.5 rounded-full bg-muted/50 px-3 py-2 text-sm font-medium text-foreground transition hover:bg-muted"
+          >
+            <MapPin className="size-4 text-muted-foreground" />
+            <span className="max-w-[140px] truncate">{locationDisplay}</span>
+            <span className="text-muted-foreground">•</span>
+            <span className="text-muted-foreground">{timeDisplay}</span>
+            <ChevronDown className="size-3 text-muted-foreground" />
+          </button>
+
+          {/* Search Bar */}
+          <Popover open={searchOpen} onOpenChange={setSearchOpen}>
+            <PopoverTrigger asChild>
+              <div className="relative flex-1">
+                <Search className="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
+                <input
+                  placeholder={`Search ${brand.shortName}`}
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  onFocus={() => setSearchOpen(true)}
+                  className="w-full rounded-full border border-border bg-muted/30 py-2.5 pl-10 pr-4 text-sm placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/20"
+                  aria-label="Search"
+                />
+              </div>
+            </PopoverTrigger>
+            <PopoverContent align="start" className="w-[400px] p-0" sideOffset={8}>
+              <Tabs
+                defaultValue="all"
+                value={activeSearchTab}
+                onValueChange={setActiveSearchTab}
+                className="w-full"
+              >
+                <TabsList className="w-full justify-start gap-0 rounded-none border-b border-border bg-background p-0">
+                  <TabsTrigger
+                    value="all"
+                    className="rounded-none border-b-2 border-transparent px-4 py-3 text-sm data-[state=active]:border-foreground data-[state=active]:shadow-none"
+                  >
+                    All
+                  </TabsTrigger>
+                  <TabsTrigger
+                    value="outlets"
+                    className="rounded-none border-b-2 border-transparent px-4 py-3 text-sm data-[state=active]:border-foreground data-[state=active]:shadow-none"
+                  >
+                    Outlets
+                  </TabsTrigger>
+                  <TabsTrigger
+                    value="grocery"
+                    className="rounded-none border-b-2 border-transparent px-4 py-3 text-sm data-[state=active]:border-foreground data-[state=active]:shadow-none"
+                  >
+                    Grocery
+                  </TabsTrigger>
+                  <TabsTrigger
+                    value="alcohol"
+                    className="rounded-none border-b-2 border-transparent px-4 py-3 text-sm data-[state=active]:border-foreground data-[state=active]:shadow-none"
+                  >
+                    Alcohol
+                  </TabsTrigger>
+                </TabsList>
+
+                {/* All Tab - Top Categories */}
+                <TabsContent value="all" className="m-0 p-4">
+                  <p className="mb-3 text-sm font-medium text-muted-foreground">Top categories</p>
+                  <div className="space-y-0">
+                    {searchCategories.map((category) => (
+                      <button
+                        key={category.id}
+                        onClick={() => {
+                          router.push(`/menu?category=${category.id}`);
+                          setSearchOpen(false);
+                        }}
+                        className="flex w-full items-center gap-4 py-3 text-sm transition hover:bg-muted/50"
+                      >
+                        <span className="text-2xl">{category.emoji}</span>
+                        <span className="font-medium text-foreground">{category.label}</span>
+                      </button>
+                    ))}
+                  </div>
+                </TabsContent>
+
+                {/* Outlets Tab */}
+                <TabsContent value="outlets" className="m-0 p-4">
+                  <p className="mb-3 text-sm font-medium text-muted-foreground">Nearby outlets</p>
+                  {outlets.length > 0 ? (
+                    <div className="space-y-0">
+                      {outlets.map((outlet) => (
+                        <button
+                          key={outlet.id}
+                          onClick={() => {
+                            router.push(`/outlet/${outlet.id}`);
+                            setSearchOpen(false);
+                          }}
+                          className="flex w-full items-start justify-between py-3 text-left text-sm transition hover:bg-muted/50"
+                        >
+                          <div>
+                            <p className="font-medium text-foreground">{outlet.name}</p>
+                            <p className="text-xs text-muted-foreground">{outlet.address}</p>
+                          </div>
+                          {outlet.distance && (
+                            <span className="text-xs text-muted-foreground">{outlet.distance}</span>
+                          )}
+                        </button>
+                      ))}
+                    </div>
+                  ) : (
+                    <p className="py-4 text-center text-sm text-muted-foreground">
+                      No outlets found nearby
+                    </p>
+                  )}
+                </TabsContent>
+
+                {/* Grocery Tab */}
+                <TabsContent value="grocery" className="m-0 p-4">
+                  <p className="mb-3 text-sm font-medium text-muted-foreground">
+                    Grocery & Essentials
+                  </p>
+                  <div className="space-y-0">
+                    {[
+                      { label: "Fresh Produce", emoji: "🥬" },
+                      { label: "Dairy & Eggs", emoji: "🥛" },
+                      { label: "Meat & Fish", emoji: "🥩" },
+                      { label: "Bakery", emoji: "🍞" },
+                      { label: "Beverages", emoji: "🥤" },
+                    ].map((item) => (
+                      <button
+                        key={item.label}
+                        onClick={() => {
+                          router.push(
+                            `/menu?category=grocery&sub=${item.label.toLowerCase().replace(/ & /g, "-")}`,
+                          );
+                          setSearchOpen(false);
+                        }}
+                        className="flex w-full items-center gap-4 py-3 text-sm transition hover:bg-muted/50"
+                      >
+                        <span className="text-2xl">{item.emoji}</span>
+                        <span className="font-medium text-foreground">{item.label}</span>
+                      </button>
+                    ))}
+                  </div>
+                </TabsContent>
+
+                {/* Alcohol Tab */}
+                <TabsContent value="alcohol" className="m-0 p-4">
+                  <p className="mb-3 text-sm font-medium text-muted-foreground">Drinks & Alcohol</p>
+                  <div className="space-y-0">
+                    {[
+                      { label: "Beer", emoji: "🍺" },
+                      { label: "Wine", emoji: "🍷" },
+                      { label: "Spirits", emoji: "🥃" },
+                      { label: "Ready to Drink", emoji: "🍹" },
+                      { label: "Non-Alcoholic", emoji: "🧃" },
+                    ].map((item) => (
+                      <button
+                        key={item.label}
+                        onClick={() => {
+                          router.push(
+                            `/menu?category=alcohol&sub=${item.label.toLowerCase().replace(/ /g, "-")}`,
+                          );
+                          setSearchOpen(false);
+                        }}
+                        className="flex w-full items-center gap-4 py-3 text-sm transition hover:bg-muted/50"
+                      >
+                        <span className="text-2xl">{item.emoji}</span>
+                        <span className="font-medium text-foreground">{item.label}</span>
+                      </button>
+                    ))}
+                  </div>
+                </TabsContent>
+              </Tabs>
+            </PopoverContent>
+          </Popover>
+        </div>
+
+        {/* Right: Theme + Cart + Auth */}
+        <div className="flex items-center gap-1 sm:gap-2">
+          {/* Mobile Search Button */}
+          <button
+            onClick={() => setSearchOpen(true)}
+            className="inline-flex size-9 items-center justify-center rounded-md text-muted-foreground hover:bg-muted hover:text-foreground md:hidden"
+            aria-label="Search"
+          >
+            <Search className="size-5" />
+          </button>
+
+          <ThemeToggle />
+
+          {/* Cart Button */}
+          <button
+            onClick={() => setCartOpen(true)}
+            className="relative inline-flex size-9 items-center justify-center rounded-full border border-border bg-background hover:bg-muted"
+            aria-label="Open cart"
+          >
+            <ShoppingCart className="size-5" />
+            {cartItems.length > 0 && (
+              <span className="absolute -right-1 -top-1 inline-flex size-5 items-center justify-center rounded-full bg-primary text-xs font-bold text-primary-foreground">
+                {cartItems.length}
+              </span>
+            )}
+          </button>
+
+          {/* Auth Buttons */}
+          {user ? (
+            <div className="hidden items-center gap-1 sm:flex">
+              <Button variant="ghost" size="sm" asChild>
+                <Link href="/profile">
+                  <UserIcon className="size-4" />
+                  <span className="hidden lg:inline">Account</span>
+                </Link>
+              </Button>
+              <Button size="sm" variant="ghost" onClick={() => void logout()}>
+                <LogOut className="size-4" />
+              </Button>
+            </div>
+          ) : (
+            <Button size="sm" asChild className="hidden sm:inline-flex">
+              <Link href="/auth">
+                <LogIn className="size-4 sm:mr-1" />
+                <span className="hidden sm:inline">Sign in</span>
+              </Link>
+            </Button>
+          )}
         </div>
       </div>
-      {/* Mobile drawer */}
-      {mobileOpen ? (
-        <div className="fixed inset-0 z-50 md:hidden" role="dialog" aria-modal="true">
-          <div
-            className="absolute inset-0 bg-black/60 backdrop-blur-sm"
-            onClick={() => setMobileOpen(false)}
-            aria-hidden
-          />
-          <div className="absolute inset-y-0 right-0 flex w-80 max-w-full flex-col gap-6 overflow-y-auto border-l border-border bg-card p-6 shadow-2xl transition-transform duration-300 ease-out">
-            <div className="mb-4 flex items-center justify-between">
-              <Link href="/" className="flex items-center gap-2 text-lg font-semibold">
-                <Image
-                  src={brand.assets.logo}
-                  alt={`${brand.name} logo`}
-                  width={28}
-                  height={28}
-                  className="h-7 w-7 rounded-full object-cover"
-                />
-                <span>{brand.shortName}</span>
-              </Link>
-              <button
-                type="button"
-                className="inline-flex size-9 items-center justify-center rounded-full border border-border bg-card"
-                aria-label="Close navigation"
-                onClick={() => setMobileOpen(false)}
-              >
-                <XIcon className="size-5" />
-              </button>
-            </div>
-            <nav className="flex flex-col gap-3 text-foreground">
-              {navigation.map((link) => (
-                <Link
-                  key={link.href}
-                  href={{ pathname: link.href }}
-                  className={cn(
-                    "rounded-xl px-3 py-2 text-sm font-medium transition-colors hover:bg-muted hover:text-primary",
-                    activeHref.startsWith(link.href)
-                      ? "bg-muted text-primary"
-                      : "text-muted-foreground",
-                  )}
-                >
-                  {link.label}
-                </Link>
-              ))}
-            </nav>
-            <div className="flex flex-col gap-3">
-              {showBecomeRider ? (
-                <Button variant="ghost" asChild>
-                  <Link href="/riders/signup">Become a rider</Link>
-                </Button>
-              ) : null}
-              {user ? (
-                <>
-                  <Button variant="outline" asChild>
-                    <Link href="/profile">My account</Link>
-                  </Button>
-                  <Button onClick={() => void logout()}>Sign out</Button>
-                </>
-              ) : (
-                <Button asChild>
-                  <Link href="/auth">Sign in</Link>
-                </Button>
-              )}
-              <ThemeToggle />
-            </div>
-          </div>
-        </div>
-      ) : null}
+
+      {/* Mobile: Delivery/Pickup + Location Row */}
+      <div className="flex items-center gap-2 border-t border-border px-3 py-2 md:hidden">
+        <DiningModeToggle size="sm" />
+        <button
+          onClick={() => setLocationDialogOpen(true)}
+          className="flex flex-1 items-center gap-1.5 rounded-full bg-muted/50 px-3 py-1.5 text-xs font-medium"
+        >
+          <MapPin className="size-3.5 text-muted-foreground" />
+          <span className="truncate">{locationDisplay}</span>
+          <span className="text-muted-foreground">•</span>
+          <span className="text-muted-foreground">{timeDisplay}</span>
+        </button>
+      </div>
+
+      {/* Location Dialog */}
+      <LocationDialog open={locationDialogOpen} onOpenChange={setLocationDialogOpen} />
+
+      {/* Cart Drawer */}
+      <CartDrawer
+        open={cartOpen}
+        onOpenChange={setCartOpen}
+        items={cartItems}
+        onRemoveItem={removeItem}
+        onUpdateQuantity={updateQuantity}
+        onCheckout={() => {
+          setCartOpen(false);
+        }}
+      />
+
+      {/* User Menu Drawer */}
+      <UserMenuDrawer open={userMenuOpen} onOpenChange={setUserMenuOpen} />
     </header>
   );
 }

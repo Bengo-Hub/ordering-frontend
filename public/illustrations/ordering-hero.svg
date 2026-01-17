@@ -1,0 +1,38 @@
+<svg viewBox="0 0 600 600" xmlns="http://www.w3.org/2000/svg">
+  <!-- Subtle gradient background -->
+  <defs>
+    <linearGradient id="heroGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#f5f5f5;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#e8e8e8;stop-opacity:1" />
+    </linearGradient>
+  </defs>
+  <rect width="600" height="600" fill="url(#heroGrad)"/>
+  
+  <!-- Large central food delivery illustration -->
+  <g transform="translate(300, 280)">
+    <!-- Delivery box -->
+    <rect x="-60" y="-40" width="120" height="100" fill="#ff6b35" rx="8"/>
+    <rect x="-60" y="-40" width="120" height="30" fill="#ff5722" rx="8"/>
+    
+    <!-- Box handle -->
+    <path d="M -40 -40 Q -40 -70 0 -70 Q 40 -70 40 -40" stroke="#ff5722" stroke-width="4" fill="none" stroke-linecap="round"/>
+    
+    <!-- Package inside (visible in window) -->
+    <circle cx="-25" cy="-10" r="12" fill="#4CAF50"/>
+    <circle cx="25" cy="10" r="10" fill="#8BC34A"/>
+  </g>
+  
+  <!-- Decorative items scattered -->
+  <circle cx="100" cy="150" r="35" fill="#FFC107" opacity="0.8"/>
+  <rect x="450" y="180" width="60" height="60" fill="#673AB7" rx="8" opacity="0.8"/>
+  <circle cx="520" cy="450" r="30" fill="#E91E63" opacity="0.7"/>
+  <rect x="80" y="450" width="50" height="50" fill="#2196F3" rx="6" opacity="0.8"/>
+  
+  <!-- Text overlay -->
+  <text x="300" y="520" font-size="28" font-weight="bold" text-anchor="middle" fill="#333">
+    Fast Delivery
+  </text>
+  <text x="300" y="555" font-size="16" text-anchor="middle" fill="#666">
+    Order now and get it delivered
+  </text>
+</svg>

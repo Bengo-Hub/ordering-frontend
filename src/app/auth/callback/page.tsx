@@ -36,14 +36,29 @@ function AuthCallbackContent() {
         return;
       }
 
-      const destination = userHasRole(user, ["staff", "admin", "superuser"])
-        ? "/dashboard/staff"
-        : userHasRole(user, ["rider"])
-          ? "/dashboard/rider"
-          : userHasRole(user, ["customer"])
-            ? "/dashboard/customer"
-            : "/profile";
-      router.replace(destination);
+      // Ordering frontend is customer-facing. Redirect staff/rider roles to their owning
+      // services (cafe website / logistics) so we avoid duplicating those UIs here.
+      if (userHasRole(user, ["staff", "admin", "superuser"])) {
+        const cafeUrl =
+          process.env.NEXT_PUBLIC_CAFE_WEBSITE_URL ?? "https://cafe.codevertexitsolutions.com";
+        // preserve return_url where possible
+        window.location.href = cafeUrl;
+        return;
+      }
+
+      if (userHasRole(user, ["rider"])) {
+        const logisticsUrl =
+          process.env.NEXT_PUBLIC_LOGISTICS_UI_URL ?? "https://logistics.codevertexitsolutions.com";
+        window.location.href = logisticsUrl;
+        return;
+      }
+
+      if (userHasRole(user, ["customer"])) {
+        router.replace("/dashboard/customer");
+        return;
+      }
+
+      router.replace("/profile");
     }
   }, [status, user, router]);
 

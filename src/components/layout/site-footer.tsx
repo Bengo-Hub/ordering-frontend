@@ -3,7 +3,6 @@ import Link from "next/link";
 import { brand } from "@/config/brand";
 
 const footerLinks = [
-  { href: "/riders/signup", label: "Rider onboarding" },
   { href: "/auth", label: "Sign in" },
   { href: "/privacy", label: "Privacy" },
   { href: "/terms", label: "Terms" },

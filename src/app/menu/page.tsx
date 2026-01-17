@@ -1,3 +1,5 @@
+import Link from "next/link";
+
 import {
   ArrowLeftRight,
   ClockIcon,
@@ -11,47 +13,51 @@ import { CustomerLocationPicker } from "@/components/location/customer-location-
 import { MenuDiscovery } from "@/components/menu/menu-discovery";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { brand } from "@/config/brand";
 
 export default function MenuPage() {
   return (
     <SiteShell>
-      <section className="border-b border-border bg-brand-surface/60 py-16">
-        <div className="mx-auto w-full max-w-6xl space-y-10 px-4">
+      <section className="border-b border-border bg-brand-surface/60 py-8 sm:py-12 md:py-16">
+        <div className="mx-auto w-full max-w-6xl space-y-6 px-4 sm:space-y-8 md:space-y-10">
           {/* Text Content Section */}
           <div className="space-y-6">
             <span className="inline-flex items-center gap-2 rounded-full bg-brand-emphasis/10 px-3 py-1 text-xs font-semibold uppercase tracking-wide text-brand-emphasis">
               <ShoppingCartIcon className="size-3.5" aria-hidden /> Menu & Ordering
             </span>
-            <h1 className="text-4xl font-semibold text-foreground md:text-5xl">
-              Curated menus crafted for {brand.shortName} patrons.
+            <h1 className="text-2xl font-semibold text-foreground sm:text-3xl md:text-4xl lg:text-5xl">
+              Browse & Order
             </h1>
-            <p className="max-w-3xl text-base leading-relaxed text-muted-foreground">
+            <p className="max-w-3xl text-sm leading-relaxed text-muted-foreground sm:text-base">
               Browse seasonal dishes, personalize dietary filters, and sync your cart across web,
-              PWA, and mobile clients. Availability is managed in real time by cafe operations and
-              the cafe backend services.
+              PWA, and mobile clients. Availability is managed in real time by operations and
+              backend services.
             </p>
             <div className="flex flex-wrap gap-3">
               <Button size="lg" asChild>
                 <a href="#menu-browser">Explore menu</a>
               </Button>
               <Button variant="outline" size="lg" asChild>
-                <a href="/contact">Talk to sales</a>
+                <Link href="/dashboard/customer">My Account</Link>
               </Button>
             </div>
           </div>
 
-          {/* Delivery Location Section - Below Text Content */}
-          <div className="grid gap-6 md:grid-cols-[1fr_1fr] lg:grid-cols-[1.2fr_0.8fr]">
+          {/* Delivery Location Section - Mobile-first: Stack on mobile, side-by-side on desktop */}
+          <div className="grid gap-4 sm:gap-6 lg:grid-cols-[1fr_1fr]">
             <CustomerLocationPicker />
-            <div className="flex flex-col gap-4">
-              <Card className="rounded-3xl border border-border bg-card p-6 shadow-soft">
-                <div className="flex items-start gap-3 text-sm text-muted-foreground">
-                  <MapPinIcon className="mt-0.5 size-5 shrink-0 text-primary" aria-hidden />
+            <div className="flex flex-col gap-3 sm:gap-4">
+              <Card className="rounded-2xl border border-border bg-card p-4 shadow-sm sm:rounded-3xl sm:p-6">
+                <div className="flex items-start gap-2 text-sm text-muted-foreground sm:gap-3">
+                  <MapPinIcon
+                    className="mt-0.5 size-4 shrink-0 text-primary sm:size-5"
+                    aria-hidden
+                  />
                   <div className="space-y-1">
-                    <p className="font-semibold text-foreground">Multi-outlet menus</p>
-                    <p className="leading-relaxed">
-                      Pull tenant-aware pricing sourced from the backend order catalog service.
+                    <p className="text-xs font-semibold text-foreground sm:text-sm">
+                      Multi-outlet menus
+                    </p>
+                    <p className="text-xs leading-relaxed sm:text-sm">
+                      Tenant-aware pricing and availability across multiple locations.
                     </p>
                   </div>
                 </div>
