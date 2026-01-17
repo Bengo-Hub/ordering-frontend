@@ -1,11 +1,12 @@
 apiVersion: v1
 kind: Secret
 metadata:
-  name: cafe-frontend-env
-  namespace: cafe
+  name: ordering-frontend-secrets
+  namespace: ordering
 type: Opaque
 stringData:
-  NEXT_PUBLIC_API_URL: "https://cafeapi.codevrtexitsolutions.com"
-  NEXT_PUBLIC_NOTIFICATIONS_URL: "https://notificationsapi.codevrtexitsolutions.com"
-  NEXT_PUBLIC_MAPBOX_TOKEN: "set-this-token"
-  NEXT_PUBLIC_SENTRY_DSN: ""
+  # Mapbox token for maps - Set via GitHub Secrets
+  mapboxToken: "${MAPBOX_TOKEN}"
+
+  # Sentry DSN for error tracking - Set via GitHub Secrets
+  sentryDsn: "${SENTRY_DSN}"
