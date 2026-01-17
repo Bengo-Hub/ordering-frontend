@@ -11,6 +11,7 @@ import {
   Tag,
   User,
   Users,
+  X,
 } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
@@ -135,8 +136,20 @@ export function UserMenuDrawer({ open, onOpenChange }: UserMenuDrawerProps) {
         aria-modal="true"
         aria-label="User menu"
       >
+        {/* Close Button */}
+        <div className="flex items-center justify-end px-4 py-3">
+          <button
+            type="button"
+            onClick={handleClose}
+            className="inline-flex items-center justify-center rounded-md p-1 hover:bg-muted"
+            aria-label="Close menu"
+          >
+            <X className="h-5 w-5" />
+          </button>
+        </div>
+
         {/* Header - User Profile Section */}
-        <div className="px-5 py-5">
+        <div className="px-5 py-3">
           {user ? (
             <div className="flex items-center gap-3">
               <div className="flex size-12 shrink-0 items-center justify-center rounded-full bg-muted">

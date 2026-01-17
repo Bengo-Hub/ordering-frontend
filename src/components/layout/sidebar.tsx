@@ -32,9 +32,9 @@ export function Sidebar({ open, onOpenChange }: SidebarProps) {
 
   return (
     <>
-      {/* Static Categories Sidebar - Always Visible */}
-      <aside className="hidden w-64 border-r border-border bg-background md:block">
-        <nav className="flex flex-col gap-0 p-0">
+      {/* Static Categories Sidebar - Always Visible and Sticky */}
+      <aside className="sticky top-0 hidden h-screen w-64 border-r border-border bg-background md:block">
+        <nav className="flex h-full flex-col gap-0 overflow-y-auto p-0">
           {/* Menu Items */}
           {sidebarItems.map((item) => {
             const Icon = item.icon;
