@@ -11,7 +11,6 @@ const nextConfig = {
   experimental: {
     typedRoutes: false,
   },
-  output: "standalone",
 };
 
 const pwaConfig = withPWA({

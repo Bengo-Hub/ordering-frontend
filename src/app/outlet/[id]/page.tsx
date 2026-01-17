@@ -1,11 +1,14 @@
-"use client";
-
 import { SiteShell } from "@/components/layout/site-shell";
-import { useParams } from "next/navigation";
 
-export default function OutletPage() {
-  const params = useParams();
-  const outletId = params.id as string;
+export async function generateStaticParams() {
+  // Return empty array since outlets are dynamic
+  // In production, fetch from API to get list of outlet IDs
+  return [];
+}
+
+export default async function OutletPage(props: { params: Promise<{ id: string }> }) {
+  const params = await props.params;
+  const { id: outletId } = params;
 
   return (
     <SiteShell>

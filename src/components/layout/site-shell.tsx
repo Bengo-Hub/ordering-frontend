@@ -1,5 +1,9 @@
-import { cn } from "@/lib/utils";
+"use client";
 
+import { cn } from "@/lib/utils";
+import { useState } from "react";
+
+import { Sidebar } from "./sidebar";
 import { SiteFooter } from "./site-footer";
 import { SiteHeader } from "./site-header";
 
@@ -10,6 +14,8 @@ type SiteShellProps = {
 };
 
 export function SiteShell({ children, className, mainClassName }: SiteShellProps) {
+  const [sidebarOpen, setSidebarOpen] = useState(false);
+
   return (
     <div
       className={cn(
@@ -17,8 +23,11 @@ export function SiteShell({ children, className, mainClassName }: SiteShellProps
         className,
       )}
     >
-      <SiteHeader />
-      <main className={cn("flex-1", mainClassName)}>{children}</main>
+      <SiteHeader onMenuClick={() => setSidebarOpen(true)} />
+      <div className="flex flex-1">
+        <Sidebar open={sidebarOpen} onOpenChange={setSidebarOpen} />
+        <main className={cn("flex-1", mainClassName)}>{children}</main>
+      </div>
       <SiteFooter />
     </div>
   );

@@ -30,6 +30,10 @@ import { useAuthStore } from "@/store/auth";
 import { useCartStore } from "@/store/cart";
 import { useDiningModeStore } from "@/store/dining-mode";
 
+interface SiteHeaderProps {
+  onMenuClick?: () => void;
+}
+
 type SearchCategory = {
   id: string;
   name: string;
@@ -75,7 +79,7 @@ async function fetchOutlets(_latitude: number, _longitude: number): Promise<Outl
   }
 }
 
-export function SiteHeader() {
+export function SiteHeader({ onMenuClick }: SiteHeaderProps) {
   const router = useRouter();
   const [userMenuOpen, setUserMenuOpen] = useState(false);
   const [cartOpen, setCartOpen] = useState(false);
@@ -150,7 +154,7 @@ export function SiteHeader() {
             type="button"
             className="inline-flex size-9 items-center justify-center rounded-md text-muted-foreground hover:bg-muted hover:text-foreground"
             aria-label="Open menu"
-            onClick={() => setUserMenuOpen(true)}
+            onClick={() => onMenuClick?.()}
           >
             <MenuIcon className="size-5" />
           </button>
