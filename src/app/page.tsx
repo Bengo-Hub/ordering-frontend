@@ -19,7 +19,9 @@ import {
 import { OutletCard, OutletGrid, type OutletCardProps } from "@/components/outlet/outlet-card";
 import { PromoBannerCarousel, mockPromoBanners } from "@/components/promo/promo-banner-carousel";
 import { Button } from "@/components/ui/button";
+import { useCartStore } from "@/store/cart";
 import { useDiningModeStore } from "@/store/dining-mode";
+import { toast } from "sonner";
 
 // =============================================================================
 // API FETCH FUNCTIONS (TODO: Replace with actual API calls)
@@ -77,7 +79,7 @@ const mockOutlets: OutletCardProps[] = [
     cuisines: ["Cafe", "Bakery", "Breakfast", "Lunch"],
     promoted: true,
     offerBadge: "Free Delivery",
-    image: "/images/outlets/ulc-busia.jpg",
+    image: "/images/outlets/urban-loft-busia.jpeg",
     businessType: "food",
   },
   {
@@ -91,7 +93,7 @@ const mockOutlets: OutletCardProps[] = [
     cuisines: ["Cafe", "Bakery", "Breakfast", "Lunch"],
     promoted: true,
     offerBadge: "20% Off Today",
-    image: "/images/outlets/ulc-kiambu.jpg",
+    image: "/images/outlets/urban-loft-kiambu.jpeg",
     businessType: "food",
   },
 ];
@@ -115,62 +117,62 @@ const mockFeaturedItems: FeaturedItemProps[] = [
   },
   {
     id: "item-2",
-    name: "Avocado Toast",
-    description: "Sourdough bread with fresh avocado, poached egg, and microgreens",
-    price: 650,
+    name: "Margherita Pizza",
+    description: "Fresh mozzarella, basil, and tomato on crispy crust",
+    price: 850,
     currency: "KES",
-    image: "/images/menu/avocado-toast.jpg",
+    image: "/images/menu/margherita-pizza.jpg",
     outletId: "ulc-busia",
     outletName: "Urban Loft Cafe Busia",
-    category: "Breakfast",
+    category: "Main Course",
   },
   {
     id: "item-3",
-    name: "Chicken Burger",
-    description: "Grilled chicken breast with lettuce, tomato, and special sauce",
+    name: "Classic Burger",
+    description: "Juicy beef patty with lettuce, tomato, and special sauce",
     price: 750,
     originalPrice: 850,
     discountPercent: 12,
     currency: "KES",
-    image: "/images/menu/chicken-burger.jpg",
+    image: "/images/menu/burger.jpg",
     outletId: "ulc-kiambu",
     outletName: "Urban Loft Cafe Kiambu",
-    category: "Lunch",
+    category: "Main Course",
   },
   {
     id: "item-4",
-    name: "Fresh Fruit Smoothie",
-    description: "Blend of seasonal fruits with yogurt",
-    price: 450,
+    name: "Espresso",
+    description: "Bold, rich espresso shot, perfectly pulled",
+    price: 280,
     currency: "KES",
-    image: "/images/menu/smoothie.jpg",
+    image: "/images/menu/espresso.jpg",
     outletId: "ulc-busia",
     outletName: "Urban Loft Cafe Busia",
     category: "Beverages",
   },
   {
     id: "item-5",
-    name: "Beef Steak",
-    description: "Tender grilled steak with herbs and garlic butter",
-    price: 1200,
-    originalPrice: 1500,
-    discountPercent: 20,
+    name: "Chocolate Lava Cake",
+    description: "Decadent chocolate cake with molten center and ice cream",
+    price: 520,
+    originalPrice: 600,
+    discountPercent: 13,
     currency: "KES",
-    image: "/images/menu/steak.jpg",
+    image: "/images/menu/chocolate-lava-cake.jpg",
     outletId: "ulc-kiambu",
     outletName: "Urban Loft Cafe Kiambu",
-    category: "Lunch",
+    category: "Desserts",
   },
   {
     id: "item-6",
-    name: "Chocolate Croissant",
-    description: "Buttery croissant filled with rich chocolate",
-    price: 280,
+    name: "Caesar Salad",
+    description: "Fresh romaine lettuce with parmesan, croutons, and caesar dressing",
+    price: 620,
     currency: "KES",
-    image: "/images/menu/croissant.jpg",
+    image: "/images/menu/salad.jpg",
     outletId: "ulc-busia",
     outletName: "Urban Loft Cafe Busia",
-    category: "Bakery",
+    category: "Salads",
   },
 ];
 
@@ -265,6 +267,7 @@ export default function HomePage() {
   const [favorites, setFavorites] = useState<Set<string>>(new Set());
 
   const deliveryLocation = useDiningModeStore((state) => state.deliveryLocation);
+  const addItem = useCartStore((state) => state.addItem);
 
   // Load data on mount
   useEffect(() => {
@@ -288,8 +291,17 @@ export default function HomePage() {
 
   // Handle add to cart
   const handleAddToCart = (itemId: string) => {
-    // TODO: Implement add to cart functionality
-    console.log("Add to cart:", itemId);
+    const item = featuredItems.find((i) => i.id === itemId);
+    if (item) {
+      addItem({
+        id: item.id,
+        name: item.name,
+        price: item.price,
+        outletId: item.outletId,
+        outletName: item.outletName,
+      });
+      toast.success(`Added ${item.name} to cart`);
+    }
   };
 
   // Filter outlets based on active category

@@ -6,8 +6,8 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 
 interface SidebarProps {
-  open: boolean;
-  onOpenChange: (open: boolean) => void;
+  open?: boolean;
+  onOpenChange?: (open: boolean) => void;
 }
 
 const sidebarItems = [
@@ -21,7 +21,7 @@ const sidebarItems = [
   { id: "offers", label: "Offers", href: "/offers", icon: Zap },
 ];
 
-export function Sidebar({ open, onOpenChange }: SidebarProps) {
+export function Sidebar({ open: _open, onOpenChange: _onOpenChange }: SidebarProps) {
   const pathname = usePathname();
 
   const isActive = (href: string) => {
@@ -32,8 +32,8 @@ export function Sidebar({ open, onOpenChange }: SidebarProps) {
 
   return (
     <>
-      {/* Static Categories Sidebar - Always Visible and Sticky */}
-      <aside className="sticky top-0 hidden h-screen w-64 border-r border-border bg-background md:block">
+      {/* Static Categories Sidebar - Always Visible */}
+      <aside className="hidden h-screen w-64 border-r border-border bg-background md:block">
         <nav className="flex h-full flex-col gap-0 overflow-y-auto p-0">
           {/* Menu Items */}
           {sidebarItems.map((item) => {

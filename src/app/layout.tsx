@@ -26,7 +26,11 @@ export const metadata: Metadata = {
     template: brand.metadata.template,
   },
   description: brand.description,
-  applicationName: brand.metadata.applicationName,
+  applicationName: "Order App",
+  icons: {
+    icon: "/logo.jpg",
+    apple: "/logo.jpg",
+  },
   authors: [{ name: brand.name }],
   manifest: "/manifest.json",
   appleWebApp: {

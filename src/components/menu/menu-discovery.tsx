@@ -10,6 +10,7 @@ import {
   SproutIcon,
   WheatIcon,
 } from "lucide-react";
+import Image from "next/image";
 import { toast } from "sonner";
 
 import { useCartStore } from "@/store/cart";
@@ -29,6 +30,7 @@ type MenuItem = {
   category: string;
   dietary: DietaryTag[];
   feature?: "recommended" | "new";
+  image?: string;
   outletId?: string;
   outletName?: string;
 };
@@ -47,55 +49,83 @@ const dietaryFilters: Array<{ value: DietaryTag; label: string; icon: React.Reac
 
 const mockMenu: MenuItem[] = [
   {
-    id: "caf-espresso-tonic",
-    name: "Citrus Espresso Tonic",
-    description: "Cold brew espresso over craft tonic, finished with candied orange peel.",
-    price: "KES 480",
-    priceValue: 480,
+    id: "caf-cappuccino",
+    name: "Classic Cappuccino",
+    description: "Rich espresso with steamed milk and velvety foam",
+    price: "KES 350",
+    priceValue: 350,
     category: "Beverages",
     dietary: ["vegan"],
     feature: "recommended",
+    image: "/images/menu/cappuccino.jpg",
     outletName: "Main Outlet",
   },
   {
-    id: "caf-busia-bowl",
-    name: "Busia Sunrise Bowl",
-    description: "Sorghum tabbouleh, roasted pumpkin, avocado crema, and tamarind dressing.",
-    price: "KES 820",
-    priceValue: 820,
-    category: "Bowls",
-    dietary: ["vegetarian", "glutenFree"],
+    id: "caf-pizza",
+    name: "Margherita Pizza",
+    description: "Fresh mozzarella, basil, and tomato on crispy artisan crust",
+    price: "KES 850",
+    priceValue: 850,
+    category: "Main Course",
+    dietary: ["vegetarian"],
+    image: "/images/menu/margherita-pizza.jpg",
     outletName: "Main Outlet",
   },
   {
-    id: "caf-ugali-bites",
-    name: "Smoked Tilapia Ugali Bites",
-    description: "Mini ugali cakes topped with smoked tilapia and herb yogurt drizzle.",
-    price: "KES 640",
-    priceValue: 640,
-    category: "Small Plates",
+    id: "caf-burger",
+    name: "Classic Burger",
+    description: "Juicy beef patty with lettuce, tomato, and special sauce",
+    price: "KES 750",
+    priceValue: 750,
+    category: "Main Course",
     dietary: ["chefSpecial"],
     feature: "new",
+    image: "/images/menu/burger.jpg",
     outletName: "Main Outlet",
   },
   {
-    id: "caf-mandazi",
-    name: "Spiced Mandazi Flight",
-    description: "Trio of house-made mandazi with orange blossom, cardamom, and cocoa dusting.",
-    price: "KES 540",
-    priceValue: 540,
-    category: "Pastries",
-    dietary: ["vegetarian"],
-    outletName: "Main Outlet",
-  },
-  {
-    id: "caf-sip",
-    name: "Iced Hibiscus Cold Brew",
-    description: "Hibiscus cold brew infused with pineapple syrup and mint.",
-    price: "KES 420",
-    priceValue: 420,
+    id: "caf-espresso",
+    name: "Espresso Shot",
+    description: "Bold, rich espresso perfectly pulled with crema",
+    price: "KES 280",
+    priceValue: 280,
     category: "Beverages",
     dietary: ["vegan", "glutenFree"],
+    image: "/images/menu/espresso.jpg",
+    outletName: "Main Outlet",
+  },
+  {
+    id: "caf-lava-cake",
+    name: "Chocolate Lava Cake",
+    description: "Decadent chocolate cake with molten center and ice cream",
+    price: "KES 520",
+    priceValue: 520,
+    category: "Desserts",
+    dietary: ["vegetarian"],
+    feature: "recommended",
+    image: "/images/menu/chocolate-lava-cake.jpg",
+    outletName: "Main Outlet",
+  },
+  {
+    id: "caf-salad",
+    name: "Caesar Salad",
+    description: "Fresh romaine lettuce with parmesan, croutons, and caesar dressing",
+    price: "KES 620",
+    priceValue: 620,
+    category: "Salads",
+    dietary: ["vegetarian", "glutenFree"],
+    image: "/images/menu/salad.jpg",
+    outletName: "Main Outlet",
+  },
+  {
+    id: "caf-breakfast",
+    name: "Full English Breakfast",
+    description: "Eggs, bacon, sausage, baked beans, mushrooms, and toast",
+    price: "KES 720",
+    priceValue: 720,
+    category: "Breakfast",
+    dietary: ["glutenFree"],
+    image: "/images/menu/breakfast.jpg",
     outletName: "Main Outlet",
   },
 ];
@@ -231,56 +261,72 @@ export function MenuDiscovery() {
             filteredItems.map((item) => (
               <article
                 key={item.id}
-                className="flex h-full flex-col justify-between rounded-2xl border border-border bg-card p-4 shadow-sm transition hover:-translate-y-1 hover:shadow-lg sm:rounded-3xl sm:p-6"
+                className="flex h-full flex-col justify-between overflow-hidden rounded-2xl border border-border bg-card shadow-sm transition hover:-translate-y-1 hover:shadow-lg sm:rounded-3xl"
               >
-                <div className="space-y-2 sm:space-y-3">
-                  <header className="flex items-start justify-between gap-2 sm:gap-3">
-                    <h3 className="text-base font-semibold text-foreground sm:text-lg">
-                      {item.name}
-                    </h3>
-                    <div className="flex shrink-0 gap-1">
-                      {item.feature === "recommended" ? (
-                        <span className="rounded-full bg-brand-muted px-2 py-0.5 text-[10px] font-medium text-brand-emphasis sm:px-3 sm:py-1 sm:text-xs">
-                          ⭐
-                        </span>
-                      ) : null}
-                      {item.feature === "new" ? (
-                        <span className="rounded-full bg-brand-emphasis/10 px-2 py-0.5 text-[10px] font-medium text-brand-emphasis sm:px-3 sm:py-1 sm:text-xs">
-                          New
-                        </span>
-                      ) : null}
-                    </div>
-                  </header>
-                  <p className="text-xs leading-relaxed text-muted-foreground sm:text-sm">
-                    {item.description}
-                  </p>
-                </div>
-                <footer className="mt-4 space-y-3 sm:mt-6">
-                  <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
-                    <span className="text-base font-semibold text-foreground sm:text-sm">
-                      {item.price}
-                    </span>
-                    <div className="flex flex-wrap gap-1">
-                      {item.dietary.slice(0, 3).map((tag) => (
-                        <span
-                          key={tag}
-                          className="rounded-full bg-brand-muted px-1.5 py-0.5 text-[10px] font-medium text-brand-dark sm:px-2 sm:text-[11px]"
-                        >
-                          {dietaryFilters.find((filter) => filter.value === tag)?.label ?? tag}
-                        </span>
-                      ))}
-                      {item.dietary.length > 3 && (
-                        <span className="rounded-full bg-brand-muted px-1.5 py-0.5 text-[10px] font-medium text-brand-dark sm:px-2 sm:text-[11px]">
-                          +{item.dietary.length - 3}
-                        </span>
-                      )}
-                    </div>
+                {/* Image - Fixed 240x240 */}
+                {item.image && (
+                  <div className="relative h-60 w-full overflow-hidden bg-muted">
+                    <Image
+                      src={item.image}
+                      alt={item.name}
+                      fill
+                      className="object-cover transition-transform duration-300 hover:scale-105"
+                      sizes="100vw"
+                    />
                   </div>
-                  <Button onClick={() => handleAddToCart(item)} className="w-full" size="sm">
-                    <ShoppingCartIcon className="mr-2 size-4" />
-                    Add to Cart
-                  </Button>
-                </footer>
+                )}
+
+                {/* Content */}
+                <div className="flex flex-1 flex-col p-4 sm:p-6">
+                  <div className="space-y-2 sm:space-y-3">
+                    <header className="flex items-start justify-between gap-2 sm:gap-3">
+                      <h3 className="text-base font-semibold text-foreground sm:text-lg">
+                        {item.name}
+                      </h3>
+                      <div className="flex shrink-0 gap-1">
+                        {item.feature === "recommended" ? (
+                          <span className="rounded-full bg-brand-muted px-2 py-0.5 text-[10px] font-medium text-brand-emphasis sm:px-3 sm:py-1 sm:text-xs">
+                            ⭐
+                          </span>
+                        ) : null}
+                        {item.feature === "new" ? (
+                          <span className="rounded-full bg-brand-emphasis/10 px-2 py-0.5 text-[10px] font-medium text-brand-emphasis sm:px-3 sm:py-1 sm:text-xs">
+                            New
+                          </span>
+                        ) : null}
+                      </div>
+                    </header>
+                    <p className="text-xs leading-relaxed text-muted-foreground sm:text-sm">
+                      {item.description}
+                    </p>
+                  </div>
+                  <footer className="mt-4 space-y-3 sm:mt-6">
+                    <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+                      <span className="text-base font-semibold text-foreground sm:text-sm">
+                        {item.price}
+                      </span>
+                      <div className="flex flex-wrap gap-1">
+                        {item.dietary.slice(0, 3).map((tag) => (
+                          <span
+                            key={tag}
+                            className="rounded-full bg-brand-muted px-1.5 py-0.5 text-[10px] font-medium text-brand-dark sm:px-2 sm:text-[11px]"
+                          >
+                            {dietaryFilters.find((filter) => filter.value === tag)?.label ?? tag}
+                          </span>
+                        ))}
+                        {item.dietary.length > 3 && (
+                          <span className="rounded-full bg-brand-muted px-1.5 py-0.5 text-[10px] font-medium text-brand-dark sm:px-2 sm:text-[11px]">
+                            +{item.dietary.length - 3}
+                          </span>
+                        )}
+                      </div>
+                    </div>
+                    <Button onClick={() => handleAddToCart(item)} className="w-full" size="sm">
+                      <ShoppingCartIcon className="mr-2 size-4" />
+                      Add to Cart
+                    </Button>
+                  </footer>
+                </div>
               </article>
             ))
           )}

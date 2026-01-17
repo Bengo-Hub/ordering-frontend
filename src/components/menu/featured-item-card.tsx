@@ -52,19 +52,19 @@ export function FeaturedItemCard({
     <Link
       href={itemHref as any}
       className={cn(
-        "group flex min-w-[200px] shrink-0 flex-col overflow-hidden rounded-xl bg-card transition-all hover:shadow-lg sm:min-w-[220px]",
+        "group flex w-60 shrink-0 flex-col overflow-hidden rounded-xl bg-card transition-all hover:shadow-lg",
         className,
       )}
     >
-      {/* Image */}
-      <div className="relative aspect-square overflow-hidden bg-muted">
+      {/* Image - Fixed 240x240 square */}
+      <div className="relative h-60 w-full overflow-hidden bg-muted">
         {image ? (
           <Image
             src={image}
             alt={name}
             fill
             className="object-cover transition-transform duration-300 group-hover:scale-105"
-            sizes="(max-width: 640px) 200px, 220px"
+            sizes="240px"
           />
         ) : (
           <div className="flex size-full items-center justify-center bg-gradient-to-br from-muted to-muted/50">
@@ -91,7 +91,7 @@ export function FeaturedItemCard({
         </Button>
       </div>
 
-      {/* Content */}
+      {/* Content - Fixed 240px width with flexible height */}
       <div className="flex flex-1 flex-col p-3">
         <h3 className="line-clamp-1 text-sm font-semibold text-foreground">{name}</h3>
 
@@ -99,7 +99,7 @@ export function FeaturedItemCard({
           <p className="mt-0.5 line-clamp-2 text-xs text-muted-foreground">{description}</p>
         )}
 
-        <p className="mt-1 text-xs text-muted-foreground">{outletName}</p>
+        <p className="mt-1 line-clamp-1 text-xs text-muted-foreground">{outletName}</p>
 
         {/* Price */}
         <div className="mt-auto flex items-center gap-2 pt-2">

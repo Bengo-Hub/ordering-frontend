@@ -45,8 +45,8 @@ const getPalette = (): Record<PaletteKey, string> => {
 
 const brandPalette = getPalette();
 
-const brandName = process.env.NEXT_PUBLIC_BRAND_NAME?.trim() || "Ordering Platform";
-const brandShortName = process.env.NEXT_PUBLIC_BRAND_SHORT_NAME?.trim() || "Ordering";
+const brandName = process.env.NEXT_PUBLIC_BRAND_NAME?.trim() || "Order App";
+const brandShortName = process.env.NEXT_PUBLIC_BRAND_SHORT_NAME?.trim() || "Order App";
 const brandTagline =
   process.env.NEXT_PUBLIC_BRAND_TAGLINE?.trim() ||
   "Online ordering platform for delivery and shipping. Fast, reliable, and integrated.";
