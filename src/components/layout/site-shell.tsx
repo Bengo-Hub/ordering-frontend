@@ -24,10 +24,8 @@ export function SiteShell({ children, className, mainClassName }: SiteShellProps
       )}
     >
       <SiteHeader onMenuClick={() => setSidebarOpen(true)} />
-      <div className="flex flex-1">
-        <Sidebar open={sidebarOpen} onOpenChange={setSidebarOpen} />
-        <main className={cn("flex-1", mainClassName)}>{children}</main>
-      </div>
+      <main className={cn("flex-1", mainClassName)}>{children}</main>
+      <Sidebar open={sidebarOpen} onOpenChange={setSidebarOpen} />
       <SiteFooter />
     </div>
   );

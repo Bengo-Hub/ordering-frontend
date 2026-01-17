@@ -45,8 +45,7 @@ export function Sidebar({ open, onOpenChange }: SidebarProps) {
       <aside
         className={cn(
           "fixed inset-y-0 left-0 z-50 w-64 overflow-y-auto border-r border-border bg-background transition-all duration-300 ease-out",
-          "md:relative md:inset-auto md:z-auto md:translate-x-0 md:border-r md:bg-muted/30",
-          open ? "translate-x-0" : "-translate-x-full md:translate-x-0",
+          open ? "translate-x-0" : "-translate-x-full",
         )}
       >
         <nav className="flex flex-col gap-1 p-4">
