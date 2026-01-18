@@ -70,7 +70,7 @@
    - Task accept/decline: `POST /v1/{tenant}/tasks/{id}/accept` or `/decline` (logistics-service)
    - Turn-by-turn navigation: Use Mapbox/Google SDK with route data from logistics-service
    - Proof of delivery: `POST /v1/{tenant}/tasks/{id}/complete` with PoD artifacts (logistics-service)
-   - Earnings dashboard: Query `GET /v1/{tenant}/fleet-members/{id}/earnings` (logistics-service) or consume treasury-app payout events
+   - Earnings dashboard: Query `GET /v1/{tenant}/fleet-members/{id}/earnings` (logistics-service) or consume treasury-api payout events
    - Daily summary, issue reporting: All via logistics-service APIs
    - _Backend alignment: [Sprint 5 – Order Fulfilment & Logistics Integration](../cafe-backend/plan.md#sprint-5--order-fulfilment--logistics-integration-weeks-10-11) & logistics-service sprint files._
 3. **Staff/Admin Dashboards** → **cafe-website** (Separate app)
@@ -98,12 +98,12 @@
   - _Backend references: [Sprint 3 – Orders & Cart](../cafe-backend/plan.md#sprint-3--orders--cart-weeks-6-7), [Sprint 4 – Payments Core](../cafe-backend/plan.md#sprint-4--payments-core-weeks-8-9)._
 - **Driver App Group:**
   - Shift management (clock-in/out), order queue, navigation hand-off, proof of delivery capture.
-  - Earnings dashboard with payouts sourced from `treasury-app`, payout history, and tax document downloads.
+  - Earnings dashboard with payouts sourced from `treasury-api`, payout history, and tax document downloads.
   - _Backend references: [Sprint 5 – Fulfilment & Dispatch](../cafe-backend/plan.md#sprint-5--fulfilment--dispatch-weeks-10-11) & treasury integrations in [Payments & Treasury Integration](../cafe-backend/plan.md#payments--treasury-integration-priority-3)._
 - **Admin/Staff Portal:**
   - Multi-tenant dashboard to manage orders, inventory, riders, staff schedules, and promotions.
   - SLA monitoring, escalation workflows, manual adjustments synced with treasury settlements, and license usage indicators (limits for riders/orders) with upgrade CTAs.
-  - Notification rule builder hooked into `notifications-app` for templated campaigns and alerts.
+  - Notification rule builder hooked into `notifications-api` for templated campaigns and alerts.
   - POS integration workspace for mapping POS outlets to cafes, monitoring sync status, and triggering manual imports via `pos-service` APIs backed by the shared outlet registry (no duplicate outlet tables in frontend or backend).
   - _Backend references: [Sprint 6 – Notifications & Ops](../cafe-backend/plan.md#sprint-6--notifications--ops-weeks-12-13) & [Sprint 7 – Analytics, Compliance & Hardening](../cafe-backend/plan.md#sprint-7--analytics-compliance--hardening-weeks-14-15)._
 
@@ -141,8 +141,8 @@
 
 - **Backend APIs:** Strict contract via OpenAPI, shared TypeScript types (tRPC or openapi-typescript) to avoid drift, with webhook callbacks driving state updates rather than polling. **Note: Rider/fleet/driver APIs are consumed directly from `logistics-service`, not from cafe-backend.**
 - **Cross-Service Data Ownership:** See [Cross-Service Data Ownership](../cafe-backend/docs/CROSS-SERVICE-DATA-OWNERSHIP.md) for patterns on service-specific data management, tenant service availability checks, and user management across services.
-- **`notifications-app`:** Subscription management UI, template preview, user channel preferences, and consumption of notification delivery receipts for in-app status chips, all scoped by the shared tenant/outlet keys and delivered via signed webhooks.
-- **`treasury-app`:** Payment status webhooks, rider/cafe wallet balances, payout visibility, and surface of treasury settlement timelines inside the operations dashboards (no polling).
+- **`notifications-api`:** Subscription management UI, template preview, user channel preferences, and consumption of notification delivery receipts for in-app status chips, all scoped by the shared tenant/outlet keys and delivered via signed webhooks.
+- **`treasury-api`:** Payment status webhooks, rider/cafe wallet balances, payout visibility, and surface of treasury settlement timelines inside the operations dashboards (no polling).
 - **`auth-service`** (Production: `https://sso.codevertexitsolutions.com/`):
   - **SSO Flows**: All login/registration via auth-service endpoints
   - **Session Refresh**: Token refresh proxied to auth-service
