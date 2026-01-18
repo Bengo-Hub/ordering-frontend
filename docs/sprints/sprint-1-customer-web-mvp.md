@@ -63,43 +63,43 @@ Sprint 1 focuses on building the customer-facing web application with menu brows
 - [x] Cafés listing page
 
 ### US-F1.2: Menu Browsing
-**As a** customer  
-**I want** to browse the menu  
+**As a** customer
+**I want** to browse the menu
 **So that** I can see available items
 
 **Acceptance Criteria**:
-- [ ] Menu listing with categories (not implemented - menu page exists but no API integration)
-- [ ] Category filtering (not implemented)
-- [ ] Search functionality (not implemented)
-- [ ] Dietary tag filtering (not implemented)
-- [ ] Availability filtering (not implemented)
+- [x] Menu listing with categories (menu page with mock data, TanStack Query hooks ready)
+- [x] Category filtering (implemented in MenuDiscovery component)
+- [x] Search functionality (implemented in MenuDiscovery and outlet pages)
+- [x] Dietary tag filtering (implemented in MenuDiscovery component)
+- [ ] Availability filtering (mock data available, backend integration pending)
 - [x] Responsive design (marketing pages are responsive)
 
 ### US-F1.3: Product Details
-**As a** customer  
-**I want** to view product details  
+**As a** customer
+**I want** to view product details
 **So that** I can make informed choices
 
 **Acceptance Criteria**:
-- [ ] Product detail page
-- [ ] Variant selection
-- [ ] Image gallery
-- [ ] Dietary information
-- [ ] Add to cart button
-- [ ] Related items
+- [x] Product detail page (`/menu/[id]` route implemented)
+- [x] Variant selection (customizations with sizes, milk types, extras)
+- [x] Image gallery (hero image with featured badge)
+- [x] Dietary information (dietary tags displayed)
+- [x] Add to cart button (with quantity selector)
+- [ ] Related items (not implemented)
 
 ### US-F1.4: Shopping Cart
-**As a** customer  
-**I want** to manage my cart  
+**As a** customer
+**I want** to manage my cart
 **So that** I can prepare my order
 
 **Acceptance Criteria**:
-- [ ] Add items to cart
-- [ ] Update quantities
-- [ ] Remove items
-- [ ] Cart drawer/sidebar
-- [ ] Cart persistence
-- [ ] Price calculation
+- [x] Add items to cart (Zustand store + toast notifications)
+- [x] Update quantities (increment/decrement in cart drawer)
+- [x] Remove items (delete button in cart drawer)
+- [x] Cart drawer/sidebar (Uber Eats-style slide-in drawer)
+- [ ] Cart persistence (localStorage persistence not implemented)
+- [x] Price calculation (subtotal, delivery fee, total)
 
 ### US-F1.5: Customer Signup
 **As a** new user  
@@ -252,14 +252,15 @@ Sprint 1 focuses on building the customer-facing web application with menu brows
 
 - [x] Marketing pages (landing, about, contact, delivery, menu, loyalty, cafés)
 - [x] **Landing page revamp** - Modern, mobile-responsive, SEO-optimized (Dec 2025)
-- [ ] Menu browsing with filters (menu page exists but no backend API integration)
-- [ ] Product detail page (not implemented)
-- [ ] Cart functionality (not implemented)
+- [x] Menu browsing with filters (menu page with TanStack Query hooks, mock data)
+- [x] Product detail page (`/menu/[id]` with customizations, dietary info)
+- [x] Cart functionality (Uber Eats-style cart drawer, Zustand store)
 - [x] Customer signup flow (signup page exists at `/customers/signup`, OAuth integration)
 - [x] Location-aware components (location picker, map, geofence validation, address autocomplete)
 - [x] Responsive design (all marketing pages are responsive, mobile-first approach)
-- [x] API integration (auth API integrated via baseapi, menu/catalog APIs pending backend)
+- [x] API integration (auth API integrated via baseapi, TanStack Query hooks for menu/catalog)
 - [x] Component structure consolidation (removed primitives duplication, standardized on `ui/`)
+- [x] Outlet detail page (`/outlet/[id]` with menu, search, categories)
 - [ ] Unit tests
 - [ ] Integration tests
 
@@ -280,11 +281,34 @@ Sprint 1 focuses on building the customer-facing web application with menu brows
 - ✅ Base API client setup with axios
 - ✅ Component structure cleaned up (removed `primitives/` duplication, all components use `@/components/ui/`)
 
+**January 2026 Update:**
+- ✅ TanStack Query hooks for menu/catalog API (`src/hooks/use-menu.ts`)
+- ✅ Menu API client with pagination support (`src/lib/api/menu.ts`)
+- ✅ Menu types for items, categories, outlets (`src/types/menu.ts`)
+- ✅ Product detail page (`/menu/[id]`) with:
+  - Customization options (size, milk type, extras)
+  - Quantity selector
+  - Add to cart functionality
+  - Dietary information
+  - Allergen display
+  - Preparation time
+- ✅ Outlet detail page (`/outlet/[id]`) with:
+  - Hero section with outlet info
+  - Menu search and category filtering
+  - Items grouped by category
+  - Add to cart from outlet page
+- ✅ Uber Eats-style cart drawer:
+  - Slide-in from right
+  - Quantity controls
+  - Clear cart option
+  - Order summary with delivery fee
+  - Free delivery threshold messaging
+- ✅ Location dialog (Uber Eats-style with address management)
+- ✅ User menu drawer (Uber Eats-style side panel)
+
 **Not Implemented:**
-- Menu browsing with backend API (menu page exists but no data fetching)
-- Product detail pages
-- Shopping cart functionality
-- Menu filtering, search, dietary tags
+- Cart persistence to localStorage
+- Related items on product detail page
 - Email verification flow
 
 ---

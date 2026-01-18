@@ -179,21 +179,27 @@
    - Next: none (move focus to Sprint 1).
    - _Backend link: [Sprint 0 – Foundation](../cafe-backend/plan.md#sprint-0--foundation-week-1)._
 
-2. **Sprint 1 – Customer Web MVP (Weeks 2-3)** — _Status: 🚧 In Progress_
-   - **Completed**: 
+2. **Sprint 1 – Customer Web MVP (Weeks 2-3)** — _Status: 🚧 In Progress (90% Complete)_
+   - **Completed**:
      - Marketing pages (landing, about, contact, delivery, menu preview, loyalty, cafés)
      - Location components (picker, map, geofence validation, address autocomplete)
      - Customer signup page with OAuth integration
      - Auth integration with backend (login, OAuth, session management)
      - Responsive design across all pages
      - Base API client setup with axios
-   - **Outstanding**: 
-     - Menu browsing with backend API integration (menu page exists but no data fetching)
-     - Product detail pages
-     - Shopping cart functionality
-     - Menu filtering, search, dietary tags
+     - **January 2026**: TanStack Query hooks for menu/catalog API (`src/hooks/use-menu.ts`)
+     - **January 2026**: Menu types and API client (`src/types/menu.ts`, `src/lib/api/menu.ts`)
+     - **January 2026**: Product detail page (`/menu/[id]`) with customizations, dietary info, add to cart
+     - **January 2026**: Outlet detail page (`/outlet/[id]`) with menu, search, categories
+     - **January 2026**: Uber Eats-style cart drawer with quantity controls, order summary
+     - **January 2026**: Uber Eats-style location dialog with address management
+     - **January 2026**: Uber Eats-style user menu drawer (side panel)
+   - **Outstanding**:
+     - Cart persistence to localStorage
+     - Related items on product detail page
      - Email verification flow
-   - **Next sprint tasks**: Build menu detail route, cart drawer, TanStack Query hooks for menu/catalog once backend contract is ready, wire customer location store into future checkout.
+     - Unit tests
+   - **Next sprint tasks**: Wire location store into checkout, integrate with live backend APIs.
    - _Backend link: [Sprint 1 – Identity & Access](../cafe-backend/plan.md#sprint-1--identity--access-management-weeks-2-3) & [Sprint 2 – Catalog & Localization](../cafe-backend/plan.md#sprint-2--catalog--localization-weeks-4-5)._
 3. **Sprint 2 – Checkout & Payments UX (Weeks 4-5)** — _Status: ⏳ Not Started_
    - Planned: Checkout form, address management, promo/loyalty handling, payment orchestration UI (treasury integration), order confirmation.

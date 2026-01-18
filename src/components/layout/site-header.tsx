@@ -93,8 +93,6 @@ export function SiteHeader({ onMenuClick }: SiteHeaderProps) {
   const user = useAuthStore((state) => state.user);
   const logout = useAuthStore((state) => state.logout);
   const cartItems = useCartStore((state) => state.items);
-  const removeItem = useCartStore((state) => state.removeItem);
-  const updateQuantity = useCartStore((state) => state.updateQuantity);
 
   // Dining mode state
   const diningMode = useDiningModeStore((state) => state.mode);
@@ -422,16 +420,7 @@ export function SiteHeader({ onMenuClick }: SiteHeaderProps) {
       <LocationDialog open={locationDialogOpen} onOpenChange={setLocationDialogOpen} />
 
       {/* Cart Drawer */}
-      <CartDrawer
-        open={cartOpen}
-        onOpenChange={setCartOpen}
-        items={cartItems}
-        onRemoveItem={removeItem}
-        onUpdateQuantity={updateQuantity}
-        onCheckout={() => {
-          setCartOpen(false);
-        }}
-      />
+      <CartDrawer open={cartOpen} onOpenChange={setCartOpen} />
 
       {/* User Menu Drawer */}
       <UserMenuDrawer open={userMenuOpen} onOpenChange={setUserMenuOpen} />
