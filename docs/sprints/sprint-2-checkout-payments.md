@@ -251,6 +251,48 @@ Sprint 2 focuses on building the checkout flow with address management, payment 
 
 ---
 
+## Critical Gaps Identified (January 2026 Audit)
+
+### HIGH PRIORITY
+
+**1. Auth-Service SSO Integration** (Status: ⚠️ Not Implemented)
+- Current auth flows call ordering-backend directly
+- Need to migrate to auth-service SSO for production
+
+**Migration Steps**:
+- [ ] Replace `beginGoogleOAuth` to redirect to auth-service `/oauth/authorize`
+- [ ] Implement PKCE flow for SPA security
+- [ ] Add tenant selection UI before login (optional, can default to `codevertex`)
+- [ ] Handle auth-service response format: `{access_token, refresh_token, session_id, tenant, user}`
+- [ ] Extract `tenant_id` from JWT claims for API calls
+- [ ] Update baseapi to use auth-service token format
+
+**2. Shared Types Extraction** (Status: ⚠️ Planned, Not Implemented)
+- Menu types hard-coded locally
+- Create `packages/shared` workspace with common types
+- See `SHARED-TYPES-EXTRACTION_PLAN.md` for detailed plan
+
+**3. Testing Coverage** (Status: ⚠️ Minimal)
+- Unit tests not comprehensive
+- MSW (Mock Service Workers) not integrated
+- Playwright E2E tests not started
+- Target: 80% statements/branches, 95% critical flows
+
+### MEDIUM PRIORITY
+
+**4. Multi-Tenant/Multi-Outlet Support**
+- [ ] Implement outlet selector UI
+- [ ] Add tenant-aware error messages
+- [ ] Implement per-tenant branding via `look_and_feel` settings
+
+**5. Observability & Monitoring**
+- [ ] Configure structured logging (`@/lib/logger`)
+- [ ] Set up Web Vitals collection
+- [ ] Integrate Sentry/Highlight for error tracking
+- [ ] Add analytics instrumentation
+
+---
+
 ## Next Steps
 
 - Sprint 3: Real-Time Tracking & Notifications
