@@ -108,11 +108,20 @@ Sprint 1 focuses on building the customer-facing web application with menu brows
 
 **Acceptance Criteria**:
 - [x] Signup form (customer signup page exists at `/customers/signup`)
-- [ ] **Auth-Service Integration**: Update signup to call auth-service `/api/v1/auth/register` with `tenant_slug`
-- [ ] **Tenant Selection**: Add tenant selection UI (required for registration)
+- [x] **Backend Integration**: Uses ordering-backend which proxies to auth-service
+  - **Endpoint**: `POST /api/v1/auth/register` (ordering-backend proxies to auth-service)
+  - **Required Fields**: `email`, `password`, `first_name`, `last_name`, `tenant_slug`
+  - **Default Tenant**: If no `tenant_slug` provided, uses default tenant
+  - **Returns**: JWT tokens (`access_token`, `refresh_token`) + user profile
+- [ ] **Frontend Implementation**: Update signup form to call backend endpoint
+- [ ] **Tenant Selection**: Add tenant selection UI (optional - uses default if not provided)
 - [ ] Email validation (form exists but validation not fully implemented)
 - [ ] Password requirements (form exists but validation not fully implemented)
-- [x] OAuth signup options (Google OAuth integration exists - needs update to use auth-service)
+- [x] OAuth signup options (Google OAuth integration exists)
+  - **Backend OAuth Endpoints**:
+    - `POST /api/v1/auth/oauth/{provider}` - Initiate OAuth flow
+    - `GET /api/v1/auth/oauth/{provider}/callback` - Handle callback
+  - **Providers**: Google (configured), Facebook/Apple (future)
 - [ ] Email verification flow (not implemented - handled by auth-service)
 - [ ] Welcome onboarding (not implemented)
 
@@ -204,31 +213,125 @@ Sprint 1 focuses on building the customer-facing web application with menu brows
 
 ## API Integration
 
-### Menu API
+### Auth API (✅ Backend Complete)
 
 **Endpoints**:
-- `GET /api/v1/public/{tenant_slug}/menu` - Public menu
-- `GET /api/v1/{tenant}/catalog/items` - Menu items (authenticated)
-- `GET /api/v1/{tenant}/catalog/items/{id}` - Product details
+- `POST /api/v1/auth/login` - User login (proxies to auth-service)
+  - **Body**: `{ email, password, tenant_slug }` (tenant_slug optional)
+  - **Returns**: `{ access_token, refresh_token, user }`
+- `POST /api/v1/auth/register` - User registration (proxies to auth-service)
+  - **Body**: `{ email, password, first_name, last_name, tenant_slug }`
+  - **Returns**: `{ access_token, refresh_token, user }`
+- `POST /api/v1/auth/oauth/{provider}` - Initiate OAuth flow
+  - **Providers**: google, facebook (future), apple (future)
+  - **Returns**: Redirect URL
+- `GET /api/v1/auth/oauth/{provider}/callback` - Handle OAuth callback
+  - **Query**: `code`, `state`
+  - **Returns**: Redirects with tokens in URL or error
+- `POST /api/v1/auth/refresh` - Refresh access token
+  - **Body**: `{ refresh_token }`
+  - **Returns**: `{ access_token, refresh_token }`
+- `POST /api/v1/auth/logout` - User logout
+  - **Headers**: `Authorization: Bearer {token}`
+  - **Returns**: `{ message: "Logged out successfully" }`
 
-**TanStack Query Hooks**:
-- `useMenuItems` - Fetch menu items
+**TanStack Query Hooks** (To Implement):
+- `useLogin` - Login mutation
+- `useRegister` - Registration mutation
+- `useLogout` - Logout mutation
+- `useRefreshToken` - Token refresh
+- `useOAuthUrl` - Get OAuth URL
+
+### Profile API (✅ Backend Complete)
+
+**Endpoints**:
+- `GET /api/v1/profile` - Get user profile
+  - **Headers**: `Authorization: Bearer {token}`
+  - **Returns**: User profile with preferences
+- `PUT /api/v1/profile` - Update user profile
+  - **Headers**: `Authorization: Bearer {token}`
+  - **Body**: `{ first_name, last_name, phone, avatar_url, etc. }`
+  - **Returns**: Updated user profile
+- `GET /api/v1/preferences` - Get user preferences
+  - **Headers**: `Authorization: Bearer {token}`
+  - **Returns**: User preferences (theme, language, notifications)
+- `PUT /api/v1/preferences` - Update user preferences
+  - **Headers**: `Authorization: Bearer {token}`
+  - **Body**: `{ theme, language, notification_preferences, etc. }`
+  - **Returns**: Updated preferences
+
+**TanStack Query Hooks** (To Implement):
+- `useProfile` - Fetch profile
+- `useUpdateProfile` - Update profile mutation
+- `usePreferences` - Fetch preferences
+- `useUpdatePreferences` - Update preferences mutation
+
+### Menu API (✅ Backend Complete - Sprint 2)
+
+**Public Endpoints** (No Authentication Required):
+- `GET /api/v1/{tenant}/menu/categories` - List menu categories
+  - **Query**: `locale` (en/sw)
+  - **Returns**: Array of categories with translations
+- `GET /api/v1/{tenant}/menu/items` - List menu items
+  - **Query**: `category_id`, `dietary_tag`, `search`, `locale`, `page`, `limit`
+  - **Returns**: Paginated array of menu items with variants
+- `GET /api/v1/{tenant}/menu/items/{id}` - Get item details
+  - **Query**: `locale`
+  - **Returns**: Item with variants, translations, dietary tags
+
+**Admin Endpoints** (RBAC Protected):
+- `POST /api/v1/{tenant}/catalog/categories` - Create category
+- `PUT /api/v1/{tenant}/catalog/categories/{id}` - Update category
+- `DELETE /api/v1/{tenant}/catalog/categories/{id}` - Delete category
+- `POST /api/v1/{tenant}/catalog/items` - Create menu item
+- `PUT /api/v1/{tenant}/catalog/items/{id}` - Update menu item
+- `DELETE /api/v1/{tenant}/catalog/items/{id}` - Delete menu item
+- `POST /api/v1/{tenant}/catalog/items/{id}/variants` - Add variant
+- `PUT /api/v1/{tenant}/catalog/items/{id}/translations` - Update translations
+- `POST /api/v1/{tenant}/catalog/items/{id}/dietary-tags` - Assign dietary tags
+
+**TanStack Query Hooks** (✅ Implemented):
+- `useMenuItems` - Fetch menu items (with filters)
 - `useMenuItem` - Fetch single item
 - `useMenuCategories` - Fetch categories
 
-### Cart API
+### Cart API (✅ Backend Complete - Sprint 3)
 
 **Endpoints**:
 - `GET /api/v1/{tenant}/carts/current` - Get current cart
-- `POST /api/v1/{tenant}/carts/items` - Add item
-- `PUT /api/v1/{tenant}/carts/items/{id}` - Update item
-- `DELETE /api/v1/{tenant}/carts/items/{id}` - Remove item
+  - **Headers**: `Authorization: Bearer {token}`
+  - **Returns**: Cart with items, subtotal, delivery fee, total
+- `POST /api/v1/{tenant}/carts/items` - Add item to cart
+  - **Headers**: `Authorization: Bearer {token}`
+  - **Body**: `{ menu_item_id, variant_id?, quantity, customizations? }`
+  - **Returns**: Updated cart
+- `PUT /api/v1/{tenant}/carts/items/{id}` - Update cart item
+  - **Headers**: `Authorization: Bearer {token}`
+  - **Body**: `{ quantity, customizations? }`
+  - **Returns**: Updated cart
+- `DELETE /api/v1/{tenant}/carts/items/{id}` - Remove cart item
+  - **Headers**: `Authorization: Bearer {token}`
+  - **Returns**: Updated cart
+- `DELETE /api/v1/{tenant}/carts/current` - Clear cart
+  - **Headers**: `Authorization: Bearer {token}`
+  - **Returns**: Empty cart
 
-**TanStack Query Hooks**:
+**TanStack Query Hooks** (To Implement):
 - `useCart` - Fetch cart
 - `useAddToCart` - Add item mutation
 - `useUpdateCartItem` - Update item mutation
 - `useRemoveFromCart` - Remove item mutation
+- `useClearCart` - Clear cart mutation
+
+### Location API (Frontend Only - No Backend)
+
+**Client-Side Only**:
+- Location detection via browser geolocation API
+- Address autocomplete via Mapbox/Google Maps API
+- Geofence validation (Busia polygon) client-side
+- Local storage persistence
+
+**Note**: Address management API available in Sprint 2 (checkout)
 
 ---
 
