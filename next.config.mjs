@@ -1,6 +1,7 @@
 import withPWA from "@ducanh2912/next-pwa";
 
 const nextConfig = {
+  output: "standalone",
   reactStrictMode: true,
   eslint: {
     dirs: ["src"],
