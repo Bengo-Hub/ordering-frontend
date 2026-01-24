@@ -2,6 +2,7 @@
 
 FROM node:20-alpine AS deps
 WORKDIR /app
+RUN apk add --no-cache libc6-compat
 ENV PNPM_HOME="/root/.local/share/pnpm" \
     PATH="$PNPM_HOME:$PATH"
 RUN corepack enable pnpm
@@ -21,12 +22,23 @@ FROM node:20-alpine AS runner
 WORKDIR /app
 ENV NODE_ENV=production
 
-# Copy standalone output (https://nextjs.org/docs/app/building-your-application/deploying#custom-server)
-COPY --from=builder /app/.next/standalone ./
-COPY --from=builder /app/.next/static ./.next/static
+# Create non-root user for security (matches auth-ui pattern)
+RUN addgroup --system --gid 1001 nodejs
+RUN adduser --system --uid 1001 nextjs
+
+# Copy public assets
 COPY --from=builder /app/public ./public
 
-USER node
+# Set the correct permission for prerender cache
+RUN mkdir .next
+RUN chown nextjs:nodejs .next
+
+# Copy standalone output with proper ownership
+COPY --from=builder --chown=nextjs:nodejs /app/.next/standalone ./
+COPY --from=builder --chown=nextjs:nodejs /app/.next/static ./.next/static
+
+USER nextjs
 EXPOSE 3000
 ENV PORT=3000
+ENV HOSTNAME="0.0.0.0"
 CMD ["node", "server.js"]
