@@ -32,6 +32,14 @@ export interface FeaturedItemProps {
   href?: string;
   className?: string;
   onAddToCart?: (id: string) => void;
+  /** "carousel" (default): fixed width (w-44/sm:w-60) for use inside a horizontally-scrolling
+   *  FeaturedItemsCarousel, which needs an explicit child width since flex rows don't stretch
+   *  non-wrapping children. "grid": fills its container (w-full) for use inside a CSS grid,
+   *  where a fixed width — even one a caller tries to override via `className` — would fight the
+   *  grid track width at the sm: breakpoint and up (className can't cleanly override a
+   *  responsive variant class via tailwind-merge, since sm:w-60 and w-full are different variant
+   *  groups) and cause cards to overflow their cell and visually overlap their neighbours. */
+  variant?: "carousel" | "grid";
   /** Not rendered by the card itself — carried through so the parent's add-to-cart
    *  handler can decide whether to open the modifier/variant modal. */
   hasVariants?: boolean | undefined;
@@ -57,6 +65,7 @@ export function FeaturedItemCard({
   href,
   className,
   onAddToCart,
+  variant = "carousel",
 }: FeaturedItemProps) {
   const orgSlug = useOrgSlug();
   const [isWhitelisted, setIsWhitelisted] = useState(false);
@@ -80,7 +89,8 @@ export function FeaturedItemCard({
     <Link
       href={itemHref as any}
       className={cn(
-        "group flex w-44 shrink-0 flex-col overflow-hidden rounded-xl bg-card transition-all hover:shadow-lg sm:w-60",
+        "group flex flex-col overflow-hidden rounded-xl bg-card transition-all hover:shadow-lg",
+        variant === "carousel" ? "w-44 shrink-0 sm:w-60" : "w-full",
         className,
       )}
     >

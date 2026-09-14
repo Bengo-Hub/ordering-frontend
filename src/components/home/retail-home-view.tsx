@@ -98,7 +98,7 @@ function CategoryProductsRow({
       </div>
       <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 sm:gap-4 md:grid-cols-4">
         {items.map((item) => (
-          <FeaturedItemCard key={item.id} {...itemToCardProps(item, orgSlug, useCase)} className="w-full" />
+          <FeaturedItemCard key={item.id} {...itemToCardProps(item, orgSlug, useCase)} variant="grid" />
         ))}
       </div>
     </div>
@@ -239,7 +239,11 @@ export function RetailHomeView() {
 
   return (
     <SiteShell>
-      <div className="mx-auto w-full max-w-6xl px-3 py-4 sm:px-4 sm:py-6 lg:px-8">
+      <div className="mx-auto w-full max-w-7xl px-3 py-4 sm:px-4 sm:py-6 lg:px-8">
+        {/* Row 1 only: sidebar beside the hero banner. Everything else below spans the FULL
+            width of this container (not indented by the sidebar column) — a sidebar tall enough
+            to sit beside the entire page reads as broken once content below it runs on for
+            several unrelated sections. */}
         <div className="md:grid md:grid-cols-[240px_1fr] md:gap-8">
           {/* Shop by Category — left rail on desktop, drill-in accordion on mobile */}
           {categories.length > 0 && (
@@ -253,110 +257,111 @@ export function RetailHomeView() {
             </aside>
           )}
 
-          <div className="min-w-0">
-            {/* Hero / marketing banner */}
-            {heroBanners.length > 0 && (
-              <div className="mb-6">
-                <PromoBannerCarousel banners={heroBanners} />
-              </div>
-            )}
+          {/* Hero / marketing banner — stretches to match the sidebar's height (CSS grid's
+              default row-stretch) so a short banner never leaves a blank gap in its cell
+              before the full-width sections below begin. */}
+          {heroBanners.length > 0 && (
+            <div className="h-48 min-w-0 sm:h-56 md:h-full md:min-h-[280px]">
+              <PromoBannerCarousel banners={heroBanners} />
+            </div>
+          )}
+        </div>
 
-            {/* Flash Sales — discount-driven, distinct from Top Deals below */}
-            {flashSaleItems.length > 0 && (
-              <div className="mb-6">
-                <FlashSaleStrip
-                  items={flashSaleItems}
-                  endsAt={flashSaleEndsAt}
-                  seeAllHref={orgRoute(orgSlug, "/catalog?filter=flash_sale")}
-                />
-              </div>
-            )}
+        {/* Full-width sections below the hero row */}
+        <div className="mt-6 space-y-6">
+          {/* Flash Sales — discount-driven, distinct from Top Deals below */}
+          {flashSaleItems.length > 0 && (
+            <FlashSaleStrip
+              items={flashSaleItems}
+              endsAt={flashSaleEndsAt}
+              seeAllHref={orgRoute(orgSlug, "/catalog?filter=flash_sale")}
+            />
+          )}
 
-            {/* Top Deals — real best-sellers */}
-            {topDeals.length > 0 && (
-              <div className="mb-6">
-                <div className="mb-3 flex items-center justify-between sm:mb-4">
-                  <div>
-                    <h2 className="text-base font-bold text-foreground sm:text-xl">Top Deals</h2>
-                    <p className="text-xs text-muted-foreground sm:text-sm">
-                      Our best-selling {copy.itemLabelPlural.toLowerCase()}
-                    </p>
-                  </div>
-                  <Button variant="ghost" size="sm" className="h-9 text-primary" asChild>
-                    <Link href={orgRoute(orgSlug, "/catalog?sort=best_selling")}>See all</Link>
-                  </Button>
+          {/* Top Deals — real best-sellers */}
+          {topDeals.length > 0 && (
+            <div>
+              <div className="mb-3 flex items-center justify-between sm:mb-4">
+                <div>
+                  <h2 className="text-base font-bold text-foreground sm:text-xl">Top Deals</h2>
+                  <p className="text-xs text-muted-foreground sm:text-sm">
+                    Our best-selling {copy.itemLabelPlural.toLowerCase()}
+                  </p>
                 </div>
-                <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 sm:gap-4 md:grid-cols-4">
-                  {topDeals.map((item) => (
-                    <FeaturedItemCard key={item.id} {...item} className="w-full" />
-                  ))}
-                </div>
+                <Button variant="ghost" size="sm" className="h-9 text-primary" asChild>
+                  <Link href={orgRoute(orgSlug, "/catalog?sort=best_selling")}>See all</Link>
+                </Button>
               </div>
-            )}
-
-            {/* New Arrivals */}
-            {newArrivals.length > 0 && (
-              <div className="mb-6">
-                <div className="mb-3 flex items-center justify-between sm:mb-4">
-                  <div>
-                    <h2 className="text-base font-bold text-foreground sm:text-xl">New Arrivals</h2>
-                    <p className="text-xs text-muted-foreground sm:text-sm">
-                      Fresh {copy.itemLabelPlural.toLowerCase()} just added
-                    </p>
-                  </div>
-                  <Button variant="ghost" size="sm" className="h-9 text-primary" asChild>
-                    <Link href={orgRoute(orgSlug, "/catalog?sort=newest")}>See all</Link>
-                  </Button>
-                </div>
-                <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 sm:gap-4 md:grid-cols-4">
-                  {newArrivals.map((item) => (
-                    <FeaturedItemCard key={item.id} {...item} className="w-full" />
-                  ))}
-                </div>
+              <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 sm:gap-4 lg:grid-cols-4 xl:grid-cols-6">
+                {topDeals.map((item) => (
+                  <FeaturedItemCard key={item.id} {...item} variant="grid" />
+                ))}
               </div>
-            )}
+            </div>
+          )}
 
-            {/* Products by Category */}
-            {categoryRows.map((cat) => (
-              <CategoryProductsRow
-                key={cat.id}
-                categoryId={cat.id}
-                categoryName={cat.name}
-                orgSlug={orgSlug}
-                useCase={profile}
-              />
-            ))}
-
-            {/* Top Brands */}
-            {brands != null && brands.length > 0 && (
-              <div className="mb-6">
-                <h2 className="mb-3 text-base font-bold text-foreground sm:mb-4 sm:text-xl">
-                  Shop by Brand
-                </h2>
-                <div className="scrollbar-hide flex gap-3 overflow-x-auto pb-2 sm:gap-4">
-                  {brands.map((brand) => (
-                    <Link
-                      key={brand.id}
-                      href={orgRoute(orgSlug, `/catalog?brand=${brand.id}`)}
-                      className="flex w-24 shrink-0 flex-col items-center gap-2 rounded-xl border border-border bg-card p-3 text-center transition hover:shadow-md sm:w-28"
-                    >
-                      <span className="flex size-14 items-center justify-center overflow-hidden rounded-full bg-muted sm:size-16">
-                        {brand.logoUrl ? (
-                          // eslint-disable-next-line @next/next/no-img-element
-                          <img src={brand.logoUrl} alt={brand.name} className="size-full object-cover" />
-                        ) : (
-                          <span className="text-lg font-bold text-muted-foreground">
-                            {brand.name.charAt(0).toUpperCase()}
-                          </span>
-                        )}
-                      </span>
-                      <span className="line-clamp-1 text-xs font-medium text-foreground">{brand.name}</span>
-                    </Link>
-                  ))}
+          {/* New Arrivals */}
+          {newArrivals.length > 0 && (
+            <div>
+              <div className="mb-3 flex items-center justify-between sm:mb-4">
+                <div>
+                  <h2 className="text-base font-bold text-foreground sm:text-xl">New Arrivals</h2>
+                  <p className="text-xs text-muted-foreground sm:text-sm">
+                    Fresh {copy.itemLabelPlural.toLowerCase()} just added
+                  </p>
                 </div>
+                <Button variant="ghost" size="sm" className="h-9 text-primary" asChild>
+                  <Link href={orgRoute(orgSlug, "/catalog?sort=newest")}>See all</Link>
+                </Button>
               </div>
-            )}
-          </div>
+              <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 sm:gap-4 lg:grid-cols-4 xl:grid-cols-6">
+                {newArrivals.map((item) => (
+                  <FeaturedItemCard key={item.id} {...item} variant="grid" />
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Products by Category */}
+          {categoryRows.map((cat) => (
+            <CategoryProductsRow
+              key={cat.id}
+              categoryId={cat.id}
+              categoryName={cat.name}
+              orgSlug={orgSlug}
+              useCase={profile}
+            />
+          ))}
+
+          {/* Top Brands */}
+          {brands != null && brands.length > 0 && (
+            <div>
+              <h2 className="mb-3 text-base font-bold text-foreground sm:mb-4 sm:text-xl">
+                Shop by Brand
+              </h2>
+              <div className="scrollbar-hide flex gap-3 overflow-x-auto pb-2 sm:gap-4">
+                {brands.map((brand) => (
+                  <Link
+                    key={brand.id}
+                    href={orgRoute(orgSlug, `/catalog?brand=${brand.id}`)}
+                    className="flex w-24 shrink-0 flex-col items-center gap-2 rounded-xl border border-border bg-card p-3 text-center transition hover:shadow-md sm:w-28"
+                  >
+                    <span className="flex size-14 items-center justify-center overflow-hidden rounded-full bg-muted sm:size-16">
+                      {brand.logoUrl ? (
+                        // eslint-disable-next-line @next/next/no-img-element
+                        <img src={brand.logoUrl} alt={brand.name} className="size-full object-cover" />
+                      ) : (
+                        <span className="text-lg font-bold text-muted-foreground">
+                          {brand.name.charAt(0).toUpperCase()}
+                        </span>
+                      )}
+                    </span>
+                    <span className="line-clamp-1 text-xs font-medium text-foreground">{brand.name}</span>
+                  </Link>
+                ))}
+              </div>
+            </div>
+          )}
         </div>
       </div>
 

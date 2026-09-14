@@ -56,7 +56,7 @@ export function CategoryTopNav({
         className,
       )}
     >
-      <div className="mx-auto flex w-full max-w-full items-center gap-1 overflow-x-auto px-3 py-1.5 scrollbar-hide [scrollbar-width:none] [-ms-overflow-style:none] sm:gap-2 sm:px-4 md:px-6 lg:px-8">
+      <div className="mx-auto flex w-full max-w-7xl items-center gap-1 overflow-x-auto px-3 py-1.5 scrollbar-hide [scrollbar-width:none] [-ms-overflow-style:none] sm:gap-2 sm:px-4 md:px-6 lg:px-8">
         <button
           type="button"
           onClick={onAllClick}
