@@ -49,6 +49,11 @@ export interface MenuItem {
   manufacturer?: string;
   /** Model name/number (retail/goods), shown as muted subtext when present. */
   model?: string;
+  /** Item brand (master data, distinct from the free-text manufacturer field). */
+  brandId?: string;
+  brandName?: string;
+  /** Quantity-aware stock projection ("Only N left"). Undefined = unknown, not "in stock". */
+  availableQuantity?: number;
   /** Item condition (retail/goods): NEW | REFURBISHED | USED | OPEN_BOX. Omitted/NEW = no badge. */
   condition?: string;
   /** Whether this item has selectable variants (e.g. color/size). */
@@ -183,8 +188,15 @@ export interface MenuFilters {
   featured?: boolean;
   outletId?: string;
   favoriteOnly?: boolean;
-  /** Opaque storefront sort key — currently only "newest" is backend-recognized. */
+  /** Opaque storefront sort key — "newest" is backend-recognized; "best_selling" and
+   *  "price_asc"/"price_desc" are resolved client-side (see catalog-discovery.tsx). */
   sort?: string;
+  /** Item brand filter (client-side — inventory-api's BrandID isn't yet a list-filter param
+   *  on ordering-backend's public items endpoint, matched against the mapped brandId field). */
+  brandId?: string;
+  /** Only in-stock items (availableQuantity > 0, or unknown — never excludes items whose stock
+   *  isn't tracked at all). Client-side, same reasoning as brandId. */
+  inStockOnly?: boolean;
 }
 
 export interface OutletFilters {

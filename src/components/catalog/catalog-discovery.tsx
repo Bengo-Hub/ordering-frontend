@@ -23,12 +23,21 @@ import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useCategories, useCatalogItems, useOutlets, useToggleFavorite } from "@/hooks/use-catalog";
 import { useOrderingConfig } from "@/hooks/use-ordering-config";
+import { usePromoDeals } from "@/hooks/use-promo-deals";
+import { useTopSellers } from "@/hooks/use-top-sellers";
+import { resolveDealItems } from "@/lib/api/promo-deals";
+import { rankBestSellers } from "@/lib/api/top-sellers";
 import type { OrderingConfig } from "@/lib/use-case-config";
 import { orgRoute } from "@/lib/routes";
 import { cn } from "@/lib/utils";
 import { useOrgSlug } from "@/providers/org-slug-provider";
 import { useCartStore } from "@/store/cart";
 import type { CatalogVariant, DietaryTag, ModifierGroup } from "@/types/catalog";
+
+/** Sort keys the storefront's own dropdown offers. Only "newest" is a real backend sort key
+ *  (see fetchMenuItems) — the others are resolved client-side over an over-fetched batch (see
+ *  SPECIAL_LISTING_BATCH_SIZE below), same posture as the homepage's deal/best-seller rails. */
+type CatalogSort = "default" | "newest" | "best_selling" | "price_asc" | "price_desc";
 
 type MenuItem = {
   id: string;
@@ -47,6 +56,9 @@ type MenuItem = {
   manufacturer?: string | undefined;
   model?: string | undefined;
   condition?: string | undefined;
+  brandId?: string | undefined;
+  brandName?: string | undefined;
+  availableQuantity?: number | undefined;
   hasVariants?: boolean | undefined;
   variants?: CatalogVariant[] | undefined;
   modifierGroups?: ModifierGroup[] | undefined;
@@ -219,6 +231,11 @@ const dietaryFilterOpts: Array<{ value: DietaryTag; label: string; icon: React.R
 ];
 
 const MENU_PAGE_SIZE = 24;
+// Sort keys resolved client-side (best_selling/price_asc/price_desc) or the flash_sale filter
+// need the WHOLE matching set before sorting/paginating, not just one server page — mirrors the
+// homepage's own bounded over-fetch for the same reason (deal/best-seller matching there caps at
+// 60). 200 is a reasonable ceiling for a single storefront catalog view.
+const SPECIAL_LISTING_BATCH_SIZE = 200;
 
 type MenuDiscoveryProps = {
   initialCategory?: string | undefined;
@@ -229,6 +246,11 @@ type MenuDiscoveryProps = {
   initialItemId?: string | undefined;
   initialAction?: string | undefined;
   initialFavoriteOnly?: boolean | undefined;
+  /** "newest" (real backend sort) | "best_selling" | "price_asc" | "price_desc" (client-side). */
+  initialSort?: string | undefined;
+  /** Only "flash_sale" is recognized today — matches the homepage's Flash Sales rail. */
+  initialFilter?: string | undefined;
+  initialBrand?: string | undefined;
 };
 
 export function MenuDiscovery({
@@ -239,6 +261,9 @@ export function MenuDiscovery({
   initialItemId,
   initialAction,
   initialFavoriteOnly,
+  initialSort,
+  initialFilter,
+  initialBrand,
 }: MenuDiscoveryProps = {}) {
   const orgSlug = useOrgSlug();
   const router = useRouter();
@@ -248,6 +273,17 @@ export function MenuDiscovery({
   const [activeOutletId, setActiveOutletId] = useState<string>(initialOutlet ?? "");
   const [activeDietary, setActiveDietary] = useState<DietaryTag[]>((initialDietary as DietaryTag[]) ?? []);
   const [favoriteOnly, setFavoriteOnly] = useState(initialFavoriteOnly ?? false);
+  const [sort, setSort] = useState<CatalogSort>((initialSort as CatalogSort) || "default");
+  const [specialFilter, setSpecialFilter] = useState<string>(initialFilter ?? "");
+  const [brandId, setBrandId] = useState<string>(initialBrand ?? "");
+  // Price/in-stock filters: applied via an explicit "Apply" button (matches the reference
+  // filter bar), not live-as-you-type — draft state is separate from what's actually applied.
+  const [minPriceDraft, setMinPriceDraft] = useState("");
+  const [maxPriceDraft, setMaxPriceDraft] = useState("");
+  const [inStockDraft, setInStockDraft] = useState(false);
+  const [appliedMinPrice, setAppliedMinPrice] = useState<number | undefined>(undefined);
+  const [appliedMaxPrice, setAppliedMaxPrice] = useState<number | undefined>(undefined);
+  const [appliedInStockOnly, setAppliedInStockOnly] = useState(false);
   const [page, setPage] = useState(1);
   const [modalItem, setModalItem] = useState<AddToCartModalItem | null>(null);
   const addItem = useCartStore((state) => state.addItem);
@@ -266,6 +302,12 @@ export function MenuDiscovery({
   const { data: categoriesData } = useCategories(orgSlug, firstOutletId, effectiveUseCase);
   const categoriesFromApi = useMemo(() => categoriesData ?? [], [categoriesData]);
 
+  // A sort/filter that needs the whole matching set before ranking (best-sellers, flash-sale
+  // discount matching, or a simple price sort applied across more than one server page) switches
+  // this view into "special listing" mode: one bounded over-fetch + client-side
+  // sort/filter/paginate, instead of the normal server-paginated flow.
+  const isSpecialListing = sort === "best_selling" || sort === "price_asc" || sort === "price_desc" || specialFilter === "flash_sale";
+
   const filters = useMemo(
     () => ({
       ...(activeCategoryId && activeCategoryId !== "all" && { category: activeCategoryId }),
@@ -273,18 +315,80 @@ export function MenuDiscovery({
       ...(search.trim() && { search: search.trim() }),
       ...(activeDietary.length > 0 && { dietary: activeDietary }),
       ...(favoriteOnly && { favoriteOnly: true }),
+      ...(brandId && { brandId }),
+      ...(sort === "newest" && { sort: "newest" }),
     }),
-    [activeCategoryId, activeOutletId, search, activeDietary, favoriteOnly],
+    [activeCategoryId, activeOutletId, search, activeDietary, favoriteOnly, brandId, sort],
   );
 
-  const { data: menuData, isPending, error: itemsError } = useCatalogItems(orgSlug, filters, page, MENU_PAGE_SIZE);
-  const apiItems = menuData?.data ?? [];
-  const totalPages = menuData?.meta?.totalPages ?? 1;
-  const total = menuData?.meta?.total ?? 0;
+  const { data: normalPage, isPending: normalPending, error: normalError } = useCatalogItems(
+    orgSlug,
+    filters,
+    page,
+    MENU_PAGE_SIZE,
+    !isSpecialListing,
+  );
+  const { data: specialPage, isPending: specialPending, error: specialError } = useCatalogItems(
+    orgSlug,
+    filters,
+    1,
+    SPECIAL_LISTING_BATCH_SIZE,
+    isSpecialListing,
+  );
+  const { data: deals } = usePromoDeals();
+  const { data: topSellerSales } = useTopSellers();
+
+  const isPending = isSpecialListing ? specialPending : normalPending;
+  const itemsError = isSpecialListing ? specialError : normalError;
+
+  // Special-listing pipeline: rank/filter the whole over-fetched batch, then paginate the
+  // RESULT client-side (not the raw batch) so page 2+ shows the next slice of the ranked set.
+  const specialRankedItems = useMemo(() => {
+    if (!isSpecialListing) return [];
+    const batch = specialPage?.data ?? [];
+    if (specialFilter === "flash_sale") {
+      return resolveDealItems(batch, deals ?? []).map(({ item }) => item);
+    }
+    if (sort === "best_selling") {
+      return rankBestSellers(batch, topSellerSales ?? [], batch.length);
+    }
+    if (sort === "price_asc") {
+      return batch.slice().sort((a, b) => a.price - b.price);
+    }
+    if (sort === "price_desc") {
+      return batch.slice().sort((a, b) => b.price - a.price);
+    }
+    return batch;
+  }, [isSpecialListing, specialPage, specialFilter, deals, sort, topSellerSales]);
+
+  const apiItems = useMemo(() => {
+    if (isSpecialListing) {
+      return specialRankedItems.slice((page - 1) * MENU_PAGE_SIZE, page * MENU_PAGE_SIZE);
+    }
+    return normalPage?.data ?? [];
+  }, [isSpecialListing, specialRankedItems, page, normalPage]);
+
+  const totalPages = isSpecialListing
+    ? Math.max(1, Math.ceil(specialRankedItems.length / MENU_PAGE_SIZE))
+    : normalPage?.meta?.totalPages ?? 1;
+  const total = isSpecialListing ? specialRankedItems.length : normalPage?.meta?.total ?? 0;
+
+  // Price/stock filters apply to whichever page is currently displayed (same "filters the
+  // loaded page, not the whole server-side result set" tier as the existing dietary filters).
+  const visibleItems = useMemo(
+    () =>
+      apiItems.filter((m) => {
+        if (appliedMinPrice != null && (m.price ?? 0) < appliedMinPrice) return false;
+        if (appliedMaxPrice != null && (m.price ?? 0) > appliedMaxPrice) return false;
+        if (appliedInStockOnly && m.availableQuantity != null && m.availableQuantity <= 0) return false;
+        return true;
+      }),
+    [apiItems, appliedMinPrice, appliedMaxPrice, appliedInStockOnly],
+  );
 
   const menuItems: MenuItem[] = useMemo(
     () =>
-      apiItems.map((m) => ({
+      visibleItems.map((m) => ({
         id: m.id,
         name: m.name,
         description: m.description ?? "",
@@ -300,21 +404,34 @@ export function MenuDiscovery({
         manufacturer: m.manufacturer,
         model: m.model,
         condition: m.condition,
+        brandName: m.brandName,
+        availableQuantity: m.availableQuantity,
         hasVariants: m.hasVariants,
         variants: m.variants,
         modifierGroups: m.modifierGroups,
         ...(m.featured && { feature: "recommended" as const }),
       })),
-    [apiItems],
+    [visibleItems],
   );
 
   const updateUrl = useCallback(
-    (updates: { category?: string | undefined; outlet?: string | undefined; search?: string | undefined; dietary?: string | undefined }) => {
+    (updates: {
+      category?: string | undefined;
+      outlet?: string | undefined;
+      search?: string | undefined;
+      dietary?: string | undefined;
+      sort?: string | undefined;
+      filter?: string | undefined;
+      brand?: string | undefined;
+    }) => {
       const p = new URLSearchParams(searchParams?.toString() ?? "");
       if (updates.category !== undefined) (updates.category && updates.category !== "all") ? p.set("category", updates.category) : p.delete("category");
       if (updates.outlet !== undefined) updates.outlet ? p.set("outlet", updates.outlet) : p.delete("outlet");
       if (updates.search !== undefined) updates.search ? p.set("search", updates.search) : p.delete("search");
       if (updates.dietary !== undefined) updates.dietary ? p.set("dietary", updates.dietary) : p.delete("dietary");
+      if (updates.sort !== undefined) (updates.sort && updates.sort !== "default") ? p.set("sort", updates.sort) : p.delete("sort");
+      if (updates.filter !== undefined) updates.filter ? p.set("filter", updates.filter) : p.delete("filter");
+      if (updates.brand !== undefined) updates.brand ? p.set("brand", updates.brand) : p.delete("brand");
       const q = p.toString();
       router.replace(q ? `?${q}` : window.location.pathname, { scroll: false });
     },
@@ -327,7 +444,10 @@ export function MenuDiscovery({
     if (initialSearch != null) setSearch(initialSearch);
     if (initialDietary != null) setActiveDietary(initialDietary as DietaryTag[]);
     if (initialFavoriteOnly != null) setFavoriteOnly(initialFavoriteOnly);
-  }, [initialCategory, initialOutlet, initialSearch, initialDietary, initialFavoriteOnly]);
+    if (initialSort != null) setSort((initialSort as CatalogSort) || "default");
+    if (initialFilter != null) setSpecialFilter(initialFilter);
+    if (initialBrand != null) setBrandId(initialBrand);
+  }, [initialCategory, initialOutlet, initialSearch, initialDietary, initialFavoriteOnly, initialSort, initialFilter, initialBrand]);
 
   const handleAddToCart = (item: MenuItem) => {
     // Variant/modifier products open the quick add-to-cart modal so the customer can
@@ -426,6 +546,79 @@ export function MenuDiscovery({
             </div>
           </div>
         </div>
+
+        {/* Sort + price/stock filter bar — retail/wholesale product listings only (a food/
+            services catalog has no "Most Popular by sales"/price-range shopping pattern). */}
+        {cfg.productLayout === "compact" && (
+          <div className="flex flex-col gap-3 rounded-xl border border-border bg-card p-3 sm:flex-row sm:flex-wrap sm:items-center sm:gap-3">
+            <Input
+              placeholder="Search products..."
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              onBlur={() => updateUrl({ search: search.trim() || undefined })}
+              onKeyDown={(e) => e.key === "Enter" && updateUrl({ search: search.trim() || undefined })}
+              className="sm:w-48"
+            />
+            <Input
+              type="number"
+              inputMode="numeric"
+              placeholder="Min KES"
+              value={minPriceDraft}
+              onChange={(e) => setMinPriceDraft(e.target.value)}
+              className="sm:w-28"
+            />
+            <Input
+              type="number"
+              inputMode="numeric"
+              placeholder="Max KES"
+              value={maxPriceDraft}
+              onChange={(e) => setMaxPriceDraft(e.target.value)}
+              className="sm:w-28"
+            />
+            <label className="flex items-center gap-2 text-sm text-foreground">
+              <input
+                type="checkbox"
+                checked={inStockDraft}
+                onChange={(e) => setInStockDraft(e.target.checked)}
+                className="size-4 rounded border-border"
+              />
+              In Stock
+            </label>
+            <Button
+              type="button"
+              size="sm"
+              onClick={() => {
+                setAppliedMinPrice(minPriceDraft.trim() ? Number(minPriceDraft) : undefined);
+                setAppliedMaxPrice(maxPriceDraft.trim() ? Number(maxPriceDraft) : undefined);
+                setAppliedInStockOnly(inStockDraft);
+                setPage(1);
+              }}
+            >
+              Apply
+            </Button>
+
+            <label htmlFor="menu-sort" className="sr-only">
+              Sort products
+            </label>
+            <select
+              id="menu-sort"
+              value={sort}
+              onChange={(e) => {
+                const next = e.target.value as CatalogSort;
+                setSort(next);
+                setPage(1);
+                updateUrl({ sort: next });
+              }}
+              className="h-9 rounded-md border border-border bg-background px-2 text-sm text-foreground sm:ml-auto"
+            >
+              <option value="default">Most Popular</option>
+              <option value="best_selling">Best Selling</option>
+              <option value="newest">Newest</option>
+              <option value="price_asc">Price: Low to High</option>
+              <option value="price_desc">Price: High to Low</option>
+            </select>
+          </div>
+        )}
 
         {/* Category filters from backend — horizontal carousel at ALL breakpoints (no wrapping into
             many rows); chips are shrink-0 so they scroll sideways instead of stacking. */}

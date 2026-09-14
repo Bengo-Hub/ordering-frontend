@@ -2,19 +2,22 @@
 
 /**
  * CategorySidebar — "Shop by Category" left rail for retail/pharmacy/wholesale
- * profiles. Builds a parent→children tree client-side from the flat
- * `MenuCategory[]` (parentId/parentName/depth/path now come from inventory-api,
- * see fetchCategories in lib/api/catalog.ts) and renders it as:
- *  - Desktop: a vertical list of top-level categories; a parent with children
- *    opens a flyout panel (hover or click) listing its children. A parent with
- *    no children is a plain clickable row (e.g. a genuine standalone root like
- *    "COPYS").
- *  - Mobile: a simple drill-down accordion (no new UI dependency — this repo
- *    has no Accordion/Collapsible primitive yet, so expand/collapse is done
- *    with local state, matching the disclosure pattern already used elsewhere).
+ * profiles. Builds a real N-level tree client-side from the flat `MenuCategory[]`
+ * (parentId/parentName/depth/path come from inventory-api via fetchCategories in
+ * lib/api/catalog.ts) using the shared `buildCategoryTree` (see lib/category-tree.ts —
+ * also used by CategoryTopNav so the two navs never drift out of sync) and renders it as:
+ *  - Desktop: a vertical list of top-level categories; a parent with children opens a
+ *    flyout panel (hover or click) listing its children. Grandchildren (and deeper) are
+ *    an inline expand/collapse disclosure *within* that same flyout panel rather than a
+ *    popover-in-popover, which keeps focus/click-outside behavior simple at any depth.
+ *    A parent with no children is a plain clickable row (e.g. a genuine standalone root).
+ *  - Mobile: a recursive drill-down accordion (no new UI dependency — this repo has no
+ *    Accordion/Collapsible primitive yet, so expand/collapse is done with local state,
+ *    matching the disclosure pattern already used elsewhere), one level of indentation
+ *    per depth.
  *
- * Deliberately NOT a replacement for CategoryCarousel — that icon-rail stays
- * as-is for hospitality/quick_service. This is a new, parallel component.
+ * Deliberately NOT a replacement for CategoryCarousel — that icon-rail stays as-is for
+ * hospitality/quick_service. This is a parallel component for retail/pharmacy/wholesale.
  */
 
 import { ChevronDown, ChevronRight } from "lucide-react";
@@ -22,6 +25,7 @@ import { useMemo, useState } from "react";
 
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { ImageWithFallback } from "@/components/ui/image-with-fallback";
+import { buildCategoryTree, type CategoryNode } from "@/lib/category-tree";
 import { cn } from "@/lib/utils";
 import type { MenuCategory } from "@/types/catalog";
 
@@ -36,39 +40,7 @@ export interface CategorySidebarProps {
   className?: string;
 }
 
-interface CategoryNode extends MenuCategory {
-  children: MenuCategory[];
-}
-
-function buildTree(categories: MenuCategory[]): CategoryNode[] {
-  const byId = new Map(categories.map((c) => [c.id, c]));
-  const childrenByParent = new Map<string, MenuCategory[]>();
-  const roots: MenuCategory[] = [];
-
-  for (const cat of categories) {
-    // A parentId that doesn't resolve to a known category (stale/cross-tenant
-    // data) is treated as a root — never silently drop a category.
-    if (cat.parentId && byId.has(cat.parentId)) {
-      const list = childrenByParent.get(cat.parentId) ?? [];
-      list.push(cat);
-      childrenByParent.set(cat.parentId, list);
-    } else {
-      roots.push(cat);
-    }
-  }
-
-  return roots
-    .slice()
-    .sort((a, b) => (a.sortOrder ?? 0) - (b.sortOrder ?? 0))
-    .map((root) => ({
-      ...root,
-      children: (childrenByParent.get(root.id) ?? []).slice().sort(
-        (a, b) => (a.sortOrder ?? 0) - (b.sortOrder ?? 0),
-      ),
-    }));
-}
-
-function CategoryIcon({
+export function CategoryIcon({
   category,
   useCase,
   size = "size-8",
@@ -96,6 +68,152 @@ function CategoryIcon({
   );
 }
 
+/** Recursive list rendered inside a top-level parent's flyout panel — depth 0 here is the
+ *  parent's direct children; a node with its own children gets an inline disclosure instead
+ *  of nesting another popover, so depth is unbounded without click-outside/z-index headaches. */
+export function CategoryFlyoutList({
+  nodes,
+  depth,
+  activeCategory,
+  useCase,
+  onSelect,
+}: {
+  nodes: CategoryNode[];
+  depth: number;
+  activeCategory?: string | undefined;
+  useCase?: string | undefined;
+  onSelect: (id: string) => void;
+}) {
+  const [expanded, setExpanded] = useState<Set<string>>(new Set());
+
+  const toggle = (id: string) => {
+    setExpanded((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+  };
+
+  return (
+    <ul className={depth > 0 ? "ml-4 border-l border-border/60 pl-2" : undefined}>
+      {nodes.map((node) => {
+        const hasChildren = node.children.length > 0;
+        const isExpanded = expanded.has(node.id);
+        return (
+          <li key={node.id}>
+            <div className="flex items-center">
+              <button
+                type="button"
+                onClick={() => onSelect(node.id)}
+                className={cn(
+                  "flex flex-1 items-center gap-2.5 rounded-md px-2 py-2 text-left text-sm transition-colors",
+                  activeCategory === node.id
+                    ? "bg-muted font-semibold text-foreground"
+                    : "text-foreground hover:bg-muted/50",
+                )}
+              >
+                <CategoryIcon category={node} useCase={useCase} size="size-6" />
+                <span className="flex-1 truncate">{node.name}</span>
+              </button>
+              {hasChildren && (
+                <button
+                  type="button"
+                  onClick={() => toggle(node.id)}
+                  className="flex size-7 shrink-0 items-center justify-center rounded-md text-muted-foreground hover:bg-muted/50"
+                  aria-label={isExpanded ? `Collapse ${node.name}` : `Expand ${node.name}`}
+                  aria-expanded={isExpanded}
+                >
+                  <ChevronDown className={cn("size-3.5 transition-transform", isExpanded && "rotate-180")} />
+                </button>
+              )}
+            </div>
+            {hasChildren && isExpanded && (
+              <CategoryFlyoutList
+                nodes={node.children}
+                depth={depth + 1}
+                activeCategory={activeCategory}
+                useCase={useCase}
+                onSelect={onSelect}
+              />
+            )}
+          </li>
+        );
+      })}
+    </ul>
+  );
+}
+
+/** Recursive mobile drill-down accordion — one level of indentation per depth. */
+function MobileCategoryAccordion({
+  nodes,
+  depth,
+  activeCategory,
+  useCase,
+  onSelect,
+}: {
+  nodes: CategoryNode[];
+  depth: number;
+  activeCategory?: string | undefined;
+  useCase?: string | undefined;
+  onSelect: (id: string) => void;
+}) {
+  const [expanded, setExpanded] = useState<Set<string>>(new Set());
+
+  const toggle = (id: string) => {
+    setExpanded((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+  };
+
+  return (
+    <ul className={depth > 0 ? "ml-4 border-l border-border/60 pb-1" : undefined}>
+      {nodes.map((node) => {
+        const hasChildren = node.children.length > 0;
+        const isExpanded = expanded.has(node.id);
+        const isActive =
+          activeCategory === node.id || node.children.some((c) => activeCategory === c.id);
+        return (
+          <li key={node.id} className={depth === 0 ? "border-b border-border/60 last:border-b-0" : undefined}>
+            <button
+              type="button"
+              onClick={() => (hasChildren ? toggle(node.id) : onSelect(node.id))}
+              className={cn(
+                "flex min-h-[44px] w-full items-center gap-2.5 px-2 py-2.5 text-left text-sm",
+                isActive ? "font-semibold text-foreground" : "text-foreground",
+              )}
+              aria-expanded={hasChildren ? isExpanded : undefined}
+            >
+              <CategoryIcon category={node} useCase={useCase} size="size-7" />
+              <span className="flex-1 truncate">{node.name}</span>
+              {hasChildren && (
+                <ChevronDown
+                  className={cn(
+                    "size-4 shrink-0 text-muted-foreground transition-transform",
+                    isExpanded && "rotate-180",
+                  )}
+                />
+              )}
+            </button>
+            {hasChildren && isExpanded && (
+              <MobileCategoryAccordion
+                nodes={node.children}
+                depth={depth + 1}
+                activeCategory={activeCategory}
+                useCase={useCase}
+                onSelect={onSelect}
+              />
+            )}
+          </li>
+        );
+      })}
+    </ul>
+  );
+}
+
 export function CategorySidebar({
   categories,
   activeCategory,
@@ -104,20 +222,10 @@ export function CategorySidebar({
   title = "Shop by Category",
   className,
 }: CategorySidebarProps) {
-  const tree = useMemo(() => buildTree(categories), [categories]);
+  const tree = useMemo(() => buildCategoryTree(categories), [categories]);
   const [openParentId, setOpenParentId] = useState<string | null>(null);
-  const [expandedMobile, setExpandedMobile] = useState<Set<string>>(new Set());
 
   if (tree.length === 0) return null;
-
-  const toggleMobile = (id: string) => {
-    setExpandedMobile((prev) => {
-      const next = new Set(prev);
-      if (next.has(id)) next.delete(id);
-      else next.add(id);
-      return next;
-    });
-  };
 
   const handleSelect = (id: string) => {
     onCategoryChange?.(id);
@@ -132,7 +240,9 @@ export function CategorySidebar({
       <ul className="hidden md:block">
         {tree.map((parent) => {
           const hasChildren = parent.children.length > 0;
-          const isActive = activeCategory === parent.id || parent.children.some((c) => c.id === activeCategory);
+          const isActive =
+            activeCategory === parent.id ||
+            parent.children.some((c) => c.id === activeCategory || c.children.some((gc) => gc.id === activeCategory));
 
           if (!hasChildren) {
             return (
@@ -177,32 +287,20 @@ export function CategorySidebar({
                   side="right"
                   align="start"
                   sideOffset={4}
-                  className="w-64 p-2"
+                  className="w-72 p-2"
                   onMouseEnter={() => setOpenParentId(parent.id)}
                   onMouseLeave={() => setOpenParentId(null)}
                 >
                   <p className="mb-1 px-2 py-1 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
                     {parent.name}
                   </p>
-                  <ul>
-                    {parent.children.map((child) => (
-                      <li key={child.id}>
-                        <button
-                          type="button"
-                          onClick={() => handleSelect(child.id)}
-                          className={cn(
-                            "flex w-full items-center gap-2.5 rounded-md px-2 py-2 text-left text-sm transition-colors",
-                            activeCategory === child.id
-                              ? "bg-muted font-semibold text-foreground"
-                              : "text-foreground hover:bg-muted/50",
-                          )}
-                        >
-                          <CategoryIcon category={child} useCase={useCase} size="size-6" />
-                          <span className="flex-1 truncate">{child.name}</span>
-                        </button>
-                      </li>
-                    ))}
-                  </ul>
+                  <CategoryFlyoutList
+                    nodes={parent.children}
+                    depth={0}
+                    activeCategory={activeCategory}
+                    useCase={useCase}
+                    onSelect={handleSelect}
+                  />
                 </PopoverContent>
               </Popover>
             </li>
@@ -210,60 +308,16 @@ export function CategorySidebar({
         })}
       </ul>
 
-      {/* Mobile: drill-in accordion */}
-      <ul className="md:hidden">
-        {tree.map((parent) => {
-          const hasChildren = parent.children.length > 0;
-          const isExpanded = expandedMobile.has(parent.id);
-          const isActive = activeCategory === parent.id || parent.children.some((c) => c.id === activeCategory);
-
-          return (
-            <li key={parent.id} className="border-b border-border/60 last:border-b-0">
-              <button
-                type="button"
-                onClick={() => (hasChildren ? toggleMobile(parent.id) : handleSelect(parent.id))}
-                className={cn(
-                  "flex min-h-[44px] w-full items-center gap-2.5 px-2 py-2.5 text-left text-sm",
-                  isActive ? "font-semibold text-foreground" : "text-foreground",
-                )}
-                aria-expanded={hasChildren ? isExpanded : undefined}
-              >
-                <CategoryIcon category={parent} useCase={useCase} size="size-7" />
-                <span className="flex-1 truncate">{parent.name}</span>
-                {hasChildren && (
-                  <ChevronDown
-                    className={cn(
-                      "size-4 shrink-0 text-muted-foreground transition-transform",
-                      isExpanded && "rotate-180",
-                    )}
-                  />
-                )}
-              </button>
-              {hasChildren && isExpanded && (
-                <ul className="ml-9 border-l border-border/60 pb-1">
-                  {parent.children.map((child) => (
-                    <li key={child.id}>
-                      <button
-                        type="button"
-                        onClick={() => handleSelect(child.id)}
-                        className={cn(
-                          "flex min-h-[40px] w-full items-center gap-2 px-2 py-2 text-left text-sm",
-                          activeCategory === child.id
-                            ? "font-semibold text-foreground"
-                            : "text-muted-foreground",
-                        )}
-                      >
-                        <CategoryIcon category={child} useCase={useCase} size="size-5" />
-                        <span className="flex-1 truncate">{child.name}</span>
-                      </button>
-                    </li>
-                  ))}
-                </ul>
-              )}
-            </li>
-          );
-        })}
-      </ul>
+      {/* Mobile: recursive drill-in accordion */}
+      <div className="md:hidden">
+        <MobileCategoryAccordion
+          nodes={tree}
+          depth={0}
+          activeCategory={activeCategory}
+          useCase={useCase}
+          onSelect={handleSelect}
+        />
+      </div>
     </nav>
   );
 }

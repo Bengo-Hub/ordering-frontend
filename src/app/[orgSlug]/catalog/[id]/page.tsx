@@ -34,7 +34,10 @@ import { Button } from "@/components/ui/button";
 import { ImageWithFallback } from "@/components/ui/image-with-fallback";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useCatalogItem, useCatalogItems } from "@/hooks/use-catalog";
+import { useCountdown } from "@/hooks/use-countdown";
 import { useOrderingConfig } from "@/hooks/use-ordering-config";
+import { usePromoDeals } from "@/hooks/use-promo-deals";
+import { applyDeal, dealBadge, resolveDealItems } from "@/lib/api/promo-deals";
 import { orgRoute } from "@/lib/routes";
 import { cn } from "@/lib/utils";
 import { useOrgSlug } from "@/providers/org-slug-provider";
@@ -91,6 +94,17 @@ export default function CatalogItemPage() {
     [relatedData, item?.id],
   );
 
+  // Deal-aware pricing (strikethrough original + discounted price + flash-sale countdown) —
+  // reuses the exact same matching/formula the homepage's Flash Sales rail uses, evaluated for
+  // this one item, so a product priced the same on both surfaces never disagrees.
+  const { data: deals } = usePromoDeals();
+  const activeDeal = useMemo(() => {
+    if (!item) return null;
+    const matches = resolveDealItems([item], deals ?? []);
+    return matches[0]?.deal ?? null;
+  }, [item, deals]);
+  const dealCountdown = useCountdown(activeDeal?.isFlashSale ? activeDeal.endAt : null);
+
   // Initialize default modifier selections when item loads
   useEffect(() => {
     if (!item?.modifierGroups) return;
@@ -137,8 +151,11 @@ export default function CatalogItemPage() {
     return adj;
   }, [item?.customizations, selectedOptions]);
 
-  // When a product has variants, the variant price replaces the base price.
-  const basePrice = hasVariants ? (selectedVariant?.price ?? item?.price ?? 0) : (item?.price ?? 0);
+  // When a product has variants, the variant price replaces the base price. A variant-selected
+  // price is never deal-discounted here — resolveDealItems matches against the base item, not a
+  // specific variant, so the deal is only applied to the plain (non-variant) price.
+  const rawBasePrice = hasVariants ? (selectedVariant?.price ?? item?.price ?? 0) : (item?.price ?? 0);
+  const basePrice = !hasVariants && activeDeal ? applyDeal(rawBasePrice, activeDeal.rule) : rawBasePrice;
   const unitPrice = basePrice + customizationAdjustment + modifierAdjustment;
   const totalPrice = unitPrice * quantity;
 
@@ -343,6 +360,26 @@ export default function CatalogItemPage() {
       </div>
 
       <div className="mx-auto max-w-5xl px-4 pb-32 pt-6">
+        {/* Breadcrumb */}
+        <nav aria-label="Breadcrumb" className="mb-4 flex items-center gap-1.5 text-xs text-muted-foreground sm:text-sm">
+          <Link href={orgRoute(orgSlug, "/")} className="hover:text-foreground hover:underline">
+            Home
+          </Link>
+          {item.category && (
+            <>
+              <ChevronRight className="size-3" />
+              <Link
+                href={orgRoute(orgSlug, `/catalog?category=${item.categoryId}`)}
+                className="hover:text-foreground hover:underline"
+              >
+                {item.category}
+              </Link>
+            </>
+          )}
+          <ChevronRight className="size-3" />
+          <span className="truncate text-foreground">{item.name}</span>
+        </nav>
+
         {/* Main content: Image + Info */}
         <div className="grid gap-8 lg:grid-cols-5">
           {/* ---------- Image column ---------- */}
@@ -404,16 +441,40 @@ export default function CatalogItemPage() {
               {item.name}
             </h1>
 
-            <div className="mt-2 flex items-baseline gap-2">
+            <div className="mt-2 flex flex-wrap items-baseline gap-2">
               <span className="text-2xl font-bold text-primary">
                 {item.currency} {basePrice.toLocaleString()}
               </span>
+              {activeDeal && !hasVariants && rawBasePrice > basePrice && (
+                <span className="text-sm text-muted-foreground line-through">
+                  {item.currency} {rawBasePrice.toLocaleString()}
+                </span>
+              )}
+              {activeDeal && (
+                <>
+                  {dealBadge(activeDeal.rule) && (
+                    <Badge className="bg-red-500 text-white hover:bg-red-500">
+                      {dealBadge(activeDeal.rule)}
+                    </Badge>
+                  )}
+                  {activeDeal.isFlashSale && dealCountdown && (
+                    <Badge className="bg-amber-500 text-white hover:bg-amber-500">{dealCountdown}</Badge>
+                  )}
+                </>
+              )}
             </div>
 
-            {/* Manufacturer / model (retail goods) — subtle muted subtext */}
-            {cfg.showMakeModel && (item.manufacturer || item.model) && (
+            {/* Brand / manufacturer / model (retail goods) — subtle muted subtext */}
+            {cfg.showMakeModel && (item.brandName || item.manufacturer || item.model) && (
               <p className="mt-1 text-sm text-muted-foreground">
-                {[item.manufacturer, item.model].filter(Boolean).join(" · ")}
+                {[item.brandName, item.manufacturer, item.model].filter(Boolean).join(" · ")}
+              </p>
+            )}
+            {/* Stock level — only shown when a real quantity projection exists; unknown never
+                renders "out of stock" (isAvailable/item.available remains the orderable gate). */}
+            {item.availableQuantity != null && item.availableQuantity > 0 && (
+              <p className="mt-1 text-xs font-medium text-amber-600">
+                Only {item.availableQuantity} left
               </p>
             )}
             {cfg.showMakeModel && item.condition && item.condition !== "NEW" && (

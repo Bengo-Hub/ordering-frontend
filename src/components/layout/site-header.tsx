@@ -17,6 +17,7 @@ import {
 } from "lucide-react";
 
 import { CartDrawer } from "@/components/cart/cart-drawer";
+import { CategoryTopNav } from "@/components/category/category-top-nav";
 import { DiningModeToggle } from "@/components/layout/dining-mode-toggle";
 import { LocationDialog } from "@/components/layout/location-dialog";
 import { OutletFilter } from "@/components/layout/outlet-filter";
@@ -27,7 +28,7 @@ import { Button } from "@/components/ui/button";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { brand } from "@/config/brand";
-import { useOutlets } from "@/hooks/use-catalog";
+import { useCategories, useOutlets } from "@/hooks/use-catalog";
 import { useOrderingConfig } from "@/hooks/use-ordering-config";
 import { userHasRole } from "@/lib/auth/permissions";
 import { getShortLocationName } from "@/lib/geocoding";
@@ -79,8 +80,12 @@ export function SiteHeader({ onMenuClick }: SiteHeaderProps) {
   // Food-specific quick-category shortcuts (pizza/sushi/grocery/alcohol/etc.)
   // only make sense for restaurant/QSR tenants — a hardware/retail/pharmacy
   // storefront must not surface them in its search dropdown.
-  const { profile } = useOrderingConfig();
+  const { profile, useCase: effectiveUseCase } = useOrderingConfig();
   const isFoodVertical = profile === "hospitality" || profile === "quick_service";
+  // Category top nav ("All Products | Category A | ...") is a retail/pharmacy/wholesale
+  // pattern — food verticals use the outlet-ranking model + delivery/pickup chrome instead.
+  const showCategoryNav = !isFoodVertical;
+  const { data: categoriesData } = useCategories(orgSlug, undefined, effectiveUseCase);
   const [userMenuOpen, setUserMenuOpen] = useState(false);
   const [cartOpen, setCartOpen] = useState(false);
   const [locationDialogOpen, setLocationDialogOpen] = useState(false);
@@ -427,6 +432,16 @@ export function SiteHeader({ onMenuClick }: SiteHeaderProps) {
           )}
         </div>
       </div>
+
+      {/* Category top nav ("All Products | ...") — retail/pharmacy/wholesale/services only */}
+      {showCategoryNav && (categoriesData?.length ?? 0) > 0 && (
+        <CategoryTopNav
+          categories={categoriesData ?? []}
+          useCase={profile}
+          onAllClick={() => router.push(orgRoute(orgSlug, "/catalog"))}
+          onCategoryChange={(id) => router.push(orgRoute(orgSlug, `/catalog?category=${id}`))}
+        />
+      )}
 
       {/* Mobile: Delivery/Pickup + Location Row */}
       <div className="flex items-center gap-1.5 border-t border-border px-3 py-1 md:hidden">

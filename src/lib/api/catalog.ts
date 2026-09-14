@@ -59,6 +59,9 @@ interface BackendMenuItem {
   manufacturer?: string;
   model?: string;
   condition?: string;
+  brandId?: string;
+  brandName?: string;
+  availableQuantity?: number;
   hasVariants?: boolean;
   variants?: BackendVariant[];
   dietaryTags?: unknown[];
@@ -118,6 +121,9 @@ function backendItemToMenuItem(
     ...(b.manufacturer ? { manufacturer: b.manufacturer } : {}),
     ...(b.model ? { model: b.model } : {}),
     ...(b.condition ? { condition: b.condition } : {}),
+    ...(b.brandId ? { brandId: b.brandId } : {}),
+    ...(b.brandName ? { brandName: b.brandName } : {}),
+    ...(b.availableQuantity != null ? { availableQuantity: b.availableQuantity } : {}),
     hasVariants,
     ...(variants.length > 0 ? { variants } : {}),
     ...(b.modifierGroups ? { modifierGroups: b.modifierGroups.map((g) => ({
@@ -159,7 +165,11 @@ export async function fetchMenuItems(
   if (filters?.featured !== undefined) params.set("featured", String(filters.featured));
   if (filters?.outletId) params.set("outlet_id", filters.outletId);
   if (filters?.favoriteOnly) params.set("favorite", "true");
-  if (filters?.sort) params.set("sort", filters.sort);
+  if (filters?.brandId) params.set("brand_id", filters.brandId);
+  // "newest" is the only sort key ordering-backend recognizes server-side; other opaque keys
+  // (best_selling, price_asc/desc) are resolved client-side (see catalog-discovery.tsx) and
+  // must never reach the backend as an unrecognized ?sort= value.
+  if (filters?.sort === "newest") params.set("sort", filters.sort);
 
   const res = await api.get<BackendListResponse<BackendMenuItem>>(
     `${tenantSlug}/catalog/items?${params.toString()}`,
@@ -366,6 +376,44 @@ export async function fetchOutletMenu(
   limit = 50,
 ): Promise<PaginatedResponse<MenuItem>> {
   return fetchMenuItems(tenantSlug, { ...filters, outletId }, page, limit);
+}
+
+// =============================================================================
+// BRANDS API (GET /catalog/brands — already built end-to-end on the backend, previously
+// unconsumed by any frontend view)
+// =============================================================================
+
+export interface CatalogBrand {
+  id: string;
+  name: string;
+  code?: string;
+  logoUrl?: string;
+  sortOrder: number;
+}
+
+interface BackendBrand {
+  id: string;
+  name: string;
+  code?: string;
+  logoUrl?: string;
+  isActive: boolean;
+  sortOrder: number;
+}
+
+export async function fetchBrands(tenantSlug: string): Promise<CatalogBrand[]> {
+  const response = await api.get<BackendBrand[]>(`${tenantSlug}/catalog/brands`);
+  return (response.data ?? [])
+    .filter((b) => b.isActive)
+    .map((b) => {
+      const logoUrl = getMediaUrl(b.logoUrl);
+      return {
+        id: b.id,
+        name: b.name,
+        ...(b.code ? { code: b.code } : {}),
+        ...(logoUrl ? { logoUrl } : {}),
+        sortOrder: b.sortOrder ?? 0,
+      };
+    });
 }
 
 export async function toggleFavorite(

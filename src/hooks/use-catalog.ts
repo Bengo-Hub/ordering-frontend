@@ -6,6 +6,7 @@
 import { keepPreviousData, useInfiniteQuery, useQuery } from "@tanstack/react-query";
 
 import {
+  fetchBrands,
   fetchCategories,
   fetchCategory,
   fetchFeaturedItems,
@@ -58,11 +59,12 @@ export function useCatalogItems(
   filters?: MenuFilters,
   page = 1,
   limit = 20,
+  enabled = true,
 ) {
   return useQuery({
     queryKey: [tenantSlug, ...catalogKeys.itemList(filters), page, limit],
     queryFn: () => fetchMenuItems(tenantSlug, filters, page, limit),
-    enabled: !!tenantSlug,
+    enabled: !!tenantSlug && enabled,
     placeholderData: keepPreviousData,
     staleTime: CATALOG_STALE_MS,
     gcTime: CATALOG_GC_MS,
@@ -146,6 +148,21 @@ export function useCategory(tenantSlug: string, id: string) {
     queryKey: [tenantSlug, ...catalogKeys.category(id)],
     queryFn: () => fetchCategory(tenantSlug, id),
     enabled: !!tenantSlug && !!id,
+    staleTime: CATALOG_STALE_MS,
+    gcTime: CATALOG_GC_MS,
+  });
+}
+
+// =============================================================================
+// BRANDS HOOKS
+// =============================================================================
+
+/** Hook to fetch a tenant's item brands ("Shop by Brand" homepage row / catalog filter). */
+export function useBrands(tenantSlug: string) {
+  return useQuery({
+    queryKey: [tenantSlug, "catalog", "brands"],
+    queryFn: () => fetchBrands(tenantSlug),
+    enabled: !!tenantSlug,
     staleTime: CATALOG_STALE_MS,
     gcTime: CATALOG_GC_MS,
   });
