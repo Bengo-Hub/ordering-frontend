@@ -12,6 +12,7 @@ import {
     Package,
     Phone,
     RefreshCw,
+    Star,
     XCircle,
 } from "lucide-react";
 import Link from "next/link";
@@ -20,6 +21,7 @@ import { useState } from "react";
 
 import { RequireAuth } from "@/components/auth/require-auth";
 import { SiteShell } from "@/components/layout/site-shell";
+import { RatingDialog } from "@/components/orders/rating-dialog";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -65,9 +67,11 @@ export default function OrderDetailPage() {
 
   const [showCancelReason, setShowCancelReason] = useState(false);
   const [cancelReason, setCancelReason] = useState("");
+  const [showRating, setShowRating] = useState(false);
 
   const isActive = order && !["delivered", "completed", "cancelled", "failed"].includes(order.status);
   const canCancel = order && ["pending", "confirmed"].includes(order.status);
+  const canRate = order && ["delivered", "completed"].includes(order.status) && !order.rating;
   const currentStep = order ? timelineIndex(order.status) : -1;
 
   function handleReorder() {
@@ -210,6 +214,42 @@ export default function OrderDetailPage() {
                   </CardContent>
                 </Card>
               )}
+
+              {/* Rate this order (delivered/completed, not yet rated) */}
+              {canRate && (
+                <Card className="border-brand-emphasis/30 bg-brand-muted/30">
+                  <CardContent className="flex items-center justify-between gap-4 py-4">
+                    <div>
+                      <p className="text-sm font-medium text-foreground">How was your order?</p>
+                      <p className="text-xs text-muted-foreground">Your feedback helps us improve.</p>
+                    </div>
+                    <Button size="sm" className="gap-1.5" onClick={() => setShowRating(true)}>
+                      <Star className="size-4" />
+                      Rate order
+                    </Button>
+                  </CardContent>
+                </Card>
+              )}
+              {order.rating ? (
+                <Card>
+                  <CardContent className="flex items-center gap-3 py-4">
+                    <div className="flex">
+                      {[1, 2, 3, 4, 5].map((star) => (
+                        <Star
+                          key={star}
+                          className={cn(
+                            "size-4",
+                            star <= order.rating! ? "fill-yellow-400 text-yellow-400" : "text-muted-foreground/30",
+                          )}
+                        />
+                      ))}
+                    </div>
+                    <p className="text-sm text-muted-foreground">
+                      You rated this order{order.ratingComment ? `: "${order.ratingComment}"` : ""}
+                    </p>
+                  </CardContent>
+                </Card>
+              ) : null}
 
               {/* Rider info (if tracking) */}
               {isActive && tracking?.riderName && (
@@ -407,6 +447,13 @@ export default function OrderDetailPage() {
             </>
           )}
         </div>
+        {showRating && order && (
+          <RatingDialog
+            orderId={order.id}
+            orderNumber={order.orderNumber}
+            onClose={() => setShowRating(false)}
+          />
+        )}
       </SiteShell>
     </RequireAuth>
   );
