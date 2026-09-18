@@ -283,7 +283,7 @@ export default function OrderDetailPage() {
                   <CardTitle className="text-base">Items</CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-3">
-                  {order.items.map((item, i) => (
+                  {(order.items ?? []).map((item, i) => (
                     <div
                       key={i}
                       className="flex items-start justify-between gap-2 text-sm"

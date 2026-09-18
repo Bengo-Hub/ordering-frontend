@@ -347,7 +347,7 @@ function OrderCard({
       <CardContent>
         {/* Item list */}
         <div className="mb-3 space-y-1">
-          {order.items.map((item, idx) => (
+          {(order.items ?? []).map((item, idx) => (
             <div key={idx} className="flex items-center justify-between text-sm">
               <span>
                 <span className="text-muted-foreground">{item.quantity}x</span>{" "}
