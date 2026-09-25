@@ -9,7 +9,8 @@ import { isDeliveryFulfillment, RIDER_PROGRESS } from "@/lib/order-timeline";
 
 /**
  * OrderStatusPanel shows the customer what they need while the order is on its way: the delivery
- * code to give the rider at the door, what the rider is doing, a pending manual M-Pesa check, and
+ * code to give the rider at the door (or the collection code to show at the counter for pickup),
+ * what the rider is doing, a pending manual M-Pesa check, and
  * the promised time of a scheduled order. Renders nothing when none applies.
  */
 export function OrderStatusPanel({ order }: { order: Order }) {
@@ -18,7 +19,9 @@ export function OrderStatusPanel({ order }: { order: Order }) {
   const finished = ["delivered", "completed", "cancelled", "refunded", "failed"].includes(order.status);
   const riderProgress = RIDER_PROGRESS[String(meta.delivery_status ?? "")];
   const awaitingMpesaCheck = meta.payment_channel === "mpesa_manual" && order.paymentStatus !== "paid";
-  const showCode = delivery && !finished && !!order.podCode;
+  // Delivery: the rider's proof-of-delivery code. Pickup: the code the counter asks for at handover.
+  const pickup = order.fulfillmentType === "pickup";
+  const showCode = (delivery || pickup) && !finished && !!order.podCode;
   const scheduledFor = order.scheduledFor;
   // Placed and paid (or pay-later) but the outlet has not accepted it yet (manual acceptance).
   const payLater = /cod|cash/i.test(order.paymentMethod ?? "") || meta.payment_channel === "mpesa_manual";
@@ -65,8 +68,12 @@ export function OrderStatusPanel({ order }: { order: Order }) {
             <div className="flex items-center gap-2">
               <KeyRound className="size-4 text-primary" />
               <div>
-                <p className="text-sm font-medium">Delivery code</p>
-                <p className="text-xs text-muted-foreground">Give this code to the rider when you receive your order.</p>
+                <p className="text-sm font-medium">{delivery ? "Delivery code" : "Collection code"}</p>
+                <p className="text-xs text-muted-foreground">
+                  {delivery
+                    ? "Give this code to the rider when you receive your order."
+                    : "Show this code at the counter when you collect your order."}
+                </p>
               </div>
             </div>
             <span className="font-mono text-2xl font-bold tracking-[0.3em] text-foreground">{order.podCode}</span>
