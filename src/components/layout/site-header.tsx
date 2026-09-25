@@ -71,7 +71,7 @@ const searchCategories: SearchCategory[] = [
 ];
 
 
-import { serviceTitle, useBrandConfig } from "@/hooks/use-brand";
+import { appDisplayName, useBrandConfig } from "@/hooks/use-brand";
 
 export function SiteHeader({ onMenuClick }: SiteHeaderProps) {
   const orgSlug = useOrgSlug();
@@ -98,8 +98,8 @@ export function SiteHeader({ onMenuClick }: SiteHeaderProps) {
   const logout = useAuthStore((state) => state.logout);
   const cartItems = useCartStore((state) => state.items);
   const { data: outletsData } = useOutlets(orgSlug, undefined, 1, 10);
-  const displayName = serviceTitle(brandConfig?.name, 'OrderApp');
-  const displayLogo = brandConfig?.logoUrl || brand.assets.logo;
+  const displayName = appDisplayName(brandConfig, 'OrderApp');
+  const displayLogo = brandConfig?.appIconUrl || brandConfig?.logoUrl || brand.assets.logo;
   const outlets: SearchOutlet[] = (outletsData?.data ?? []).map((o) => ({
     id: o.id,
     name: o.name,

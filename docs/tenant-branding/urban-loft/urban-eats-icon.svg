@@ -1,0 +1,23 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="512" height="512" viewBox="0 0 512 512">
+  <defs>
+    <linearGradient id="ue-bg" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#4E342E"/>
+      <stop offset="1" stop-color="#3E2723"/>
+    </linearGradient>
+    <linearGradient id="ue-bowl" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#FFCA28"/>
+      <stop offset="1" stop-color="#FFB300"/>
+    </linearGradient>
+  </defs>
+  <rect width="512" height="512" rx="112" fill="url(#ue-bg)"/>
+  <!-- loft roofline -->
+  <path d="M120 222 L256 112 L392 222" fill="none" stroke="#FFC107" stroke-width="30" stroke-linecap="round" stroke-linejoin="round"/>
+  <!-- steam -->
+  <path d="M222 240 c-16 -18 16 -32 0 -52" fill="none" stroke="#FFE082" stroke-width="14" stroke-linecap="round"/>
+  <path d="M256 234 c-16 -18 16 -32 0 -52" fill="none" stroke="#FFE082" stroke-width="14" stroke-linecap="round"/>
+  <path d="M290 240 c-16 -18 16 -32 0 -52" fill="none" stroke="#FFE082" stroke-width="14" stroke-linecap="round"/>
+  <!-- bowl -->
+  <path d="M120 266 H392 C392 340 331 394 256 394 C181 394 120 340 120 266 Z" fill="url(#ue-bowl)"/>
+  <path d="M146 300 H366" stroke="#3E2723" stroke-opacity="0.22" stroke-width="10" stroke-linecap="round"/>
+  <rect x="206" y="404" width="100" height="22" rx="11" fill="#FFC107"/>
+</svg>

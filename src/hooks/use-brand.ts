@@ -19,6 +19,10 @@ interface TenantBrandConfig {
   features?: Record<string, boolean>;
   use_case?: string;
   use_cases?: string[];
+  app_name?: string;
+  app_short_name?: string;
+  app_icon_url?: string;
+  app_theme_color?: string;
 }
 
 export const brandKeys = {
@@ -34,28 +38,55 @@ export function serviceTitle(tenantName: string | undefined, appName: string): s
   return firstWord ? `${firstWord} ${appName}` : appName;
 }
 
+export interface BrandConfig {
+  name: string;
+  shortName: string;
+  tagline: string;
+  logoUrl: string;
+  supportEmail: string;
+  supportPhone: string;
+  primaryColor: string;
+  secondaryColor: string;
+  features: Record<string, boolean>;
+  useCase: string | undefined;
+  useCases: string[];
+  /** Tenant's own name for this app (e.g. "Urban Eats"); undefined uses the default. */
+  appName: string | undefined;
+  /** Tenant's own icon for this app; undefined uses the business logo. */
+  appIconUrl: string | undefined;
+}
+
+function staticBrandConfig(): BrandConfig {
+  return {
+    name: staticBrand.name,
+    shortName: staticBrand.shortName,
+    tagline: staticBrand.tagline,
+    logoUrl: staticBrand.assets.logo,
+    supportEmail: staticBrand.support.email,
+    supportPhone: staticBrand.support.phone,
+    primaryColor: staticBrand.palette.primary,
+    secondaryColor: staticBrand.palette.emphasis,
+    features: {},
+    useCase: undefined,
+    useCases: [],
+    appName: undefined,
+    appIconUrl: undefined,
+  };
+}
+
+/** App name for headers and install prompts: the tenant's own app name, else "<First word> <fallback>". */
+export function appDisplayName(config: BrandConfig | undefined, fallback: string): string {
+  return config?.appName || serviceTitle(config?.name, fallback);
+}
+
 export function useBrandConfig() {
   const orgSlug = useOrgSlug();
   const slug = orgSlug || (process.env.NEXT_PUBLIC_TENANT_SLUG as string) || "";
 
   return useQuery({
     queryKey: brandKeys.config(slug),
-    queryFn: async () => {
-      if (!slug) {
-        return {
-          name: staticBrand.name,
-          shortName: staticBrand.shortName,
-          tagline: staticBrand.tagline,
-          logoUrl: staticBrand.assets.logo,
-          supportEmail: staticBrand.support.email,
-          supportPhone: staticBrand.support.phone,
-          primaryColor: staticBrand.palette.primary,
-          secondaryColor: staticBrand.palette.emphasis,
-          features: {} as Record<string, boolean>,
-          useCase: undefined as string | undefined,
-          useCases: [] as string[],
-        };
-      }
+    queryFn: async (): Promise<BrandConfig> => {
+      if (!slug) return staticBrandConfig();
       try {
         const { data } = await api.get<TenantBrandConfig>(`${slug}/config`);
         return {
@@ -70,21 +101,11 @@ export function useBrandConfig() {
           features: data.features ?? {},
           useCase: data.use_case,
           useCases: data.use_cases ?? [],
+          appName: data.app_name || undefined,
+          appIconUrl: data.app_icon_url || undefined,
         };
       } catch {
-        return {
-          name: staticBrand.name,
-          shortName: staticBrand.shortName,
-          tagline: staticBrand.tagline,
-          logoUrl: staticBrand.assets.logo,
-          supportEmail: staticBrand.support.email,
-          supportPhone: staticBrand.support.phone,
-          primaryColor: staticBrand.palette.primary,
-          secondaryColor: staticBrand.palette.emphasis,
-          features: {} as Record<string, boolean>,
-          useCase: undefined as string | undefined,
-          useCases: [] as string[],
-        };
+        return staticBrandConfig();
       }
     },
     enabled: !!slug,

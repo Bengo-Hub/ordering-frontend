@@ -45,12 +45,14 @@ export function PWAInstallPrompt() {
   useTenantManifestLink();
   const { data: brandConfig } = useBrandConfig();
 
-  const appName = brandConfig?.name ? `${brandConfig.name} Ordering` : brand.shortName;
+  // Same name the installed app gets from the manifest (tenant's own app name first).
+  const appName =
+    brandConfig?.appName || (brandConfig?.name ? `${brandConfig.name} Ordering` : brand.shortName);
 
   return (
     <PwaInstallPrompt
       appName={appName}
-      logoUrl={brandConfig?.logoUrl ?? null}
+      logoUrl={brandConfig?.appIconUrl ?? brandConfig?.logoUrl ?? null}
       tagline="Order faster with the installed app. Works offline too!"
       dismissKey={DISMISS_KEY}
     />
