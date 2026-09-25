@@ -1,6 +1,6 @@
 "use client";
 
-import { Bike, CalendarClock, KeyRound, ShieldCheck } from "lucide-react";
+import { Bike, CalendarClock, Hourglass, KeyRound, ShieldCheck } from "lucide-react";
 
 import { Card, CardContent } from "@/components/ui/card";
 import type { Order } from "@/lib/api/orders";
@@ -20,12 +20,21 @@ export function OrderStatusPanel({ order }: { order: Order }) {
   const awaitingMpesaCheck = meta.payment_channel === "mpesa_manual" && order.paymentStatus !== "paid";
   const showCode = delivery && !finished && !!order.podCode;
   const scheduledFor = order.scheduledFor;
+  // Placed and paid (or pay-later) but the outlet has not accepted it yet (manual acceptance).
+  const payLater = /cod|cash/i.test(order.paymentMethod ?? "") || meta.payment_channel === "mpesa_manual";
+  const awaitingAcceptance = order.status === "pending" && (order.paymentStatus === "paid" || payLater);
 
-  if (!showCode && !riderProgress && !awaitingMpesaCheck && !(scheduledFor && !finished)) return null;
+  if (!showCode && !riderProgress && !awaitingMpesaCheck && !awaitingAcceptance && !(scheduledFor && !finished)) return null;
 
   return (
     <Card>
       <CardContent className="space-y-3 py-4">
+        {awaitingAcceptance && (
+          <p className="flex items-start gap-2 text-sm">
+            <Hourglass className="mt-0.5 size-4 text-primary" />
+            <span>Your order has been sent. We will let you know as soon as the outlet accepts it.</span>
+          </p>
+        )}
         {scheduledFor && !finished && (
           <p className="flex items-center gap-2 text-sm">
             <CalendarClock className="size-4 text-primary" />

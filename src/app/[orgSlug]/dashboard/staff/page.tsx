@@ -64,7 +64,11 @@ function nextActions(order: AdminOrder): StatusAction[] {
   const delivery = isDeliveryType(order.fulfillmentType);
   switch (order.status) {
     case "pending":
-      return isOfflinePaid(order) ? [{ next: "confirmed", label: "Accept order", variant: "default" }] : [];
+      // Acceptable once paid, or straight away when paid later (cash / M-Pesa on collection or
+      // delivery, or a customer-keyed M-Pesa code). Manual acceptance is the default policy.
+      return isOfflinePaid(order) || order.paymentStatus === "paid"
+        ? [{ next: "confirmed", label: "Accept order", variant: "default" }]
+        : [];
     case "confirmed":
       return [{ next: "preparing", label: "Start preparing", variant: "default" }];
     case "preparing":
@@ -328,7 +332,7 @@ function OrderCard({
   const cancelOrder = useCancelAdminOrder();
   const verifyPayment = useVerifyOrderPayment();
   const needsPaymentCheck = isManualMpesaOrder(order) && order.paymentStatus !== "paid";
-  const awaitingOnlinePayment = order.status === "pending" && !isOfflinePaid(order);
+  const awaitingOnlinePayment = order.status === "pending" && !isOfflinePaid(order) && order.paymentStatus !== "paid";
   const canReject = ["pending", "confirmed", "preparing", "ready"].includes(order.status);
   const riderState = RIDER_STATE[String(order.metadata?.delivery_status ?? "")];
 

@@ -203,6 +203,72 @@ export default function TenantSettingsPage() {
 
 // ── Payment Settings ─────────────────────────────────────────────────────────
 
+/**
+ * OrderAcceptanceCard switches between manual acceptance (the default: staff accept every order in
+ * the POS online-orders queue or here before the kitchen gets it) and automatic acceptance (an
+ * order is confirmed as soon as it is paid, or placed with pay on delivery / at the counter).
+ */
+function OrderAcceptanceCard() {
+  const { data: configs = [], isLoading } = useServiceConfig();
+  const updateConfig = useUpdateServiceConfig();
+  const current = configs.find((c) => c.configKey === "orders.auto_accept");
+  const autoAccept = /^(true|1)$/i.test((current?.configValue ?? "false").replace(/"/g, "").trim());
+
+  const setMode = (auto: boolean) => {
+    updateConfig.mutate(
+      { key: "orders.auto_accept", value: auto ? "true" : "false" },
+      {
+        onSuccess: () => toast.success(auto ? "Orders will be accepted automatically" : "Staff will accept each order"),
+        onError: async (err) => toast.error(await apiErrorMessage(err, "Failed to save order acceptance")),
+      },
+    );
+  };
+
+  return (
+    <Card>
+      <CardHeader>
+        <CardTitle className="flex items-center gap-2">
+          <Check className="size-5" />
+          Order acceptance
+        </CardTitle>
+      </CardHeader>
+      <CardContent className="space-y-3">
+        {isLoading ? (
+          <Loader2 className="size-5 animate-spin text-primary" />
+        ) : (
+          <div className="grid gap-3 sm:grid-cols-2">
+            {[
+              {
+                auto: false,
+                title: "Manual (recommended)",
+                body: "Every order rings in the POS online orders queue. Staff accept it (or reject it with a reason) before the kitchen or packing starts.",
+              },
+              {
+                auto: true,
+                title: "Automatic",
+                body: "Orders go straight to the kitchen once paid, or when placed with pay on delivery / at the counter. Staff can still reject.",
+              },
+            ].map((opt) => (
+              <button
+                key={String(opt.auto)}
+                type="button"
+                disabled={updateConfig.isPending}
+                onClick={() => opt.auto !== autoAccept && setMode(opt.auto)}
+                className={`rounded-lg border p-4 text-left transition-colors ${
+                  opt.auto === autoAccept ? "border-primary bg-primary/5" : "border-border hover:border-muted-foreground/30"
+                }`}
+              >
+                <p className="font-medium">{opt.title}</p>
+                <p className="mt-1 text-xs text-muted-foreground">{opt.body}</p>
+              </button>
+            ))}
+          </div>
+        )}
+      </CardContent>
+    </Card>
+  );
+}
+
 function PaymentSettingsTab({ tenantSlug: _tenantSlug }: { tenantSlug: string }) {
   const { data: available = [], isLoading: availableLoading } = useAvailableGateways();
   const { data: selected = [], isLoading: selectedLoading } = useSelectedGateways();
@@ -249,6 +315,7 @@ function PaymentSettingsTab({ tenantSlug: _tenantSlug }: { tenantSlug: string })
 
   return (
     <div className="space-y-6">
+      <OrderAcceptanceCard />
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
