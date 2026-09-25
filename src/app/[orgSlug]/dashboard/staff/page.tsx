@@ -22,9 +22,15 @@ import { SubscriptionBanner } from "@/components/subscription/subscription-banne
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle,
+} from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Pagination } from "@/components/ui/pagination";
-import { useAdminOrders, useAssignRider, useAvailableRiders, useUpdateOrderStatus, useDeleteAdminOrder } from "@/hooks/use-admin";
+import {
+  useAdminOrders, useAssignRider, useAvailableRiders, useCancelAdminOrder, useUpdateOrderStatus,
+  useDeleteAdminOrder, useVerifyOrderPayment,
+} from "@/hooks/use-admin";
 import { toast } from "@/lib/toast";
 import { apiErrorMessage } from "@/lib/api/error-message";
 import type { AdminOrder } from "@/lib/api/admin";
@@ -40,20 +46,45 @@ const STATUS_TABS = [
   { key: "cancelled", label: "Cancelled" },
 ] as const;
 
-const STATUS_ACTIONS: Record<string, { next: string; label: string; variant: "default" | "outline" }[]> = {
-  pending: [
-    { next: "confirmed", label: "Accept Order", variant: "default" },
-    { next: "cancelled", label: "Reject", variant: "outline" },
-  ],
-  confirmed: [
-    { next: "preparing", label: "Start Preparing", variant: "default" },
-  ],
-  preparing: [
-    { next: "ready", label: "Mark Ready", variant: "default" },
-  ],
-  ready: [
-    { next: "out_for_delivery", label: "Hand to Rider", variant: "default" },
-  ],
+type StatusAction = { next: string; label: string; variant: "default" | "outline" };
+
+const isDeliveryType = (t: string) => /deliver|scheduled/i.test(t);
+const isManualMpesaOrder = (o: AdminOrder) => o.metadata?.payment_channel === "mpesa_manual";
+/** Cash/M-Pesa on collection or delivery, or a customer-keyed M-Pesa payment: nothing online confirms it. */
+const isOfflinePaid = (o: AdminOrder) =>
+  o.paymentMethod === "cod" || o.paymentMethod === "cash" || isManualMpesaOrder(o);
+
+/**
+ * nextActions lists the status moves that make sense for this order right now. An order paid by
+ * an online gateway is confirmed by the payment itself, so a pending one is simply waiting for the
+ * customer to pay and must not be "accepted" (the kitchen would cook an unpaid order). A pickup
+ * order ends with "Collected"; a delivery order leaves with a rider, never by a status button.
+ */
+function nextActions(order: AdminOrder): StatusAction[] {
+  const delivery = isDeliveryType(order.fulfillmentType);
+  switch (order.status) {
+    case "pending":
+      return isOfflinePaid(order) ? [{ next: "confirmed", label: "Accept order", variant: "default" }] : [];
+    case "confirmed":
+      return [{ next: "preparing", label: "Start preparing", variant: "default" }];
+    case "preparing":
+      return [{ next: "ready", label: delivery ? "Ready for the rider" : "Ready for pickup", variant: "default" }];
+    case "ready":
+      return delivery ? [] : [{ next: "completed", label: "Collected", variant: "default" }];
+    default:
+      return [];
+  }
+}
+
+const RIDER_STATE: Record<string, string> = {
+  rider_assigned: "Rider assigned",
+  rider_accepted: "Rider accepted",
+  en_route_pickup: "Rider heading to the outlet",
+  arrived_pickup: "Rider at the outlet",
+  picked_up: "Rider has the order",
+  en_route_dropoff: "On the way to the customer",
+  arrived_dropoff: "Rider at the customer",
+  needs_rider: "Needs a new rider",
 };
 
 function statusBadgeVariant(status: string): "default" | "soft" | "outline" {
@@ -289,14 +320,36 @@ function OrderCard({
   showRiderPicker: boolean;
   onToggleRiderPicker: (orderId: string) => void;
 }) {
-  const isDeliveryOrder = order.fulfillmentType === "delivery";
-  const rawActions = STATUS_ACTIONS[order.status] ?? [];
-  // For delivery orders at "ready" status, suppress the direct "Hand to Rider" status push —
-  // the proper path is "Assign Rider" which creates a logistics task and triggers the NATS flow
-  // that transitions the order to out_for_delivery automatically.
-  const actions = isDeliveryOrder
-    ? rawActions.filter((a) => a.next !== "out_for_delivery")
-    : rawActions;
+  const isDeliveryOrder = isDeliveryType(order.fulfillmentType);
+  const actions = nextActions(order);
+  const [dialog, setDialog] = useState<"reject" | "verify" | "delete" | null>(null);
+  const [reason, setReason] = useState("");
+  const [mpesaCode, setMpesaCode] = useState(String(order.metadata?.mpesa_code ?? ""));
+  const cancelOrder = useCancelAdminOrder();
+  const verifyPayment = useVerifyOrderPayment();
+  const needsPaymentCheck = isManualMpesaOrder(order) && order.paymentStatus !== "paid";
+  const awaitingOnlinePayment = order.status === "pending" && !isOfflinePaid(order);
+  const canReject = ["pending", "confirmed", "preparing", "ready"].includes(order.status);
+  const riderState = RIDER_STATE[String(order.metadata?.delivery_status ?? "")];
+
+  const submitReject = async () => {
+    try {
+      await cancelOrder.mutateAsync({ orderId: order.id, reason: reason.trim() });
+      toast.success(`Order #${order.orderNumber} rejected; the customer has been told`);
+      setDialog(null);
+    } catch (e) {
+      toast.error(await apiErrorMessage(e, "Failed to reject the order"));
+    }
+  };
+  const submitVerify = async () => {
+    try {
+      await verifyPayment.mutateAsync({ orderId: order.id, reference: mpesaCode });
+      toast.success(`Payment for #${order.orderNumber} confirmed`);
+      setDialog(null);
+    } catch (e) {
+      toast.error(await apiErrorMessage(e, "Could not confirm the payment"));
+    }
+  };
   const createdDate = new Date(order.createdAt);
   const minutesAgo = Math.round((Date.now() - createdDate.getTime()) / 60_000);
   const timeLabel =
@@ -368,6 +421,19 @@ function OrderCard({
                 Deliver to: {order.deliveryAddress}
               </p>
             )}
+            {isDeliveryOrder && riderState && (
+              <p className="mt-0.5 text-xs font-medium text-green-700 dark:text-green-400">{riderState}</p>
+            )}
+            {awaitingOnlinePayment && (
+              <p className="mt-0.5 text-xs text-amber-700 dark:text-amber-400">
+                Waiting for the customer to complete payment. It goes to the kitchen once paid.
+              </p>
+            )}
+            {needsPaymentCheck && (
+              <p className="mt-0.5 text-xs text-amber-700 dark:text-amber-400">
+                M-Pesa code {String(order.metadata?.mpesa_code ?? "")}: confirm it before handing the order over.
+              </p>
+            )}
           </div>
 
           <div className="flex gap-2 flex-wrap justify-end">
@@ -425,21 +491,96 @@ function OrderCard({
               </div>
             )}
 
+            {needsPaymentCheck && (
+              <PermissionActionButton
+                permission="ordering.orders.manage"
+                disabled={isUpdating}
+                onClick={() => setDialog("verify")}
+                className="inline-flex h-8 items-center justify-center rounded-md bg-amber-500 px-3 text-sm font-medium text-white hover:bg-amber-600 disabled:pointer-events-none disabled:opacity-50"
+              >
+                Confirm M-Pesa
+              </PermissionActionButton>
+            )}
+
+            {canReject && (
+              <PermissionActionButton
+                permission="ordering.orders.manage"
+                disabled={isUpdating}
+                onClick={() => setDialog("reject")}
+                className="inline-flex h-8 items-center justify-center rounded-md border border-input px-3 text-sm font-medium hover:bg-accent disabled:pointer-events-none disabled:opacity-50"
+              >
+                Reject
+              </PermissionActionButton>
+            )}
+
             <PermissionActionButton
               permission="ordering.orders.delete"
               disabled={isUpdating}
               className="inline-flex h-8 items-center justify-center rounded-md px-3 text-sm font-medium text-destructive hover:bg-destructive/10 disabled:pointer-events-none disabled:opacity-50"
-              onClick={() => {
-                if (window.confirm(`Delete order #${order.orderNumber}? This cannot be undone.`)) {
-                  onDelete(order.id);
-                }
-              }}
+              onClick={() => setDialog("delete")}
             >
               Delete
             </PermissionActionButton>
           </div>
         </div>
       </CardContent>
+
+      <Dialog open={dialog !== null} onOpenChange={(o) => !o && setDialog(null)}>
+        <DialogContent className="sm:max-w-md">
+          {dialog === "reject" && (
+            <>
+              <DialogHeader>
+                <DialogTitle>Reject order #{order.orderNumber}?</DialogTitle>
+                <DialogDescription>
+                  The customer is told why. A prepaid order is refunded to them.
+                </DialogDescription>
+              </DialogHeader>
+              <Input value={reason} onChange={(e) => setReason(e.target.value)} placeholder="e.g. An item is out of stock" />
+              <DialogFooter>
+                <Button variant="outline" onClick={() => setDialog(null)}>Back</Button>
+                <Button onClick={submitReject} disabled={!reason.trim() || cancelOrder.isPending}>Reject order</Button>
+              </DialogFooter>
+            </>
+          )}
+          {dialog === "verify" && (
+            <>
+              <DialogHeader>
+                <DialogTitle>Confirm M-Pesa payment</DialogTitle>
+                <DialogDescription>
+                  Find this code in the business M-Pesa messages and check the amount ({order.currency} {order.grandTotal.toLocaleString()}).
+                </DialogDescription>
+              </DialogHeader>
+              <Input
+                value={mpesaCode}
+                onChange={(e) => setMpesaCode(e.target.value.toUpperCase().replace(/[^A-Z0-9]/g, "").slice(0, 10))}
+                className="font-semibold tracking-widest"
+              />
+              <DialogFooter>
+                <Button variant="outline" onClick={() => setDialog("reject")}>Not received</Button>
+                <Button onClick={submitVerify} disabled={mpesaCode.length !== 10 || verifyPayment.isPending}>Payment received</Button>
+              </DialogFooter>
+            </>
+          )}
+          {dialog === "delete" && (
+            <>
+              <DialogHeader>
+                <DialogTitle>Delete order #{order.orderNumber}?</DialogTitle>
+                <DialogDescription>This cannot be undone. Use Reject to cancel an order the customer should hear about.</DialogDescription>
+              </DialogHeader>
+              <DialogFooter>
+                <Button variant="outline" onClick={() => setDialog(null)}>Keep</Button>
+                <Button
+                  variant="outline"
+                  className="border-destructive text-destructive hover:bg-destructive/10"
+                  onClick={() => { onDelete(order.id); setDialog(null); }}
+                >
+                  Delete
+                </Button>
+              </DialogFooter>
+            </>
+          )}
+        </DialogContent>
+      </Dialog>
     </Card>
   );
 }

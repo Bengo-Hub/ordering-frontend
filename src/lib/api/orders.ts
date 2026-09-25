@@ -51,6 +51,12 @@ export interface Order {
   rating?: number;
   ratingComment?: string;
   ratedAt?: string;
+  /** 6-digit code the customer gives the rider at the door (delivery orders). */
+  podCode?: string;
+  /** Promised time of a scheduled order. */
+  scheduledFor?: string;
+  /** Order metadata: delivery_status (rider progress), payment_channel/mpesa_code, order notes. */
+  metadata?: Record<string, unknown>;
   createdAt: string;
   updatedAt: string;
 }

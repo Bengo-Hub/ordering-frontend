@@ -640,6 +640,8 @@ export default function CatalogItemPage() {
             <h2 className="mb-4 text-lg font-bold text-foreground">Choose an appointment</h2>
             <AppointmentPicker
               durationMinutes={item.durationMinutes ?? 30}
+              tenantSlug={orgSlug}
+              outletId={item.outletId}
               onSelect={setAppointment}
             />
             {!appointment && (

@@ -53,9 +53,12 @@ export type CheckoutStep = "review" | "processing" | "payment" | "success";
 export type CheckoutPaymentOptionId =
   | "paystack_now"
   | "mpesa_now"
+  | "mpesa_manual"
   | "wallet"
-  | "cod_collection"
-  | "mpesa_collection";
+  | "cod_collection";
+
+/** M-Pesa confirmation codes are 10 letters and digits, e.g. SGH7K2L9QP. */
+export const MPESA_CODE_PATTERN = /^[A-Z0-9]{10}$/;
 
 /** A payment method the customer can select at checkout. */
 export interface CheckoutPaymentOption {
@@ -71,6 +74,10 @@ export interface CheckoutPaymentOption {
    * later (cash at handover / staff STK / guest order page).
    */
   payNow: boolean;
+  /** One-line explanation under the label. */
+  description?: string | undefined;
+  /** Manual M-Pesa: the outlet's Till / Paybill (+ account) / Pochi numbers to pay to. */
+  instructions?: Record<string, string> | undefined;
 }
 
 const SMALL_ORDER_THRESHOLD = 500;
@@ -158,13 +165,18 @@ export function useCheckoutState() {
   const [selectedOptionId, setSelectedOptionId] = useState<
     CheckoutPaymentOptionId | undefined
   >(undefined);
+  // Manual M-Pesa: the confirmation code from the customer's payment message.
+  const [mpesaCode, setMpesaCodeRaw] = useState("");
+  const setMpesaCode = useCallback(
+    (v: string) => setMpesaCodeRaw(v.toUpperCase().replace(/[^A-Z0-9]/g, "").slice(0, 10)),
+    [],
+  );
 
   // Queries & mutations
   const { data: addresses = [], isLoading: addressesLoading } = useAddresses();
   const checkoutMutation = useCheckout();
   const guestCheckoutMutation = useGuestCheckout();
   const applyPromo = useApplyPromoCode();
-  const { data: paymentMethodsData } = usePaymentMethods(fulfillmentMode);
 
   const selectedAddress = useMemo(
     () => addresses.find((a) => a.id === selectedAddressId) ?? null,
@@ -197,6 +209,11 @@ export function useCheckoutState() {
   });
   const outletId = cartOutletId || outlets[0]?.id || null;
   const [selectedPickupOutletId, setSelectedPickupOutletId] = useState<string | null>(null);
+  // Booking carts are "pickup" for payment purposes (the customer comes to the outlet).
+  const { data: paymentMethodsData } = usePaymentMethods(
+    noFulfillment ? "pickup" : fulfillmentMode,
+    selectedPickupOutletId || outletId,
+  );
 
   const { data: remoteFees, isLoading: feesLoading } = useFeeBreakdown(outletId, fulfillmentMode, sessionId);
 
@@ -282,21 +299,22 @@ export function useCheckoutState() {
     const gateways = paymentMethodsData?.gateways ?? [];
     const opts: CheckoutPaymentOption[] = [];
 
-    // Pickup collects at the outlet; delivery (and schedule, which is delivery-like)
-    // collects at the customer's door. Labels adapt to the channel.
-    const isPickup = fulfillmentMode === "pickup";
-    const collectWord = isPickup ? "Pickup" : "Delivery";
+    // Pickup (and bookings) are paid at the outlet; delivery (and schedule, which is a delivery)
+    // at the customer's door. Labels adapt to the channel.
+    const isPickup = noFulfillment || fulfillmentMode === "pickup";
 
     let hasMpesa = false;
     let hasPaystack = false;
-    let hasCod = false;
+    let codGateway: (typeof gateways)[number] | undefined;
+    let manualMpesa: (typeof gateways)[number] | undefined;
 
     for (const g of gateways) {
       if (!g.enabled) continue;
       const t = g.type.toLowerCase();
-      if (isMpesaGateway(t)) hasMpesa = true;
+      if (t === "mpesa_manual") manualMpesa = g;
+      else if (isMpesaGateway(t)) hasMpesa = true;
       else if (isPaystackGateway(t)) hasPaystack = true;
-      else if (isCodGateway(t)) hasCod = true;
+      else if (isCodGateway(t)) codGateway = g;
     }
 
     // ── Pay now ───────────────────────────────────────────────────────
@@ -328,26 +346,38 @@ export function useCheckoutState() {
       });
     }
 
-    // ── Pay on collection (cash / deferred M-Pesa at handover) ─────────
-    if (hasCod) {
+    // ── Manual M-Pesa: pay the outlet's own Till/Paybill now, then type the code ──
+    // Offered when the outlet has its own M-Pesa numbers. The order goes to the kitchen at once
+    // and the outlet checks the code before handing it over.
+    if (manualMpesa) {
       opts.push({
-        id: "cod_collection",
-        method: "cod",
-        label: `Cash on ${collectWord}`,
+        id: "mpesa_manual",
+        method: "mpesa_manual",
+        label: hasMpesa ? "M-Pesa to our Till/Paybill (enter code)" : "Pay with M-Pesa (enter code)",
+        description: manualMpesa.description,
+        instructions: manualMpesa.instructions,
         payNow: false,
       });
     }
-    if (hasMpesa) {
+
+    // ── Pay on delivery / at the counter (cash or M-Pesa at handover) ──
+    // One option: the rider or cashier records whether it was cash or M-Pesa (with the code).
+    // A separate "M-Pesa on delivery" option used to place an unpaid M-Pesa order that never
+    // reached the kitchen.
+    if (codGateway) {
       opts.push({
-        id: "mpesa_collection",
-        method: "mpesa",
-        label: `M-Pesa on ${collectWord}`,
+        id: "cod_collection",
+        method: "cod",
+        label: codGateway.name || (isPickup ? "Pay at the counter" : "Pay on delivery"),
+        description:
+          codGateway.description ||
+          (isPickup ? "Cash or M-Pesa when you collect your order." : "Cash or M-Pesa to the rider when your order arrives."),
         payNow: false,
       });
     }
 
     return opts;
-  }, [paymentMethodsData, fulfillmentMode, isGuestMode, walletBalance, walletCurrency, amountDueNow]);
+  }, [paymentMethodsData, fulfillmentMode, noFulfillment, isGuestMode, walletBalance, walletCurrency, amountDueNow]);
 
   // The currently selected option object (derived from the tracked id).
   const selectedOption = useMemo(
@@ -514,6 +544,12 @@ export function useCheckoutState() {
       }
     }
 
+    // Manual M-Pesa: the customer must have paid and typed the code from the M-Pesa message.
+    if (selectedOption?.id === "mpesa_manual" && !MPESA_CODE_PATTERN.test(mpesaCode)) {
+      toast.error("Pay to the M-Pesa number shown, then enter the 10-character code from the M-Pesa message");
+      return;
+    }
+
     // Booking carts (tickets/appointments) have no fulfillment — send pickup so no
     // delivery address/fee is required. Deposits (per-outlet bookingDepositPercent)
     // and per-ticket attendees are handled here: the backend charges the deposit and
@@ -569,6 +605,9 @@ export function useCheckoutState() {
         if (deliveryNotes) guestPayload.deliveryNotes = deliveryNotes;
         if (scheduledTime) guestPayload.scheduledAt = scheduledTime.date.toISOString();
         if (selectedMethod) guestPayload.paymentMethod = selectedMethod;
+        if (selectedMethod === "mpesa_manual") guestPayload.mpesaCode = mpesaCode;
+        if (orderNotes) guestPayload.orderNotes = orderNotes;
+        if (requestUtensils) guestPayload.requestUtensils = requestUtensils;
         result = await guestCheckoutMutation.mutateAsync(guestPayload);
       } else {
         const payload: Parameters<typeof checkoutMutation.mutateAsync>[0] = {
@@ -599,6 +638,7 @@ export function useCheckoutState() {
         if (requestUtensils) payload.requestUtensils = requestUtensils;
         if (scheduledTime) payload.scheduledAt = scheduledTime.date.toISOString();
         if (selectedMethod) payload.paymentMethod = selectedMethod;
+        if (selectedMethod === "mpesa_manual") payload.mpesaCode = mpesaCode;
         result = await checkoutMutation.mutateAsync(payload);
       }
 
@@ -656,7 +696,7 @@ export function useCheckoutState() {
     fulfillmentMode, selectedAddressId, addresses, isOutsideDeliveryZone, scheduledTime,
     items, sessionId, deliveryNotes, promoCode, orderNotes, requestUtensils, isTicketOnly, noFulfillment,
     checkoutMutation, guestCheckoutMutation, orgSlug, router, clearCart,
-    selectedMethod, selectedOption, handleWalletPayment,
+    selectedMethod, selectedOption, handleWalletPayment, mpesaCode,
   ]);
 
   const handlePaymentConfirmed = useCallback(
@@ -794,6 +834,9 @@ export function useCheckoutState() {
     selectedOption,
     /** Derived backend method key for the current selection (mpesa/paystack/cod/wallet). */
     selectedMethod,
+    /** Manual M-Pesa confirmation code typed by the customer. */
+    mpesaCode,
+    setMpesaCode,
 
     // Wallet
     walletBalance,

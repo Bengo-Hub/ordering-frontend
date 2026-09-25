@@ -206,6 +206,11 @@ export async function cancelAdminOrder(
   await api.post(`${slug}/admin/orders/${orderId}/cancel`, { reason });
 }
 
+/** Confirm a manual M-Pesa payment (the code matched on the business's M-Pesa statement). */
+export async function verifyOrderPayment(slug: string, orderId: string, reference?: string): Promise<void> {
+  await api.post(`${slug}/admin/orders/${orderId}/payment/verify`, { reference });
+}
+
 export async function deleteAdminOrder(slug: string, orderId: string): Promise<void> {
   await api.delete(`${slug}/admin/orders/${orderId}`);
 }
@@ -237,10 +242,9 @@ export async function getDeliveryTask(
   }
 }
 
-// assignOrderRider assigns a rider via the canonical ordering-backend admin endpoint,
-// which auto-creates the logistics delivery task if missing, assigns the rider, and
-// transitions the order to out_for_delivery — keeping order status in sync. (The old
-// direct logistics /tasks/{id}/assign call did NOT, leaving the order stuck at "ready".)
+// assignOrderRider assigns a rider via the canonical ordering-backend admin endpoint, which
+// auto-creates the logistics delivery task if missing and assigns the rider. The order stays
+// "ready" until the rider picks it up; the rider's pickup moves it to out_for_delivery.
 export async function assignOrderRider(
   slug: string,
   orderId: string,

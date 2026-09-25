@@ -3,9 +3,6 @@
 import {
     ArrowLeft,
     Bike,
-    Check,
-    ChefHat,
-    Clock,
     CreditCard,
     Loader2,
     MapPin,
@@ -21,7 +18,9 @@ import { useState } from "react";
 
 import { RequireAuth } from "@/components/auth/require-auth";
 import { SiteShell } from "@/components/layout/site-shell";
+import { OrderStatusPanel } from "@/components/orders/order-status-panel";
 import { RatingDialog } from "@/components/orders/rating-dialog";
+import { timelineFor, timelineIndex } from "@/lib/order-timeline";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -33,20 +32,6 @@ import { apiErrorMessage } from "@/lib/api/error-message";
 import { cn } from "@/lib/utils";
 import { useOrgSlug } from "@/providers/org-slug-provider";
 import { useCartStore } from "@/store/cart";
-
-const ORDER_TIMELINE = [
-  { key: "pending", label: "Order Placed", icon: Clock },
-  { key: "confirmed", label: "Confirmed", icon: Check },
-  { key: "preparing", label: "Preparing", icon: ChefHat },
-  { key: "ready", label: "Ready", icon: Package },
-  { key: "out_for_delivery", label: "On the Way", icon: Bike },
-  { key: "delivered", label: "Delivered", icon: Check },
-] as const;
-
-function timelineIndex(status: string): number {
-  const idx = ORDER_TIMELINE.findIndex((s) => s.key === status);
-  return idx === -1 ? -1 : idx;
-}
 
 function statusVariant(status: string): "default" | "soft" | "outline" {
   if (["delivered", "completed"].includes(status)) return "default";
@@ -72,7 +57,10 @@ export default function OrderDetailPage() {
   const isActive = order && !["delivered", "completed", "cancelled", "failed"].includes(order.status);
   const canCancel = order && ["pending", "confirmed"].includes(order.status);
   const canRate = order && ["delivered", "completed"].includes(order.status) && !order.rating;
-  const currentStep = order ? timelineIndex(order.status) : -1;
+  // Pickup orders end at "Picked up", delivery orders at "Delivered" (the page used to show the
+  // delivery steps for every order).
+  const timeline = timelineFor(order?.fulfillmentType);
+  const currentStep = order ? timelineIndex(timeline, order.status) : -1;
 
   function handleReorder() {
     if (!order) return;
@@ -155,6 +143,8 @@ export default function OrderDetailPage() {
                 </Badge>
               </header>
 
+              <OrderStatusPanel order={order} />
+
               {/* Timeline (only for active/completed orders, not cancelled) */}
               {order.status !== "cancelled" && order.status !== "failed" && (
                 <Card>
@@ -163,12 +153,12 @@ export default function OrderDetailPage() {
                   </CardHeader>
                   <CardContent>
                     <div className="flex items-center justify-between">
-                      {ORDER_TIMELINE.map((step, i) => {
+                      {timeline.map((step, i) => {
                         const StepIcon = step.icon;
                         const reached = i <= currentStep;
                         const isCurrent = i === currentStep;
                         return (
-                          <div key={step.key} className="flex flex-1 flex-col items-center gap-1.5">
+                          <div key={step.label} className="flex flex-1 flex-col items-center gap-1.5">
                             <div className="flex w-full items-center">
                               {i > 0 && (
                                 <div
@@ -190,7 +180,7 @@ export default function OrderDetailPage() {
                               >
                                 <StepIcon className="size-4" />
                               </div>
-                              {i < ORDER_TIMELINE.length - 1 && (
+                              {i < timeline.length - 1 && (
                                 <div
                                   className={cn(
                                     "h-0.5 flex-1",

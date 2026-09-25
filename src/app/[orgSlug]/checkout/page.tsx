@@ -228,6 +228,9 @@ export default function CheckoutPage() {
               options={state.paymentOptions}
               selected={state.selectedOptionId}
               onSelect={state.setSelectedOptionId}
+              amountDue={state.amountDueNow}
+              mpesaCode={state.mpesaCode}
+              onMpesaCodeChange={state.setMpesaCode}
             />
           )}
 
@@ -313,9 +316,59 @@ interface PaymentMethodSelectorProps {
   options: CheckoutPaymentOption[];
   selected: CheckoutPaymentOptionId | undefined;
   onSelect: (id: CheckoutPaymentOptionId) => void;
+  amountDue: number;
+  mpesaCode: string;
+  onMpesaCodeChange: (v: string) => void;
 }
 
-function PaymentMethodSelector({ options, selected, onSelect }: PaymentMethodSelectorProps) {
+/**
+ * ManualMpesaPanel tells the customer exactly where and how much to pay by M-Pesa, then takes the
+ * confirmation code from the M-Pesa message. The outlet checks the code before handing the order over.
+ */
+function ManualMpesaPanel({ instructions, amountDue, code, onCodeChange }: {
+  instructions?: Record<string, string> | undefined;
+  amountDue: number;
+  code: string;
+  onCodeChange: (v: string) => void;
+}) {
+  const steps: string[] = [];
+  if (instructions?.till) steps.push(`Lipa na M-Pesa, Buy Goods: Till ${instructions.till}`);
+  if (instructions?.paybill) {
+    steps.push(
+      `Lipa na M-Pesa, Paybill ${instructions.paybill}${instructions.account_reference ? `, account ${instructions.account_reference}` : ""}`,
+    );
+  }
+  if (instructions?.pochi) steps.push(`Pochi la Biashara: ${instructions.pochi}`);
+  return (
+    <div className="mt-2 space-y-3 rounded-xl border border-primary/30 bg-primary/5 p-3">
+      <p className="text-sm">
+        Pay <span className="font-bold">KES {amountDue.toLocaleString()}</span> from your phone:
+      </p>
+      <ul className="list-disc space-y-1 pl-5 text-sm">
+        {steps.map((s) => <li key={s}>{s}</li>)}
+      </ul>
+      <div>
+        <label htmlFor="mpesa-code" className="text-xs font-semibold uppercase text-muted-foreground">
+          M-Pesa code from the confirmation message
+        </label>
+        <input
+          id="mpesa-code"
+          value={code}
+          onChange={(e) => onCodeChange(e.target.value)}
+          placeholder="e.g. SGH7K2L9QP"
+          autoCapitalize="characters"
+          className="mt-1 w-full rounded-lg border border-input bg-background px-3 py-2 text-base font-semibold tracking-wider"
+        />
+        <p className="mt-1 text-xs text-muted-foreground">
+          We start your order right away and confirm the payment before handing it over.
+        </p>
+      </div>
+    </div>
+  );
+}
+
+function PaymentMethodSelector({ options, selected, onSelect, amountDue, mpesaCode, onMpesaCodeChange }: PaymentMethodSelectorProps) {
+  const selectedOpt = options.find((o) => o.id === selected);
   return (
     <section className="rounded-xl border border-border p-4">
       <div className="mb-3 flex items-center gap-2 text-sm font-medium">
@@ -345,12 +398,23 @@ function PaymentMethodSelector({ options, selected, onSelect }: PaymentMethodSel
               >
                 {isSelected && <div className="size-2.5 rounded-full bg-primary" />}
               </div>
-              <span className="min-w-0 flex-1 text-sm font-medium">{opt.label}</span>
+              <span className="min-w-0 flex-1">
+                <span className="block text-sm font-medium">{opt.label}</span>
+                {opt.description && <span className="block text-xs text-muted-foreground">{opt.description}</span>}
+              </span>
               {opt.method === "wallet" && <Wallet className="size-4 shrink-0 text-primary" />}
             </button>
           );
         })}
       </div>
+      {selectedOpt?.id === "mpesa_manual" && (
+        <ManualMpesaPanel
+          instructions={selectedOpt.instructions}
+          amountDue={amountDue}
+          code={mpesaCode}
+          onCodeChange={onMpesaCodeChange}
+        />
+      )}
     </section>
   );
 }

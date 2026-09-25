@@ -18,6 +18,7 @@ import {
   updateCategory,
   updateMenuItem,
   updateOrderStatus,
+  verifyOrderPayment,
   type AdminOrderFilters,
   type CreateCategoryRequest,
   type CreateMenuItemRequest,
@@ -66,6 +67,20 @@ export function useUpdateOrderStatus() {
   return useMutation({
     mutationFn: ({ orderId, status }: { orderId: string; status: string }) =>
       updateOrderStatus(slug, orderId, status),
+    onSuccess: (_data, { orderId }) => {
+      queryClient.invalidateQueries({ queryKey: adminKeys.orderDetail(orderId) });
+      queryClient.invalidateQueries({ queryKey: adminKeys.orders() });
+    },
+  });
+}
+
+/** Confirm a manual M-Pesa payment on an order. */
+export function useVerifyOrderPayment() {
+  const slug = useOrgSlug();
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({ orderId, reference }: { orderId: string; reference?: string }) =>
+      verifyOrderPayment(slug, orderId, reference),
     onSuccess: (_data, { orderId }) => {
       queryClient.invalidateQueries({ queryKey: adminKeys.orderDetail(orderId) });
       queryClient.invalidateQueries({ queryKey: adminKeys.orders() });

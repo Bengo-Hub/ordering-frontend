@@ -8,6 +8,12 @@ export interface PaymentGateway {
   icon: string;
   enabled: boolean;
   reason?: string;
+  /** One-line explanation shown under the option. */
+  description?: string;
+  /**
+   * Manual M-Pesa ("mpesa_manual"): where to pay. Keys: till, paybill, account_reference, pochi.
+   */
+  instructions?: Record<string, string>;
 }
 
 export interface SavedPaymentMethod {
@@ -29,9 +35,14 @@ export interface PaymentMethodsResponse {
 export async function getPaymentMethods(
   slug: string,
   fulfillmentType?: string,
+  outletId?: string | null,
 ): Promise<PaymentMethodsResponse> {
+  const params: Record<string, string> = {};
+  if (fulfillmentType) params.fulfillment_type = fulfillmentType;
+  // The outlet decides whether "pay to our M-Pesa and enter the code" is offered (its own Till/Paybill).
+  if (outletId) params.outlet_id = outletId;
   const res = await api.get(`${slug}/payment-methods`, {
-    params: fulfillmentType ? { fulfillment_type: fulfillmentType } : undefined,
+    params: Object.keys(params).length ? params : undefined,
   });
   return res.data;
 }

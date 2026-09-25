@@ -48,6 +48,8 @@ export interface CheckoutRequest {
   contactName?: string;
   contactPhone?: string;
   paymentMethod?: string;
+  /** Manual M-Pesa ("mpesa_manual"): the code from the customer's payment to the outlet. */
+  mpesaCode?: string;
 }
 
 // ─── API Functions ───────────────────────────────────────────────────
@@ -118,6 +120,9 @@ export interface GuestCheckoutRequest {
   scheduledAt?: string;
   idempotencyKey?: string;
   paymentMethod?: string;
+  mpesaCode?: string;
+  orderNotes?: string;
+  requestUtensils?: boolean;
 }
 
 export async function guestCheckout(slug: string, data: GuestCheckoutRequest): Promise<CheckoutResponse> {

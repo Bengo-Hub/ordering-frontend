@@ -2,14 +2,11 @@
 
 import {
   Bike,
-  Check,
   CheckCircle2,
-  ChefHat,
   Clock,
   CreditCard,
   Loader2,
   MapPin,
-  Package,
   Star,
   ExternalLink,
 } from "lucide-react";
@@ -25,54 +22,12 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { getGuestOrder, rateGuestOrder, type Order } from "@/lib/api/orders";
 import { getGoogleReviewUrl } from "@/lib/api/integrations";
+import { OrderStatusPanel } from "@/components/orders/order-status-panel";
+import { isDeliveryFulfillment, timelineFor, timelineIndex } from "@/lib/order-timeline";
 import { formatDateTime } from "@/lib/datetime";
 import { orgRoute } from "@/lib/routes";
 import { cn } from "@/lib/utils";
 import { useOrgSlug } from "@/providers/org-slug-provider";
-
-type TimelineStep = {
-  /** Order statuses that map to this step. The step lights up once the order
-   *  reaches any of these statuses (or a later step's status). */
-  keys: readonly string[];
-  label: string;
-  icon: typeof Clock;
-};
-
-// Delivery flow: …→ Ready → On the Way → Delivered.
-const DELIVERY_TIMELINE: readonly TimelineStep[] = [
-  { keys: ["pending"], label: "Order Placed", icon: Clock },
-  { keys: ["confirmed"], label: "Confirmed", icon: Check },
-  { keys: ["preparing"], label: "Preparing", icon: ChefHat },
-  { keys: ["ready"], label: "Ready", icon: Package },
-  { keys: ["out_for_delivery"], label: "On the Way", icon: Bike },
-  { keys: ["delivered", "completed"], label: "Delivered", icon: Check },
-] as const;
-
-// Pickup / dine-in flow: …→ Ready → Picked Up. No "On the Way"/"Delivered".
-const PICKUP_TIMELINE: readonly TimelineStep[] = [
-  { keys: ["pending"], label: "Order Placed", icon: Clock },
-  { keys: ["confirmed"], label: "Confirmed", icon: Check },
-  { keys: ["preparing"], label: "Preparing", icon: ChefHat },
-  { keys: ["ready"], label: "Ready", icon: Package },
-  { keys: ["completed", "delivered"], label: "Picked Up", icon: Check },
-] as const;
-
-/** Normalizes the order's fulfilment type — anything containing "deliver"
- *  (e.g. "delivery") is a delivery flow; everything else (pickup, dine_in,
- *  scheduled, missing) uses the pickup flow. */
-function isDeliveryFulfillment(fulfillmentType: string | undefined): boolean {
-  return /deliver/i.test(fulfillmentType ?? "");
-}
-
-function timelineFor(fulfillmentType: string | undefined): readonly TimelineStep[] {
-  return isDeliveryFulfillment(fulfillmentType) ? DELIVERY_TIMELINE : PICKUP_TIMELINE;
-}
-
-/** Maps the order's current status to its step index in the given timeline.
- *  Returns the index of the furthest step whose keys include the status. */
-function timelineIndex(timeline: readonly TimelineStep[], status: string): number {
-  return timeline.findIndex((s) => s.keys.includes(status));
-}
 
 const TREASURY_API_URL =
   process.env.NEXT_PUBLIC_TREASURY_API_URL || "http://localhost:4201";
@@ -377,6 +332,9 @@ function GuestOrderContent() {
     const isCod = /cash|cod|on_delivery/i.test(order.paymentMethod ?? "");
     const cancelledOrFailed = ["cancelled", "failed"].includes(order.status);
     if (isCod) return cancelledOrFailed ? null : "cod";
+    // Manual M-Pesa: already paid by the customer, being confirmed by the outlet (see the
+    // status panel); it is not "awaiting payment".
+    if (order.metadata?.payment_channel === "mpesa_manual") return null;
     // Prepaid method, not yet paid: awaiting payment (unless cancelled/failed).
     if (cancelledOrFailed) return null;
     return "awaiting";
@@ -422,12 +380,12 @@ function GuestOrderContent() {
           <CreditCard className="size-5 text-blue-600 shrink-0" />
           <div>
             <p className="text-sm font-semibold text-blue-800">
-              {isDeliveryFulfillment(order.fulfillmentType) ? "Cash on delivery" : "Pay on collection"}
+              {isDeliveryFulfillment(order.fulfillmentType) ? "Pay on delivery" : "Pay at the counter"}
             </p>
             <p className="text-xs text-blue-700">
               {isDeliveryFulfillment(order.fulfillmentType)
-                ? "Pay the rider on delivery. Please have payment ready when it arrives."
-                : "Pay at the counter when you collect your order. Please have payment ready."}
+                ? "Pay the rider in cash or M-Pesa when your order arrives."
+                : "Pay in cash or M-Pesa when you collect your order."}
             </p>
           </div>
         </div>
@@ -477,6 +435,8 @@ function GuestOrderContent() {
           {order.status.replace(/_/g, " ")}
         </Badge>
       </header>
+
+      <OrderStatusPanel order={order} />
 
       {/* Timeline */}
       {order.status !== "cancelled" && order.status !== "failed" && (

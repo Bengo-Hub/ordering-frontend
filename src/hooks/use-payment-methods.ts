@@ -9,16 +9,18 @@ import { useOrgSlug } from "@/providers/org-slug-provider";
 
 export const paymentMethodKeys = {
   all: ["payment-methods"] as const,
-  list: (fulfillmentType?: string) => [...paymentMethodKeys.all, fulfillmentType] as const,
+  list: (fulfillmentType?: string, outletId?: string | null) =>
+    [...paymentMethodKeys.all, fulfillmentType, outletId ?? null] as const,
 };
 
 // ─── Queries ─────────────────────────────────────────────────────────
 
-export function usePaymentMethods(fulfillmentType?: string) {
+/** Checkout payment options for the order's fulfilment and outlet (the outlet's own M-Pesa numbers). */
+export function usePaymentMethods(fulfillmentType?: string, outletId?: string | null) {
   const slug = useOrgSlug();
   return useQuery<PaymentMethodsResponse>({
-    queryKey: paymentMethodKeys.list(fulfillmentType),
-    queryFn: () => getPaymentMethods(slug, fulfillmentType),
+    queryKey: paymentMethodKeys.list(fulfillmentType, outletId),
+    queryFn: () => getPaymentMethods(slug, fulfillmentType, outletId),
     staleTime: 60_000,
   });
 }

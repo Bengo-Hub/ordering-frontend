@@ -1,5 +1,6 @@
 "use client";
 
+import { useQuery } from "@tanstack/react-query";
 import { Calendar, Clock, User } from "lucide-react";
 import { useState } from "react";
 
@@ -33,6 +34,9 @@ interface AppointmentPickerProps {
   staffMembers?: StaffMember[];
   /** Available time slots (generate from opening hours if not provided) */
   timeSlots?: TimeSlot[];
+  /** Tenant slug + outlet: when set, times the outlet is already fully booked for are disabled. */
+  tenantSlug?: string;
+  outletId?: string | null;
   /** Called when a complete appointment is selected */
   onSelect: (appointment: {
     staffId: string | null;
@@ -42,13 +46,54 @@ interface AppointmentPickerProps {
   className?: string;
 }
 
+/** YYYY-MM-DD in the device's local time (toISOString is UTC, which shifted "Today" to yesterday
+ * around midnight in East Africa). */
+function localDate(d: Date): string {
+  const pad = (n: number) => n.toString().padStart(2, "0");
+  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
+}
+
+const POS_API_URL = process.env.NEXT_PUBLIC_POS_API_URL ?? "https://posapi.codevertexafrica.com";
+
+interface BookedSlots {
+  capacity: number;
+  booked_slots: { start: string; end: string }[];
+}
+
+/** Booked intervals at the outlet for a day (public, no customer data) from the POS calendar. */
+function useBookedSlots(tenantSlug: string | undefined, outletId: string | null | undefined, date: string) {
+  return useQuery<BookedSlots>({
+    queryKey: ["appointment-booked-slots", tenantSlug, outletId, date],
+    queryFn: async () => {
+      const url = `${POS_API_URL}/api/v1/${encodeURIComponent(tenantSlug!)}/pos/appointments/booked-slots?outlet_id=${encodeURIComponent(outletId!)}&date=${date}`;
+      const res = await fetch(url);
+      if (!res.ok) throw new Error(`availability ${res.status}`);
+      return res.json();
+    },
+    enabled: !!tenantSlug && !!outletId && !!date,
+    staleTime: 30_000,
+    retry: 1,
+  });
+}
+
+/** A slot is taken when the bookings overlapping it already fill the outlet's parallel capacity. */
+function slotTaken(date: string, time: string, durationMinutes: number, booked?: BookedSlots): boolean {
+  if (!booked?.booked_slots?.length) return false;
+  const start = new Date(`${date}T${time}:00`).getTime();
+  const end = start + durationMinutes * 60_000;
+  const overlapping = booked.booked_slots.filter(
+    (b) => new Date(b.start).getTime() < end && new Date(b.end).getTime() > start,
+  ).length;
+  return overlapping >= Math.max(1, booked.capacity || 1);
+}
+
 function generateDays(): { date: string; label: string; dayLabel: string }[] {
   const days = [];
   const now = new Date();
   for (let i = 0; i < 7; i++) {
     const d = new Date(now);
     d.setDate(d.getDate() + i);
-    const dateStr = d.toISOString().split("T")[0];
+    const dateStr = localDate(d);
     const dayLabel = i === 0 ? "Today" : i === 1 ? "Tomorrow" : d.toLocaleDateString("en-US", { weekday: "short" });
     const label = d.toLocaleDateString("en-US", { month: "short", day: "numeric" });
     days.push({ date: dateStr, label, dayLabel });
@@ -74,6 +119,8 @@ export function AppointmentPicker({
   durationMinutes,
   staffMembers = [],
   timeSlots,
+  tenantSlug,
+  outletId,
   onSelect,
   className,
 }: AppointmentPickerProps) {
@@ -82,7 +129,16 @@ export function AppointmentPicker({
   const [selectedTime, setSelectedTime] = useState<string | null>(null);
 
   const days = generateDays();
-  const slots = timeSlots ?? generateDefaultTimeSlots();
+  const { data: booked } = useBookedSlots(tenantSlug, outletId, selectedDate);
+  const nowMs = Date.now();
+  // Past times today and times the outlet is already fully booked for cannot be chosen.
+  const slots = (timeSlots ?? generateDefaultTimeSlots()).map((slot) => ({
+    ...slot,
+    available:
+      slot.available &&
+      new Date(`${selectedDate}T${slot.time}:00`).getTime() > nowMs &&
+      !slotTaken(selectedDate, slot.time, durationMinutes, booked),
+  }));
 
   const handleConfirm = () => {
     if (!selectedDate || !selectedTime) return;
