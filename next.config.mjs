@@ -40,7 +40,7 @@ const nextConfig = {
     ],
     // Serve optimized images in modern formats with quality 80
     formats: ["image/avif", "image/webp"],
-    minimumCacheTTL: 86400,
+    minimumCacheTTL: 604800, // 7 days: upload names are content-unique
     deviceSizes: [640, 750, 828, 1080, 1200],
     imageSizes: [64, 96, 128, 256, 384],
   },

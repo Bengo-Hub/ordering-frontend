@@ -1,10 +1,12 @@
 /* eslint-disable no-restricted-globals */
+// Media cache (images from our API /media and /_next/image): see sw-media.js.
+importScripts('/sw-media.js');
 // Uniform Codevertex offline-shell service worker (committed, runtime-caching, bundler-agnostic).
 const VERSION = 'cv-offline-sw-v1';
 const DOC_CACHE = `${VERSION}-documents`;
 const ASSET_CACHE = `${VERSION}-assets`;
 self.addEventListener('install', () => self.skipWaiting());
-self.addEventListener('activate', (event) => { event.waitUntil((async () => { const keys = await caches.keys(); await Promise.all(keys.filter((k) => !k.startsWith(VERSION)).map((k) => caches.delete(k))); await self.clients.claim(); })()); });
+self.addEventListener('activate', (event) => { event.waitUntil((async () => { const keys = await caches.keys(); await Promise.all(keys.filter((k) => !k.startsWith(VERSION) && k !== MEDIA_CACHE).map((k) => caches.delete(k))); await self.clients.claim(); })()); });
 self.addEventListener('message', (e) => { if (e.data && e.data.type === 'SKIP_WAITING') self.skipWaiting(); });
 function isAsset(url) { return url.pathname.startsWith('/_next/static/') || url.pathname.startsWith('/icons/') || url.pathname.startsWith('/images/') || /\.(?:js|css|woff2?|ttf|otf|png|jpg|jpeg|svg|gif|webp|ico)$/.test(url.pathname); }
 self.addEventListener('fetch', (event) => {
