@@ -6,6 +6,7 @@ import {
   ChefHatIcon,
   FilterIcon,
   Heart,
+  PlusIcon,
   SearchIcon,
   ShieldAlert,
   ShoppingCart as ShoppingCartIcon,
@@ -28,6 +29,7 @@ import { useTopSellers } from "@/hooks/use-top-sellers";
 import { resolveDealItems } from "@/lib/api/promo-deals";
 import { rankBestSellers } from "@/lib/api/top-sellers";
 import type { OrderingConfig } from "@/lib/use-case-config";
+import { buildCategoryTree, categoryNodeContains } from "@/lib/category-tree";
 import { orgRoute } from "@/lib/routes";
 import { cn } from "@/lib/utils";
 import { useOrgSlug } from "@/providers/org-slug-provider";
@@ -218,6 +220,114 @@ function MenuItemCardSkeleton() {
   );
 }
 
+/** A menu-section chip in the sticky app bar (pill, thumb-sized, scrolls sideways). */
+function SectionChip({
+  active,
+  small,
+  onClick,
+  children,
+}: {
+  active: boolean;
+  small?: boolean;
+  onClick: () => void;
+  children: React.ReactNode;
+}) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      aria-pressed={active}
+      className={cn(
+        "shrink-0 whitespace-nowrap rounded-full border font-semibold transition-colors",
+        small ? "h-8 px-3 text-xs" : "h-9 px-4 text-sm",
+        active
+          ? "border-transparent bg-brand text-brand-contrast shadow-soft"
+          : "border-border bg-card text-muted-foreground hover:border-brand-emphasis hover:text-brand-emphasis",
+      )}
+    >
+      {children}
+    </button>
+  );
+}
+
+/**
+ * App-style menu row for food/services catalogs: name, short description and price on the left,
+ * an optional thumbnail and a round add button on the right, like a delivery app's menu list.
+ * Items without a picture get no image block at all (no grey placeholders): many venues run a
+ * text-only menu. Tapping the row opens the item; the + adds it (or opens options).
+ */
+function MenuRow({
+  item,
+  orgSlug,
+  onAddToCart,
+  cfg,
+}: {
+  item: MenuItem;
+  orgSlug: string;
+  onAddToCart: (item: MenuItem) => void;
+  cfg: OrderingConfig;
+}) {
+  const opensModal = needsAddToCartModal(item);
+  const itemUrl = item.id ? `/${orgSlug}/catalog/${item.id}` : "#";
+  return (
+    <Link
+      href={itemUrl}
+      prefetch={false}
+      data-menu-item-id={item.id}
+      className="group flex min-h-[96px] items-stretch gap-3 rounded-2xl border border-border bg-card p-3 shadow-sm transition active:scale-[0.99] hover:border-brand-emphasis/40 hover:shadow-md"
+    >
+      <div className="flex min-w-0 flex-1 flex-col justify-between gap-1.5">
+        <div className="min-w-0">
+          <h3 className="text-[15px] font-semibold leading-snug text-foreground">{item.name}</h3>
+          {item.description ? (
+            <p className="mt-0.5 line-clamp-2 text-xs leading-relaxed text-muted-foreground">{item.description}</p>
+          ) : null}
+        </div>
+        <div className="flex items-center gap-2">
+          <span className="text-sm font-bold text-foreground">{item.price}</span>
+          {item.dietary.slice(0, 2).map((tag) => (
+            <span key={tag} className="rounded-full bg-brand-muted px-1.5 py-0.5 text-[10px] font-medium text-brand-dark">
+              {dietaryFilterOpts.find((f) => f.value === tag)?.label ?? tag}
+            </span>
+          ))}
+        </div>
+      </div>
+      <div className="relative flex shrink-0 flex-col items-end justify-between">
+        {item.image ? (
+          <div className="relative size-20 overflow-hidden rounded-xl bg-muted sm:size-24">
+            <ImageWithFallback
+              src={item.image}
+              alt={item.name}
+              useCase={cfg.profile}
+              fill
+              className="object-cover"
+              sizes="96px"
+              loading="lazy"
+            />
+          </div>
+        ) : (
+          <span aria-hidden className="size-0" />
+        )}
+        <button
+          type="button"
+          onClick={(e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            onAddToCart(item);
+          }}
+          aria-label={opensModal ? `${cfg.selectOptionsLabel}: ${item.name}` : `${cfg.ctaLabel}: ${item.name}`}
+          className={cn(
+            "relative z-10 flex size-10 items-center justify-center rounded-full bg-brand text-brand-contrast shadow-md transition hover:scale-105 active:scale-95",
+            item.image && "-mt-5 mr-1 ring-4 ring-card",
+          )}
+        >
+          <PlusIcon className="size-5" />
+        </button>
+      </div>
+    </Link>
+  );
+}
+
 const dietaryFilterOpts: Array<{ value: DietaryTag; label: string; icon: React.ReactNode }> = [
   { value: "vegan", label: "Vegan", icon: <SproutIcon className="size-4" aria-hidden /> },
   { value: "vegetarian", label: "Vegetarian", icon: <SproutIcon className="size-4" aria-hidden /> },
@@ -301,6 +411,22 @@ export function MenuDiscovery({
 
   const { data: categoriesData } = useCategories(orgSlug, firstOutletId, effectiveUseCase);
   const categoriesFromApi = useMemo(() => categoriesData ?? [], [categoriesData]);
+  // Menu sections = top-level categories in menu order, each with its sub-sections.
+  const sectionTree = useMemo(() => buildCategoryTree(categoriesFromApi), [categoriesFromApi]);
+  const activeSection = useMemo(
+    () => sectionTree.find((node) => categoryNodeContains(node, activeCategoryId)),
+    [sectionTree, activeCategoryId],
+  );
+  // Food menus open on their first section (like a delivery app's menu screen), not an
+  // alphabetical "All" list. Only on first load with no category/search in the URL; once the
+  // customer picks a chip (including "All") their choice stands.
+  const [openedOnFirstSection, setOpenedOnFirstSection] = useState(false);
+  useEffect(() => {
+    if (openedOnFirstSection || cfg.productLayout === "compact") return;
+    if (initialCategory || initialSearch || sectionTree.length === 0) return;
+    setOpenedOnFirstSection(true);
+    setActiveCategoryId(sectionTree[0].id);
+  }, [openedOnFirstSection, cfg.productLayout, initialCategory, initialSearch, sectionTree]);
 
   // A sort/filter that needs the whole matching set before ranking (best-sellers, flash-sale
   // discount matching, or a simple price sort applied across more than one server page) switches
@@ -513,52 +639,87 @@ export function MenuDiscovery({
     );
   }
 
+  const selectCategory = (id: string) => {
+    setActiveCategoryId(id);
+    setPage(1);
+    updateUrl({ category: id === "all" ? undefined : id });
+  };
+
   return (
-    <section className="border-t border-border bg-card py-8 sm:py-12 md:py-16">
-      <div className="mx-auto flex w-full max-w-6xl flex-col gap-4 px-4 sm:gap-6 md:gap-8">
-        <div className="flex flex-col gap-4 rounded-2xl border border-border bg-brand-surface/40 p-4 shadow-sm sm:gap-6 sm:rounded-3xl sm:p-6 md:flex-row md:items-center md:justify-between">
-          <div className="flex-1 space-y-2">
-            <h2 className="text-xl font-semibold text-foreground sm:text-2xl md:text-3xl">
-              Browse {activeCategoryId === "all" ? `all ${copy.itemLabelPlural.toLowerCase()}` : (categoriesFromApi.find((c) => c.id === activeCategoryId)?.name ?? copy.itemLabelPlural).toLowerCase()}
-            </h2>
-            <p className="text-xs text-muted-foreground sm:text-sm">
-              Filter by dietary preference, explore specials, and build your cart seamlessly.
-            </p>
-          </div>
-          <div className="w-full md:max-w-md">
+    <section className="bg-background pb-24 md:pb-12">
+      {/* App bar: title + search + menu sections, pinned under the site header like a native
+          app's menu screen. Sections are the top-level categories in menu order; a section with
+          sub-sections (Wines > Red / White / House) shows them in a second row. */}
+      <div className="sticky top-[var(--site-header-h,4rem)] z-30 border-b border-border bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/80">
+        <div className="mx-auto w-full max-w-6xl space-y-2 px-4 pb-2 pt-3">
+          <div className="flex items-center gap-3">
+            <h1 className="shrink-0 text-lg font-bold text-foreground sm:text-xl">
+              {cfg.profile === "hospitality" ? "Menu" : copy.itemLabelPlural}
+            </h1>
             <label htmlFor="menu-search" className="sr-only">
-              Search catalog items
+              Search {copy.itemLabelPlural.toLowerCase()}
             </label>
-            <div className="relative">
+            <div className="relative min-w-0 flex-1 md:max-w-md md:ml-auto">
               <SearchIcon
                 className="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground"
                 aria-hidden
               />
               <Input
                 id="menu-search"
+                type="search"
+                inputMode="search"
                 placeholder={copy.searchPlaceholder}
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
                 onBlur={() => updateUrl({ search: search.trim() || undefined })}
                 onKeyDown={(e) => e.key === "Enter" && updateUrl({ search: search.trim() || undefined })}
-                className="pl-10"
+                className="h-10 rounded-full pl-10"
               />
             </div>
           </div>
+          <nav aria-label="Menu sections" className="-mx-4 flex flex-nowrap gap-2 overflow-x-auto px-4 pb-1 [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden">
+            <SectionChip active={activeCategoryId === "all"} onClick={() => selectCategory("all")}>All</SectionChip>
+            {sectionTree.map((node) => (
+              <SectionChip
+                key={node.id}
+                active={categoryNodeContains(node, activeCategoryId)}
+                onClick={() => selectCategory(node.id)}
+              >
+                {node.name}
+              </SectionChip>
+            ))}
+          </nav>
+          {activeSection && activeSection.children.length > 0 && (
+            <nav aria-label={`${activeSection.name} sub-sections`} className="-mx-4 flex flex-nowrap gap-2 overflow-x-auto px-4 pb-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+              <SectionChip small active={activeCategoryId === activeSection.id} onClick={() => selectCategory(activeSection.id)}>
+                All {activeSection.name}
+              </SectionChip>
+              {activeSection.children.map((child) => (
+                <SectionChip
+                  small
+                  key={child.id}
+                  active={categoryNodeContains(child, activeCategoryId)}
+                  onClick={() => selectCategory(child.id)}
+                >
+                  {child.name}
+                </SectionChip>
+              ))}
+            </nav>
+          )}
         </div>
+      </div>
+      <div className="mx-auto flex w-full max-w-6xl flex-col gap-4 px-4 pt-4 sm:gap-5">
+        {activeCategoryId !== "all" && (
+          <h2 className="text-base font-semibold text-foreground sm:text-lg">
+            {categoriesFromApi.find((c) => c.id === activeCategoryId)?.name ?? copy.itemLabelPlural}
+            <span className="ml-2 text-sm font-normal text-muted-foreground">{total} {total === 1 ? "item" : "items"}</span>
+          </h2>
+        )}
 
         {/* Sort + price/stock filter bar — retail/wholesale product listings only (a food/
             services catalog has no "Most Popular by sales"/price-range shopping pattern). */}
         {cfg.productLayout === "compact" && (
           <div className="flex flex-col gap-3 rounded-xl border border-border bg-card p-3 sm:flex-row sm:flex-wrap sm:items-center sm:gap-3">
-            <Input
-              placeholder="Search products..."
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              onBlur={() => updateUrl({ search: search.trim() || undefined })}
-              onKeyDown={(e) => e.key === "Enter" && updateUrl({ search: search.trim() || undefined })}
-              className="sm:w-48"
-            />
             <Input
               type="number"
               inputMode="numeric"
@@ -619,64 +780,6 @@ export function MenuDiscovery({
             </select>
           </div>
         )}
-
-        {/* Category filters from backend — horizontal carousel at ALL breakpoints (no wrapping into
-            many rows); chips are shrink-0 so they scroll sideways instead of stacking. */}
-        <div className="flex flex-nowrap gap-2 overflow-x-auto pb-2 scrollbar-hide [scrollbar-width:none] [-ms-overflow-style:none]">
-          <Button
-            type="button"
-            size="sm"
-            variant={activeCategoryId === "all" ? "default" : "outline"}
-            onClick={() => {
-              setActiveCategoryId("all");
-              setPage(1);
-              updateUrl({ category: undefined });
-            }}
-            className={cn(
-              "shrink-0",
-              activeCategoryId === "all"
-                ? "bg-brand text-brand-contrast shadow-soft"
-                : "border-border text-muted-foreground hover:border-brand-emphasis hover:text-brand-emphasis",
-            )}
-          >
-            All
-          </Button>
-          {categoriesFromApi.map((cat) => (
-            <Button
-              key={cat.id}
-              type="button"
-              size="sm"
-              variant={activeCategoryId === cat.id ? "default" : "outline"}
-              onClick={() => {
-                setActiveCategoryId(cat.id);
-                setPage(1);
-                updateUrl({ category: cat.id });
-              }}
-              className={cn(
-                "shrink-0 h-10 gap-2 px-4 rounded-xl",
-                activeCategoryId === cat.id
-                  ? "bg-brand text-brand-contrast shadow-soft"
-                  : "border-border text-muted-foreground hover:border-brand-emphasis hover:text-brand-emphasis",
-              )}
-            >
-              <div className="relative flex size-5 shrink-0 items-center justify-center overflow-hidden rounded-full border border-current/10 text-xs">
-                {cat.emoji ? (
-                  <span aria-hidden>{cat.emoji}</span>
-                ) : (
-                  <ImageWithFallback
-                    src={cat.image}
-                    alt={cat.name}
-                    useCase={cfg.profile}
-                    fill
-                    className="object-cover"
-                    iconClassName="size-3"
-                  />
-                )}
-              </div>
-              <span className="font-bold">{cat.name}</span>
-            </Button>
-          ))}
-        </div>
 
         {/* Outlet filter when multiple */}
         {outlets.length > 1 && (
@@ -749,11 +852,18 @@ export function MenuDiscovery({
         {/* Items grid — denser (4-up) for product-style retail/wholesale verticals,
             comfortable (3-up) for food/services where cards carry more detail. */}
         <div className={cn(
-          "grid gap-4 sm:grid-cols-2 sm:gap-6",
-          cfg.productLayout === "compact" ? "lg:grid-cols-4" : "lg:grid-cols-3",
+          cfg.productLayout === "compact"
+            ? "grid gap-4 sm:grid-cols-2 sm:gap-6 lg:grid-cols-4"
+            : "grid grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-3",
         )}>
           {isPending && menuItems.length === 0 ? (
-            Array.from({ length: 8 }, (_, i) => <MenuItemCardSkeleton key={i} />)
+            Array.from({ length: 8 }, (_, i) =>
+              cfg.productLayout === "compact" ? (
+                <MenuItemCardSkeleton key={i} />
+              ) : (
+                <Skeleton key={i} className="h-24 w-full rounded-2xl" />
+              ),
+            )
           ) : itemsError && menuItems.length === 0 ? (
             <div className="col-span-full flex flex-col items-center gap-3 rounded-2xl border border-dashed border-border bg-card p-6 text-center sm:rounded-3xl sm:p-8">
               <ShieldAlert className="size-8 text-muted-foreground" aria-hidden />
@@ -769,16 +879,20 @@ export function MenuDiscovery({
               </p>
             </div>
           ) : (
-            menuItems.map((item, idx) => (
-              <DiscoveryMenuItem
-                key={item.id}
-                item={item}
-                orgSlug={orgSlug}
-                onAddToCart={handleAddToCart}
-                cfg={cfg}
-                index={idx}
-              />
-            ))
+            menuItems.map((item, idx) =>
+              cfg.productLayout === "compact" ? (
+                <DiscoveryMenuItem
+                  key={item.id}
+                  item={item}
+                  orgSlug={orgSlug}
+                  onAddToCart={handleAddToCart}
+                  cfg={cfg}
+                  index={idx}
+                />
+              ) : (
+                <MenuRow key={item.id} item={item} orgSlug={orgSlug} onAddToCart={handleAddToCart} cfg={cfg} />
+              ),
+            )
           )}
         </div>
 

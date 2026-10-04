@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 
 import {
   ChevronDown,
@@ -93,6 +93,20 @@ export function SiteHeader({ onMenuClick }: SiteHeaderProps) {
   const [searchQuery, setSearchQuery] = useState("");
   const [activeSearchTab, setActiveSearchTab] = useState("all");
 
+  // Publish the header's live height as --site-header-h so sticky bars below it (the catalog's
+  // menu-section bar) sit exactly under it: the header is one row on desktop but grows a second
+  // row (delivery/pickup + location) on phones.
+  const headerRef = useRef<HTMLElement>(null);
+  useEffect(() => {
+    const el = headerRef.current;
+    if (!el || typeof ResizeObserver === "undefined") return;
+    const publish = () => document.documentElement.style.setProperty("--site-header-h", `${el.offsetHeight}px`);
+    publish();
+    const ro = new ResizeObserver(publish);
+    ro.observe(el);
+    return () => ro.disconnect();
+  }, []);
+
   // Store state
   const user = useAuthStore((state) => state.user);
   const logout = useAuthStore((state) => state.logout);
@@ -148,7 +162,7 @@ export function SiteHeader({ onMenuClick }: SiteHeaderProps) {
   }, [deliveryLocation, setDeliveryLocation]);
 
   return (
-    <header className="sticky top-0 z-40 border-b border-border bg-background">
+    <header ref={headerRef} className="sticky top-0 z-40 border-b border-border bg-background">
       <div className="mx-auto flex h-16 w-full max-w-7xl items-center justify-between gap-2 px-3 sm:gap-3 sm:px-4 md:px-6 lg:px-8">
         {/* Left: Hamburger + Logo */}
         <div className="flex items-center gap-2 sm:gap-3">
