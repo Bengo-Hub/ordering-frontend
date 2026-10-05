@@ -95,7 +95,20 @@ if (roles.includes('rider')) {
 
 **Integration**: Indirect — frontend calls ordering backend, backend calls treasury-service.
 
-**Payment workflow (invoice-first)**: Backend creates a payment intent via treasury-api with `payment_method: "pending"`, returns intent_id and details. Frontend redirects the user to the **shared treasury-ui pay page** (`/pay`) with query params (intent_id, amount, tenant, initiate_url, redirect_url, button_text). User selects gateway (Paystack, M-Pesa, COD); modals support QR and “I paid at till”. See [shared-docs/payment-workflow.md](../../../shared-docs/payment-workflow.md).
+**Payment workflow (invoice-first)**: Backend creates a payment intent via treasury-api with `payment_method: "pending"`, returns intent_id and details. Frontend opens the **shared treasury-ui pay page** (`/pay`) in `TreasuryPaymentModal` (`@bengo-hub/shared-ui-lib`). See [shared-docs/payment-workflow.md](../../../shared-docs/payment-workflow.md).
+
+**Checkout payment options (2026-10-05)** (`hooks/use-checkout-state.ts`), built from `GET /payment-methods` (ordering-backend's aggregate of treasury's `/pay/{tenant}/gateways`):
+
+| Option | Shown when the gateway list has | `paymentMethod` sent | Pay now |
+|---|---|---|---|
+| Pay now, Card (Paystack) | `paystack` | `paystack` | yes |
+| Pay now, PayHero (M-Pesa, Airtel Money and more) | `payhero` | `payhero` | yes |
+| Pay now, M-Pesa (STK) | `mpesa` (the outlet's own Daraja paybill or till) | `mpesa` | yes |
+| Wallet | signed in, balance covers the amount | `wallet` | no |
+| M-Pesa to our Till/Paybill (enter code) | `mpesa_manual` | `mpesa_manual` | no |
+| Pay at the counter / on delivery | `cod` | `cod` | no |
+
+For a pay-now option the modal gets `allowedMethods` set to the chosen gateway, so the pay page opens it directly (PayHero opens its own checkout with M-PESA, Airtel and the other rails). Since 2026-10-05 treasury reports PayHero as `payhero`, not `mpesa`; before this option a PayHero-only outlet had no pay-now M-Pesa at checkout. The guest order page's "Pay" opens the modal without `allowedMethods`, listing every gateway. Provider logos (wallet top-up page) come from shared-ui-lib (v0.1.96+).
 
 ### Order creation and payment flow
 
@@ -104,10 +117,10 @@ The frontend currently sends `POST /v1/{tenant}/orders` with body `{ outletId, i
 ### Payment Flow
 
 ```
-1. Frontend: POST /v1/{tenant}/orders (with payment_method: "mpesa" or "cod")
+1. Frontend: POST /v1/{tenant}/orders (with paymentMethod: "paystack", "payhero", "mpesa", "mpesa_manual", "wallet" or "cod")
 2. Backend: Creates order → calls treasury POST /api/v1/{tenant}/payments/intents with payment_method: "pending" (invoice-only), returns intent_id + order_id
 3. Frontend: Redirects to treasury-ui /pay with intent_id, amount, tenant, initiate_url, redirect_url, button_text
-4. User selects gateway on pay page; modal POSTs to initiate_url; backend calls treasury POST .../intents/{id}/initiate (Paystack → authorization_url; M-Pesa → STK push)
+4. Pay page opens the chosen gateway (or lists them); its form POSTs to initiate_url (Paystack → authorization_url; M-Pesa → Daraja STK push with gateway "daraja"; PayHero → the chosen rail with gateway "payhero")
 5. Frontend: For M-Pesa, polls GET /v1/{tenant}/orders/{id}; for Paystack, user returns to callback page then redirect_url
 6. Treasury: Webhook updates intent → backend updates order payment_status: "paid"
 7. Frontend: Poll or callback detects status → shows "Payment Confirmed"
