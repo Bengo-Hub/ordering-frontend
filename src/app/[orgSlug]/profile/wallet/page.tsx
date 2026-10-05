@@ -6,11 +6,11 @@ import {
   CreditCard,
   Loader2,
   PlusCircle,
-  Smartphone,
   Wallet,
 } from "lucide-react";
 import { useEffect, useState } from "react";
 import { useSearchParams } from "next/navigation";
+import { MpesaLogo, PayHeroLogo, PaystackLogo } from "@bengo-hub/shared-ui-lib";
 
 import { RequireAuth } from "@/components/auth/require-auth";
 import { SiteShell } from "@/components/layout/site-shell";
@@ -37,8 +37,11 @@ import { useAuthStore } from "@/store/auth";
 
 const EXCLUDED_FOR_TOPUP = new Set(["cod", "cash", "wallet"]);
 
+// Provider marks come from shared-ui-lib (the one home for them).
 function PaymentMethodIcon({ type }: { type: string }) {
-  if (type === "mpesa") return <Smartphone className="size-5 text-green-600" />;
+  if (type === "mpesa") return <MpesaLogo className="h-5 w-9" />;
+  if (type === "payhero") return <PayHeroLogo className="h-5 w-9" />;
+  if (type === "paystack") return <PaystackLogo className="size-5" />;
   return <CreditCard className="size-5 text-blue-600" />;
 }
 

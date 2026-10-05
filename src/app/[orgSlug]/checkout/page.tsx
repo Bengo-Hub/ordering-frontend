@@ -303,6 +303,9 @@ export default function CheckoutPage() {
         description={`Order ${state.orderId ?? ""}`}
         referenceId={state.orderId ?? ""}
         referenceType="order"
+        // The customer already chose the gateway here (Paystack, PayHero or M-Pesa), so the pay
+        // page opens it directly instead of listing every gateway again.
+        {...(state.selectedOption?.payNow && state.selectedMethod ? { allowedMethods: state.selectedMethod } : {})}
         onPaymentConfirmed={state.handlePaymentConfirmed}
         onPaymentFailed={state.handlePaymentFailed}
       />

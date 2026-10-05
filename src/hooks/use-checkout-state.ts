@@ -52,6 +52,7 @@ export type CheckoutStep = "review" | "processing" | "payment" | "success";
  */
 export type CheckoutPaymentOptionId =
   | "paystack_now"
+  | "payhero_now"
   | "mpesa_now"
   | "mpesa_manual"
   | "wallet"
@@ -289,11 +290,13 @@ export function useCheckoutState() {
   const walletCurrency = paymentMethodsData?.wallet?.currency ?? "KES";
 
   // Classify backend gateway `type` values. COD / cash variants enable the
-  // pay-on-collection options; an M-Pesa STK gateway enables both pay-now M-Pesa
-  // and M-Pesa-on-collection (deferred STK at handover / guest page).
+  // pay-on-collection options; an M-Pesa STK gateway (the outlet's own Daraja paybill or till)
+  // enables pay-now M-Pesa. PayHero is its own gateway on treasury's pay page (M-Pesa, Airtel,
+  // card and more in its modal); since 2026-10-05 treasury no longer reports it as "mpesa".
   const isCodGateway = (t: string) => /cash|cod|on_delivery|on_pickup|on_collection/i.test(t);
   const isMpesaGateway = (t: string) => t === "mpesa" || t === "stk" || t === "mpesa_stk";
   const isPaystackGateway = (t: string) => t === "paystack" || t === "card";
+  const isPayHeroGateway = (t: string) => t === "payhero";
 
   const paymentOptions = useMemo<CheckoutPaymentOption[]>(() => {
     const gateways = paymentMethodsData?.gateways ?? [];
@@ -305,6 +308,7 @@ export function useCheckoutState() {
 
     let hasMpesa = false;
     let hasPaystack = false;
+    let hasPayHero = false;
     let codGateway: (typeof gateways)[number] | undefined;
     let manualMpesa: (typeof gateways)[number] | undefined;
 
@@ -314,6 +318,7 @@ export function useCheckoutState() {
       if (t === "mpesa_manual") manualMpesa = g;
       else if (isMpesaGateway(t)) hasMpesa = true;
       else if (isPaystackGateway(t)) hasPaystack = true;
+      else if (isPayHeroGateway(t)) hasPayHero = true;
       else if (isCodGateway(t)) codGateway = g;
     }
 
@@ -323,6 +328,15 @@ export function useCheckoutState() {
         id: "paystack_now",
         method: "paystack",
         label: "Pay now — Card (Paystack)",
+        payNow: true,
+      });
+    }
+    if (hasPayHero) {
+      opts.push({
+        id: "payhero_now",
+        method: "payhero",
+        label: "Pay now — PayHero",
+        description: "M-Pesa, Airtel Money and more",
         payNow: true,
       });
     }
