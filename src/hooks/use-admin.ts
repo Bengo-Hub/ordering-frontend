@@ -11,6 +11,7 @@ import {
   deleteCategory,
   deleteMenuItem,
   getAdminOrder,
+  getAdminOrderCounts,
   listAdminOrders,
   listCategories,
   listMenuItems,
@@ -46,6 +47,17 @@ export function useAdminOrders(filters?: AdminOrderFilters) {
   return useQuery({
     queryKey: adminKeys.orderList(filters ?? {}),
     queryFn: () => listAdminOrders(slug, filters),
+    staleTime: 15_000,
+    refetchInterval: 30_000,
+  });
+}
+
+/** Open-order counts for the dashboard cards (all statuses, independent of the list filter). */
+export function useAdminOrderCounts() {
+  const slug = useOrgSlug();
+  return useQuery({
+    queryKey: [...adminKeys.orders(), "counts"] as const,
+    queryFn: () => getAdminOrderCounts(slug),
     staleTime: 15_000,
     refetchInterval: 30_000,
   });

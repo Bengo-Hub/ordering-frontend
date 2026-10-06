@@ -28,8 +28,8 @@ import {
 import { Input } from "@/components/ui/input";
 import { Pagination } from "@/components/ui/pagination";
 import {
-  useAdminOrders, useAssignRider, useAvailableRiders, useCancelAdminOrder, useUpdateOrderStatus,
-  useDeleteAdminOrder, useVerifyOrderPayment,
+  useAdminOrderCounts, useAdminOrders, useAssignRider, useAvailableRiders, useCancelAdminOrder,
+  useUpdateOrderStatus, useDeleteAdminOrder, useVerifyOrderPayment,
 } from "@/hooks/use-admin";
 import { toast } from "@/lib/toast";
 import { apiErrorMessage } from "@/lib/api/error-message";
@@ -78,6 +78,16 @@ function nextActions(order: AdminOrder): StatusAction[] {
     default:
       return [];
   }
+}
+
+/**
+ * A live order (offered to the outlet, in the kitchen, with a rider) is rejected, never deleted:
+ * deleting would leave the POS card, kitchen tickets and rider job behind. The server enforces the
+ * same rule; this only hides the button.
+ */
+function canDelete(order: AdminOrder): boolean {
+  if (["cancelled", "refunded", "payment_timeout", "completed", "delivered"].includes(order.status)) return true;
+  return order.status === "pending" && !order.metadata?.outlet_offered_at && !order.metadata?.outlet_handoff_at;
 }
 
 const RIDER_STATE: Record<string, string> = {
@@ -149,6 +159,7 @@ export default function StaffDashboardPage() {
   };
 
   const { data, isLoading } = useAdminOrders(filters);
+  const { data: counts } = useAdminOrderCounts();
   const updateStatus = useUpdateOrderStatus();
   const deleteOrder = useDeleteAdminOrder();
   const assignRider = useAssignRider();
@@ -158,10 +169,10 @@ export default function StaffDashboardPage() {
   const total = data?.total ?? 0;
   const totalPages = Math.max(1, Math.ceil(total / limit));
 
-  // Count by status for the summary cards
-  const pendingCount = orders.filter((o) => o.status === "pending").length;
-  const preparingCount = orders.filter((o) => o.status === "preparing").length;
-  const readyCount = orders.filter((o) => o.status === "ready").length;
+  // Card counts come from the server across every open order, not from the current page or tab.
+  const pendingCount = counts?.pending ?? 0;
+  const preparingCount = (counts?.confirmed ?? 0) + (counts?.preparing ?? 0);
+  const readyCount = counts?.ready ?? 0;
 
   const handleStatusUpdate = useCallback(
     async (orderId: string, status: string) => {
@@ -212,12 +223,12 @@ export default function StaffDashboardPage() {
               icon={<Clock className="size-4 text-amber-500" />}
             />
             <MetricCard
-              title="Preparing"
+              title="Accepted / preparing"
               value={preparingCount}
               icon={<ChefHat className="size-4 text-blue-500" />}
             />
             <MetricCard
-              title="Ready for Pickup"
+              title="Ready (pickup or rider)"
               value={readyCount}
               icon={<Package className="size-4 text-green-500" />}
             />
@@ -229,9 +240,12 @@ export default function StaffDashboardPage() {
               <Search className="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
               <Input
                 className="pl-10"
-                placeholder="Search orders by number or customer..."
+                placeholder="Search by order number..."
                 value={search}
-                onChange={(e) => setSearch(e.target.value)}
+                onChange={(e) => {
+                  setSearch(e.target.value);
+                  setPage(1);
+                }}
               />
             </div>
             <p className="text-sm text-muted-foreground">{total} orders</p>
@@ -243,7 +257,10 @@ export default function StaffDashboardPage() {
               <button
                 key={tab.key}
                 type="button"
-                onClick={() => setStatusFilter(tab.key)}
+                onClick={() => {
+                  setStatusFilter(tab.key);
+                  setPage(1);
+                }}
                 className={`rounded-full px-3 py-1 text-xs font-medium transition-colors ${
                   statusFilter === tab.key
                     ? "bg-primary text-primary-foreground"
@@ -455,7 +472,7 @@ function OrderCard({
             ))}
 
             {/* Assign Rider button: delivery orders at "ready" status */}
-            {order.status === "ready" && order.fulfillmentType === "delivery" && (
+            {order.status === "ready" && isDeliveryOrder && (
               <div className="relative">
                 <PermissionActionButton
                   permission="ordering.orders.manage"
@@ -517,14 +534,16 @@ function OrderCard({
               </PermissionActionButton>
             )}
 
-            <PermissionActionButton
-              permission="ordering.orders.delete"
-              disabled={isUpdating}
-              className="inline-flex h-8 items-center justify-center rounded-md px-3 text-sm font-medium text-destructive hover:bg-destructive/10 disabled:pointer-events-none disabled:opacity-50"
-              onClick={() => setDialog("delete")}
-            >
-              Delete
-            </PermissionActionButton>
+            {canDelete(order) && (
+              <PermissionActionButton
+                permission="ordering.orders.delete"
+                disabled={isUpdating}
+                className="inline-flex h-8 items-center justify-center rounded-md px-3 text-sm font-medium text-destructive hover:bg-destructive/10 disabled:pointer-events-none disabled:opacity-50"
+                onClick={() => setDialog("delete")}
+              >
+                Delete
+              </PermissionActionButton>
+            )}
           </div>
         </div>
       </CardContent>

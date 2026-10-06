@@ -211,6 +211,12 @@ export async function verifyOrderPayment(slug: string, orderId: string, referenc
   await api.post(`${slug}/admin/orders/${orderId}/payment/verify`, { reference });
 }
 
+/** Open orders per status (pending through out_for_delivery), counted by the server. */
+export async function getAdminOrderCounts(slug: string): Promise<Record<string, number>> {
+  const res = await api.get(`${slug}/admin/orders/counts`);
+  return res.data ?? {};
+}
+
 export async function deleteAdminOrder(slug: string, orderId: string): Promise<void> {
   await api.delete(`${slug}/admin/orders/${orderId}`);
 }
