@@ -110,6 +110,22 @@ if (roles.includes('rider')) {
 
 For a pay-now option the modal gets `allowedMethods` set to the chosen gateway, so the pay page opens it directly (PayHero opens its own checkout with M-PESA, Airtel and the other rails). Since 2026-10-05 treasury reports PayHero as `payhero`, not `mpesa`; before this option a PayHero-only outlet had no pay-now M-Pesa at checkout. The guest order page's "Pay" opens the modal without `allowedMethods`, listing every gateway. Provider logos (wallet top-up page) come from shared-ui-lib (v0.1.96+).
 
+### Payment not completed: retry window
+
+When an online payment is declined, cancelled or times out the order is not cancelled. The order
+API returns `paymentRetry` (`open`, `until`, `attempts`, `lastFailureReason`) while the order waits
+for its money. Both order pages (signed-in `orders/[orderId]` and the public `orders/guest/[orderId]`)
+render `components/orders/payment-retry-panel.tsx`: "Payment not completed" with the time left and
+a "Retry payment" button. The button calls `useRetryOrderPayment` (owner route
+`POST orders/{id}/payment/retry`, or the guest route `orders/guest/{id}/payment/retry` with the
+session id when known), then opens the shared `TreasuryPaymentModal` with the returned intent and
+initiate URL, so the customer can pick any gateway again. The email `?pay=1` link starts the retry
+on the guest page. Once the window closes the backend cancels the order and releases the stock.
+
+The staff dashboard shows these orders as "Awaiting payment (retry open until HH:MM)" with the
+failed attempt count and never offers Accept for an unpaid online order. Time-left and label
+helpers live in `lib/payment-retry.ts` (unit tested).
+
 ### Order creation and payment flow
 
 The frontend currently sends `POST /v1/{tenant}/orders` with body `{ outletId, items, deliveryAddress, paymentMethod }`. The ordering-backend exposes `POST /checkout` with `{ cartId, deliveryAddressId, ... }` (cart-based). Ensure backend either supports a direct create-order-from-items endpoint matching the frontend contract or frontend is updated to use cart API (`POST /cart/items`, then `POST /checkout` with `cartId`). See e2e-gap-analysis.md.

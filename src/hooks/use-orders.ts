@@ -12,6 +12,7 @@ import {
   initiateMpesaPayment,
   listOrders,
   rateOrder,
+  retryOrderPayment,
   type CreateOrderRequest,
   type MpesaPaymentRequest,
   type PromoValidateLine,
@@ -118,6 +119,23 @@ export function useRateOrder() {
       rateOrder(slug, orderId, rating, comment),
     onSuccess: (_data, { orderId }) => {
       queryClient.invalidateQueries({ queryKey: orderKeys.detail(orderId) });
+    },
+  });
+}
+
+/**
+ * Starts another payment for an unpaid online order (signed-in owner route, or the guest route on
+ * the public order page). The caller opens the payment modal with the returned intent.
+ */
+export function useRetryOrderPayment(opts?: { guest?: boolean | undefined; sessionId?: string | undefined }) {
+  const slug = useOrgSlug();
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (orderId: string) => retryOrderPayment(slug, orderId, opts),
+    onSettled: (_data, _err, orderId) => {
+      // A 409 "already paid" also changes what the page should show.
+      queryClient.invalidateQueries({ queryKey: orderKeys.detail(orderId) });
+      queryClient.invalidateQueries({ queryKey: ["guest-order", orderId] });
     },
   });
 }

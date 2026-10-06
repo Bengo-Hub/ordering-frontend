@@ -1,4 +1,5 @@
 import { api } from "./base";
+import type { PaymentRetryInfo } from "./orders";
 
 // ─── Types ───────────────────────────────────────────────────────────
 
@@ -32,6 +33,8 @@ export interface AdminOrder {
   placedAt: string;
   createdAt: string;
   updatedAt: string;
+  /** Online-payment order still waiting for its money; never accepted before it is paid. */
+  paymentRetry?: PaymentRetryInfo;
 }
 
 export interface AdminOrderItem {

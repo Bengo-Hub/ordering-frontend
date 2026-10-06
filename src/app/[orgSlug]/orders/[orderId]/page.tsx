@@ -19,6 +19,7 @@ import { useState } from "react";
 import { RequireAuth } from "@/components/auth/require-auth";
 import { SiteShell } from "@/components/layout/site-shell";
 import { OrderStatusPanel } from "@/components/orders/order-status-panel";
+import { PaymentRetryPanel } from "@/components/orders/payment-retry-panel";
 import { RatingDialog } from "@/components/orders/rating-dialog";
 import { timelineFor, timelineIndex } from "@/lib/order-timeline";
 import { Badge } from "@/components/ui/badge";
@@ -45,7 +46,7 @@ export default function OrderDetailPage() {
   const params = useParams<{ orderId: string }>();
   const orderId = params.orderId;
 
-  const { data: order, isLoading, isError } = useOrder(orderId);
+  const { data: order, isLoading, isError, refetch } = useOrder(orderId);
   const { data: tracking } = useOrderTracking(orderId, !!order && !["delivered", "completed", "cancelled"].includes(order.status));
   const cancelOrder = useCancelOrder();
   const addItem = useCartStore((s) => s.addItem);
@@ -142,6 +143,14 @@ export default function OrderDetailPage() {
                   {order.status.replace(/_/g, " ")}
                 </Badge>
               </header>
+
+              {order.paymentRetry && (
+                <PaymentRetryPanel
+                  order={order}
+                  orgSlug={orgSlug}
+                  onPaid={() => void refetch()}
+                />
+              )}
 
               <OrderStatusPanel order={order} />
 

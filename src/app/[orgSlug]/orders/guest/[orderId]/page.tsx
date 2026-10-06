@@ -23,6 +23,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { getGuestOrder, rateGuestOrder, type Order } from "@/lib/api/orders";
 import { getGoogleReviewUrl } from "@/lib/api/integrations";
 import { OrderStatusPanel } from "@/components/orders/order-status-panel";
+import { PaymentRetryPanel } from "@/components/orders/payment-retry-panel";
 import { isDeliveryFulfillment, timelineFor, timelineIndex } from "@/lib/order-timeline";
 import { formatDateTime } from "@/lib/datetime";
 import { orgRoute } from "@/lib/routes";
@@ -290,8 +291,12 @@ function GuestOrderContent() {
   // "Payable" = a pending, unpaid order that has a payment intent we can drive
   // through the treasury pay flow (Paystack / M-Pesa). COD / pay-on-delivery
   // orders also get a payable intent, so they can be paid early from here too.
+  // Online-payment orders still waiting for their money carry paymentRetry; the retry panel
+  // handles them (time left, pay again with any gateway). Pay Now stays for other payable orders.
+  const awaitingRetry = !!order?.paymentRetry;
   const isPayable =
     !!order &&
+    !awaitingRetry &&
     order.status === "pending" &&
     order.paymentStatus !== "paid" &&
     order.paymentStatus !== "completed" &&
@@ -335,8 +340,9 @@ function GuestOrderContent() {
     // Manual M-Pesa: already paid by the customer, being confirmed by the outlet (see the
     // status panel); it is not "awaiting payment".
     if (order.metadata?.payment_channel === "mpesa_manual") return null;
-    // Prepaid method, not yet paid: awaiting payment (unless cancelled/failed).
-    if (cancelledOrFailed) return null;
+    // Prepaid method, not yet paid: awaiting payment (unless cancelled/failed, or the retry panel
+    // already says so).
+    if (cancelledOrFailed || order.paymentRetry) return null;
     return "awaiting";
   })();
 
@@ -398,6 +404,17 @@ function GuestOrderContent() {
           </div>
         </div>
       ) : null}
+
+      {awaitingRetry && (
+        <PaymentRetryPanel
+          order={order}
+          orgSlug={orgSlug}
+          guest
+          sessionId={sessionId || undefined}
+          autoOpen={autoOpenPay}
+          onPaid={refetchOrder}
+        />
+      )}
 
       {/* Pay Now — prepaid (Paystack / M-Pesa) orders that are still awaiting payment
           can be completed right here, no login required. */}

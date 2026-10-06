@@ -57,8 +57,36 @@ export interface Order {
   scheduledFor?: string;
   /** Order metadata: delivery_status (rider progress), payment_channel/mpesa_code, order notes. */
   metadata?: Record<string, unknown>;
+  /** Set while an online-payment order waits for its money (see PaymentRetryInfo). */
+  paymentRetry?: PaymentRetryInfo;
   createdAt: string;
   updatedAt: string;
+}
+
+/**
+ * Retry state of an unpaid online-payment order. The order stays open (stock held) until
+ * `until`; after that it is cancelled. Staff cannot accept it before it is paid.
+ */
+export interface PaymentRetryInfo {
+  open: boolean;
+  until: string;
+  attempts: number;
+  retries: number;
+  lastFailureReason?: string;
+  lastAttemptAt?: string;
+}
+
+/** What the retry endpoint returns: the intent to pay and its treasury initiate URL. */
+export interface PaymentRetryResult {
+  orderId: string;
+  orderNumber: string;
+  paymentIntentId: string;
+  initiateUrl?: string;
+  amount: number;
+  currency: string;
+  retryUntil: string;
+  /** True when the order's current intent was never completed and is offered again. */
+  reused: boolean;
 }
 
 export interface PaymentIntent {
@@ -121,6 +149,24 @@ export async function rateGuestOrder(
   body: { rating: number; comment?: string; riderRating?: number; riderComment?: string },
 ): Promise<Order> {
   const res = await api.post(`${tenantSlug}/orders/guest/${orderId}/rate`, body);
+  return res.data;
+}
+
+/**
+ * Starts another payment for an unpaid online order while its retry window is open. Signed-in
+ * customers use the owner route; the public order page uses the guest route (order id as the
+ * capability, plus the guest session id when known).
+ */
+export async function retryOrderPayment(
+  tenantSlug: string,
+  orderId: string,
+  opts?: { guest?: boolean | undefined; sessionId?: string | undefined },
+): Promise<PaymentRetryResult> {
+  const path = opts?.guest
+    ? `${tenantSlug}/orders/guest/${orderId}/payment/retry`
+    : `${tenantSlug}/orders/${orderId}/payment/retry`;
+  const params = opts?.guest && opts.sessionId ? { session_id: opts.sessionId } : undefined;
+  const res = await api.post(path, {}, { params });
   return res.data;
 }
 

@@ -34,6 +34,7 @@ import {
 import { toast } from "@/lib/toast";
 import { apiErrorMessage } from "@/lib/api/error-message";
 import type { AdminOrder } from "@/lib/api/admin";
+import { awaitingPaymentLabel } from "@/lib/payment-retry";
 
 const STATUS_TABS = [
   { key: "all", label: "All" },
@@ -447,7 +448,9 @@ function OrderCard({
             )}
             {awaitingOnlinePayment && (
               <p className="mt-0.5 text-xs text-amber-700 dark:text-amber-400">
-                Waiting for the customer to complete payment. It goes to the kitchen once paid.
+                {awaitingPaymentLabel(order.paymentRetry, Date.now()) ?? "Awaiting payment"}.{" "}
+                It goes to the kitchen once paid.
+                {order.paymentRetry?.attempts ? ` Failed attempts: ${order.paymentRetry.attempts}.` : ""}
               </p>
             )}
             {needsPaymentCheck && (
