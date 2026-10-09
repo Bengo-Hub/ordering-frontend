@@ -9,6 +9,13 @@
  * Without an entry the app is "<Business> Ordering" with the business logo.
  */
 
+import {
+  serviceBrandingEntry,
+  serviceFullName,
+  serviceShortName,
+  type ServiceBrandingEntry,
+} from "@bengo-hub/shared-ui-lib/branding";
+
 const AUTH_API_BASE =
   process.env.NEXT_PUBLIC_SSO_URL ||
   process.env.NEXT_PUBLIC_AUTH_API_URL ||
@@ -16,13 +23,8 @@ const AUTH_API_BASE =
 
 export const DEFAULT_THEME_COLOR = "#f97316";
 
-interface ServiceBrandingEntry {
-  name?: string;
-  short_name?: string;
-  tagline?: string;
-  theme_color?: string;
-  icon_url?: string;
-}
+/** This app's key in tenant metadata service_branding (same key as the app-switcher registry). */
+const SERVICE_KEY = "ordering";
 
 interface PublicTenant {
   name?: string;
@@ -62,27 +64,15 @@ function text(value: unknown): string {
   return typeof value === "string" ? value.trim() : "";
 }
 
-function orderingEntry(metadata: Record<string, unknown> | undefined): ServiceBrandingEntry {
-  const all = metadata?.service_branding;
-  if (!all || typeof all !== "object") return {};
-  const entry = (all as Record<string, unknown>).ordering;
-  return entry && typeof entry === "object" ? (entry as ServiceBrandingEntry) : {};
-}
-
-/** Launcher label: explicit short name, else a name that already fits, else "<First word> Ordering". */
-function deriveShortName(appName: string, businessName: string, custom: boolean): string {
-  if (appName.length <= 12) return appName;
-  const firstWord = businessName.split(/\s+/)[0] || appName.split(/\s+/)[0] || "Ordering";
-  return custom ? appName.split(/\s+/).slice(0, 2).join(" ") : `${firstWord} Ordering`;
-}
-
 export async function getAppBranding(slug: string): Promise<AppBranding> {
   const tenant = await fetchTenant(slug);
-  const entry = orderingEntry(tenant?.metadata);
+  const entry: ServiceBrandingEntry = serviceBrandingEntry(tenant?.metadata, SERVICE_KEY) ?? {};
   const businessName = text(tenant?.name) || slug;
   const customName = text(entry.name);
-  const appName = customName || `${businessName} Ordering`;
-  const shortName = text(entry.short_name) || deriveShortName(appName, businessName, !!customName);
+  // Shared naming rule (shared-ui-lib branding): the tenant's own app name ("Urban Eats") wins,
+  // else "<Business> Ordering" with a "<brand word> Ordering" launcher label ("The Urban Ordering").
+  const appName = serviceFullName(businessName, "Ordering", slug, entry);
+  const shortName = serviceShortName(businessName, "Ordering", slug, entry);
   const themeColor =
     text(entry.theme_color) ||
     text(tenant?.brand_colors?.primary) ||

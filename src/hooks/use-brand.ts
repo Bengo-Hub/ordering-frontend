@@ -1,6 +1,7 @@
 "use client";
 
 import { useQuery } from "@tanstack/react-query";
+import { serviceAppName } from "@bengo-hub/shared-ui-lib/branding";
 import { api } from "@/lib/api/base";
 import { brand as staticBrand } from "@/config/brand";
 import { useOrgSlug } from "@/providers/org-slug-provider";
@@ -29,14 +30,6 @@ export const brandKeys = {
   all: ["brand"] as const,
   config: (tenantSlug: string) => [...brandKeys.all, "config", tenantSlug] as const,
 };
-
-/** "{first word of tenantName} {appName}", e.g. "Urban OrderApp" — falls back to just
- *  appName while no tenant name has resolved yet. Mirrors the shared-ui-lib
- *  TenantBrandingProvider's getServiceTitle helper this replaces. */
-export function serviceTitle(tenantName: string | undefined, appName: string): string {
-  const firstWord = (tenantName ?? "").trim().split(/\s+/)[0] ?? "";
-  return firstWord ? `${firstWord} ${appName}` : appName;
-}
 
 export interface BrandConfig {
   name: string;
@@ -74,9 +67,11 @@ function staticBrandConfig(): BrandConfig {
   };
 }
 
-/** App name for headers and install prompts: the tenant's own app name, else "<First word> <fallback>". */
+/** App name for headers and install prompts, by the shared rule (shared-ui-lib branding): the
+ *  tenant's own app name ("Urban Eats", service_branding.ordering via ordering-backend's
+ *  app_name), else "<brand word> <fallback>" ("The Urban OrderApp"). */
 export function appDisplayName(config: BrandConfig | undefined, fallback: string): string {
-  return config?.appName || serviceTitle(config?.name, fallback);
+  return serviceAppName(config?.name, fallback, undefined, config?.appName ? { name: config.appName } : null);
 }
 
 export function useBrandConfig() {
