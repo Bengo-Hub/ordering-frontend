@@ -3,7 +3,6 @@
 import { AlertTriangle, CheckCircle2, Gauge, Loader2, Timer } from "lucide-react";
 
 import { RequireAuth } from "@/components/auth/require-auth";
-import { SiteShell } from "@/components/layout/site-shell";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useBreachedSlaMetrics, useSlaStats } from "@/hooks/use-sla";
@@ -223,8 +222,8 @@ export default function SlaDashboardPage() {
       permissions={["ordering.analytics.view"]}
       permissionOperator="or"
     >
-      <SiteShell>
-        <div className="mx-auto w-full max-w-4xl px-4 py-6">
+      <>
+        <div className="mx-auto w-full max-w-4xl">
           <header className="mb-6">
             <p className="text-sm font-semibold uppercase tracking-wide text-primary">
               Operations
@@ -262,7 +261,7 @@ export default function SlaDashboardPage() {
             </Card>
           </div>
         </div>
-      </SiteShell>
+      </>
     </RequireAuth>
   );
 }

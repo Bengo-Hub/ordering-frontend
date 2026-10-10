@@ -1,5 +1,6 @@
 "use client";
 
+import { LOGISTICS_UI_URL } from "@/lib/app-urls";
 import { ExternalLink, Loader2, MapPin } from "lucide-react";
 
 import { Badge } from "@/components/ui/badge";
@@ -8,7 +9,6 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useDeliveryCoverage } from "@/hooks/use-delivery";
 import { useOrgSlug } from "@/providers/org-slug-provider";
 
-const LOGISTICS_UI_URL = (process.env.NEXT_PUBLIC_LOGISTICS_UI_URL ?? "https://logistics.codevertexafrica.com").replace(/\/+$/, "");
 
 /** Where to manage delivery areas, pricing and geofencing (logistics-ui owns them). */
 export function logisticsZonesUrl(orgSlug: string): string {

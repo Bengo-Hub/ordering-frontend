@@ -14,7 +14,6 @@ import { useState } from "react";
 import { ImageUpload } from "@/components/ui/image-upload";
 
 import { RequireAuth } from "@/components/auth/require-auth";
-import { SiteShell } from "@/components/layout/site-shell";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -69,8 +68,8 @@ export default function MenuManagementPage() {
       permissions={["ordering.catalog.manage"]}
       permissionOperator="or"
     >
-      <SiteShell>
-        <div className="mx-auto w-full max-w-6xl px-4 py-6">
+      <>
+        <div className="w-full">
           {/* Header */}
           <header className="mb-6 flex flex-wrap items-start justify-between gap-4">
             <div>
@@ -242,7 +241,7 @@ export default function MenuManagementPage() {
             </div>
           )}
         </div>
-      </SiteShell>
+      </>
     </RequireAuth>
   );
 }

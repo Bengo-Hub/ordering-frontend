@@ -1,5 +1,6 @@
 "use client";
 
+import { LOGISTICS_UI_URL } from "@/lib/app-urls";
 import { Suspense, useEffect, useRef } from "react";
 
 import { SSOCallbackError } from "@bengo-hub/shared-ui-lib/auth";
@@ -141,7 +142,7 @@ function AuthCallbackContent() {
       }
 
       if (userHasRole(user, ["rider"])) {
-        const logisticsUrl = process.env.NEXT_PUBLIC_LOGISTICS_UI_URL ?? "https://logistics.codevertexafrica.com";
+        const logisticsUrl = LOGISTICS_UI_URL;
         window.location.href = `${logisticsUrl}/${orgSlug}`;
         return;
       }

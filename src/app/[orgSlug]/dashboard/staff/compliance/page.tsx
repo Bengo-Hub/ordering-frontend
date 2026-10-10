@@ -10,7 +10,6 @@ import {
 } from "lucide-react";
 
 import { RequireAuth } from "@/components/auth/require-auth";
-import { SiteShell } from "@/components/layout/site-shell";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -312,8 +311,8 @@ function RequestsTable() {
 export default function CompliancePage() {
   return (
     <RequireAuth roles={["admin", "superuser"]}>
-      <SiteShell>
-        <div className="mx-auto w-full max-w-4xl px-4 py-6">
+      <>
+        <div className="mx-auto w-full max-w-4xl">
           <header className="mb-6">
             <p className="text-sm font-semibold uppercase tracking-wide text-primary">
               Compliance
@@ -350,7 +349,7 @@ export default function CompliancePage() {
             </Card>
           </div>
         </div>
-      </SiteShell>
+      </>
     </RequireAuth>
   );
 }

@@ -4,7 +4,6 @@ import { useState } from "react";
 import { Loader2, Receipt, RotateCcw, Eye } from "lucide-react";
 
 import { RequireAuth } from "@/components/auth/require-auth";
-import { SiteShell } from "@/components/layout/site-shell";
 import { useCreateRefund, useRefund, useRefunds } from "@/hooks/use-refunds";
 import type { Refund, RefundReason, RefundStatus } from "@/lib/api/refunds";
 import { Badge } from "@/components/ui/badge";
@@ -350,8 +349,8 @@ export default function RefundsPage() {
       permissions={["ordering.orders.delete"]}
       permissionOperator="or"
     >
-      <SiteShell>
-        <div className="mx-auto w-full max-w-4xl px-4 py-6">
+      <>
+        <div className="mx-auto w-full max-w-4xl">
           <header className="mb-6">
             <p className="text-sm font-semibold uppercase tracking-wide text-primary">
               Payments
@@ -388,7 +387,7 @@ export default function RefundsPage() {
             </Card>
           </div>
         </div>
-      </SiteShell>
+      </>
     </RequireAuth>
   );
 }

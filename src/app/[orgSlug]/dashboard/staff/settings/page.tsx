@@ -1,6 +1,7 @@
 "use client";
 
 import { DeliveryAreasCard } from "@/components/delivery/delivery-areas-card";
+import { FeeConfigCard } from "@/components/settings/fee-config-card";
 import { useCallback, useEffect, useState } from "react";
 import {
   Bell,
@@ -25,7 +26,6 @@ import {
 import { useParams } from "next/navigation";
 
 import { RequireAuth } from "@/components/auth/require-auth";
-import { SiteShell } from "@/components/layout/site-shell";
 import { TenantLogo } from "@/components/layout/tenant-logo";
 import { useBrandConfig } from "@/hooks/use-brand";
 import {
@@ -155,8 +155,8 @@ export default function TenantSettingsPage() {
 
   return (
     <RequireAuth roles={["admin", "superuser"]} roleOperator="or">
-      <SiteShell>
-        <div className="mx-auto w-full max-w-4xl px-4 py-6">
+      <>
+        <div className="mx-auto w-full max-w-4xl">
           <header className="mb-6">
             <p className="text-sm font-semibold uppercase tracking-wide text-primary">
               Organization Settings
@@ -197,7 +197,7 @@ export default function TenantSettingsPage() {
           {activeTab === "integrations" && <IntegrationsTab />}
           {activeTab === "configuration" && <ConfigurationTab />}
         </div>
-      </SiteShell>
+      </>
     </RequireAuth>
   );
 }
@@ -887,114 +887,9 @@ function IntegrationsTab() {
 // fee_config holds only the fees ordering owns. Delivery fees, areas and the distance
 // rate are set in Logistics (see DeliveryAreasCard) and priced by its quote. Keys match
 // ordering-backend's FeeConfig; percentages are stored as fractions (5% = 0.05).
-const FEE_CONFIG_FIELDS: { key: string; label: string; percent?: boolean }[] = [
-  { key: "service_fee_percent", label: "Service fee (%)", percent: true },
-  { key: "packaging_fee_flat", label: "Packaging fee (KES)" },
-  { key: "small_order_fee", label: "Small-order fee (KES)" },
-  { key: "small_order_threshold", label: "Small-order threshold (KES)" },
-  { key: "delivery_discount_pct", label: "Delivery fee discount (%)", percent: true },
-  { key: "free_delivery_minimum", label: "Free delivery from a basket of (KES, 0 = never)" },
-];
-
-type FeeConfigShape = Record<string, unknown>;
-
-function parseFeeConfig(raw: string | undefined): FeeConfigShape {
-  if (!raw) return {};
-  try {
-    const parsed = JSON.parse(raw);
-    return parsed && typeof parsed === "object" ? (parsed as FeeConfigShape) : {};
-  } catch {
-    return {};
-  }
-}
-
 function maskValue(item: ServiceConfigItem): string {
   if (item.isSecret) return "•••••";
   return item.configValue ?? "";
-}
-
-/** Editable structured form for the fee_config key. */
-function FeeConfigCard({ item }: { item: ServiceConfigItem | undefined }) {
-  const update = useUpdateServiceConfig();
-  const [fields, setFields] = useState<Record<string, string>>({});
-
-  useEffect(() => {
-    const existing = parseFeeConfig(item?.configValue);
-    const next: Record<string, string> = {};
-    for (const f of FEE_CONFIG_FIELDS) {
-      const v = existing[f.key];
-      next[f.key] = v === undefined || v === null ? "" : String(f.percent ? Math.round(Number(v) * 10000) / 100 : v);
-    }
-    setFields(next);
-  }, [item?.configValue]);
-
-  const handleSave = () => {
-    if (!confirm("Save order fee configuration?")) return;
-    // Preserve any keys we don't surface in the form, but drop the retired delivery-rate keys
-    // (delivery pricing lives in Logistics now).
-    const { delivery_fee_base: _base, delivery_fee_per_km: _perKm, packaging_fee: _oldPackaging, ...existing } =
-      parseFeeConfig(item?.configValue);
-    const value: FeeConfigShape = { ...existing };
-    for (const f of FEE_CONFIG_FIELDS) {
-      const raw = fields[f.key];
-      if (raw === "" || raw === undefined) continue;
-      const num = Number(raw);
-      if (!Number.isFinite(num) || num < 0) continue;
-      value[f.key] = f.percent ? num / 100 : num;
-    }
-    update.mutate(
-      { key: "fee_config", value },
-      {
-        onSettled: async (_data, error) => {
-          if (error) toast.error(await apiErrorMessage(error, "Failed to save fee configuration"));
-          else toast.success("Fee configuration saved");
-        },
-      },
-    );
-  };
-
-  return (
-    <Card>
-      <CardHeader>
-        <CardTitle className="flex items-center gap-2">
-          <SlidersHorizontal className="size-5" />
-          Order fees
-          {item?.isOverride && (
-            <Badge variant="soft" className="ml-1">
-              Override
-            </Badge>
-          )}
-        </CardTitle>
-      </CardHeader>
-      <CardContent>
-        <div className="grid gap-4 sm:grid-cols-2">
-          {FEE_CONFIG_FIELDS.map((f) => (
-            <div key={f.key} className="space-y-2">
-              <Label htmlFor={`fee-${f.key}`}>{f.label}</Label>
-              <Input
-                id={`fee-${f.key}`}
-                type="number"
-                min="0"
-                step="any"
-                value={fields[f.key] ?? ""}
-                onChange={(e) =>
-                  setFields((prev) => ({ ...prev, [f.key]: e.target.value }))
-                }
-              />
-            </div>
-          ))}
-        </div>
-        <Button className="mt-4" onClick={handleSave} disabled={update.isPending}>
-          {update.isPending ? (
-            <Loader2 className="size-4 animate-spin mr-2" />
-          ) : (
-            <Save className="size-4 mr-2" />
-          )}
-          Save Configuration
-        </Button>
-      </CardContent>
-    </Card>
-  );
 }
 
 /** Generic edit dialog for a single (non-secret) service-config value. */
@@ -1367,7 +1262,7 @@ function ConfigurationTab() {
     <div className="space-y-6">
       <DeliveryAreasCard />
 
-      <FeeConfigCard item={feeConfig} />
+      <FeeConfigCard scope="tenant" item={feeConfig} />
 
       <AutoBackupCard />
 

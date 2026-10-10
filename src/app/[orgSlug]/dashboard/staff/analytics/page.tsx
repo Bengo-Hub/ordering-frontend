@@ -19,7 +19,6 @@ import {
 import Link from "next/link";
 
 import { RequireAuth } from "@/components/auth/require-auth";
-import { SiteShell } from "@/components/layout/site-shell";
 import { useSubscription } from "@/hooks/use-subscription";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -341,8 +340,8 @@ export default function AnalyticsDashboardPage() {
       permissions={["ordering.analytics.view"]}
       permissionOperator="or"
     >
-      <SiteShell>
-        <div className="mx-auto w-full max-w-5xl px-4 py-6">
+      <>
+        <div className="mx-auto w-full max-w-5xl">
           <header className="mb-6">
             <p className="text-sm font-semibold uppercase tracking-wide text-primary">
               Insights
@@ -374,7 +373,7 @@ export default function AnalyticsDashboardPage() {
             </CardContent>
           </Card>
         </div>
-      </SiteShell>
+      </>
     </RequireAuth>
   );
 }

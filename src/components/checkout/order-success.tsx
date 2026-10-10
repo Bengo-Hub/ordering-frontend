@@ -1,5 +1,6 @@
 "use client";
 
+import { LOGISTICS_UI_URL } from "@/lib/app-urls";
 import { CheckCircle2 } from "lucide-react";
 import Link from "next/link";
 
@@ -13,8 +14,7 @@ interface OrderSuccessProps {
 
 export function OrderSuccess({ orderId }: OrderSuccessProps) {
   const orgSlug = useOrgSlug();
-  const logisticsUrl =
-    process.env.NEXT_PUBLIC_LOGISTICS_UI_URL ?? "https://logistics.codevertexafrica.com";
+  const logisticsUrl = LOGISTICS_UI_URL;
 
   return (
     <div className="flex flex-col items-center gap-6 py-12 text-center">

@@ -1,5 +1,6 @@
 "use client";
 
+import { LOGISTICS_UI_URL } from "@/lib/app-urls";
 import {
   BadgeCheckIcon,
   BikeIcon,
@@ -472,7 +473,7 @@ export default function CustomerDashboardPage() {
                   <a
                     key={order.id}
                     href={`${
-                      process.env.NEXT_PUBLIC_LOGISTICS_UI_URL ?? "https://logistics.codevertexafrica.com"
+                      LOGISTICS_UI_URL
                     }/${orgSlug}/tracking?orderId=${encodeURIComponent(order.id)}`}
                     className="flex flex-wrap items-center justify-between gap-2 rounded-2xl border border-border bg-muted/30 px-4 py-3 mb-2 text-sm transition-colors hover:bg-muted/60"
                   >

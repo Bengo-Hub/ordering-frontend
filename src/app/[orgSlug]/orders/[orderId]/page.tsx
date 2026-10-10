@@ -1,5 +1,6 @@
 "use client";
 
+import { LOGISTICS_UI_URL } from "@/lib/app-urls";
 import {
     ArrowLeft,
     Bike,
@@ -386,7 +387,7 @@ export default function OrderDetailPage() {
                   <Button variant="outline" className="gap-2" asChild>
                     <a
                       href={`${
-                        process.env.NEXT_PUBLIC_LOGISTICS_UI_URL ?? "https://logistics.codevertexafrica.com"
+                        LOGISTICS_UI_URL
                       }/${orgSlug}/tracking?orderId=${encodeURIComponent(order.id)}`}
                     >
                       <Bike className="size-4" />

@@ -1,5 +1,6 @@
 "use client";
 
+import { LOGISTICS_UI_URL } from "@/lib/app-urls";
 import {
   ChevronDown,
   ChevronUp,
@@ -43,8 +44,7 @@ export default function TrackOrderPage() {
   const orgSlug = params.orgSlug;
 
   const logisticsUrl =
-    process.env.NEXT_PUBLIC_LOGISTICS_UI_URL ??
-    "https://logistics.codevertexafrica.com";
+    LOGISTICS_UI_URL;
 
   // Fetch initial order data (with polling fallback when SSE is down)
   const { data: order, isLoading: orderLoading } = useOrder(orderId, {

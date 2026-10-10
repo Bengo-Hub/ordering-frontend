@@ -12,7 +12,6 @@ import {
 } from "lucide-react";
 
 import { RequireAuth } from "@/components/auth/require-auth";
-import { SiteShell } from "@/components/layout/site-shell";
 import {
   useDisconnectGoogle,
   useGoogleConnect,
@@ -450,8 +449,8 @@ export default function GoogleIntegrationsPage() {
       permissions={["ordering.config.manage"]}
       permissionOperator="or"
     >
-      <SiteShell>
-        <div className="mx-auto w-full max-w-3xl px-4 py-6">
+      <>
+        <div className="mx-auto w-full max-w-3xl">
           <header className="mb-6">
             <p className="text-sm font-semibold uppercase tracking-wide text-primary">
               Integrations
@@ -465,7 +464,7 @@ export default function GoogleIntegrationsPage() {
 
           <IntegrationsContent />
         </div>
-      </SiteShell>
+      </>
     </RequireAuth>
   );
 }

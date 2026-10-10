@@ -4,7 +4,6 @@ import { useState } from "react";
 import { Bell, FileText, Loader2, Pencil, Plus, Trash2 } from "lucide-react";
 
 import { RequireAuth } from "@/components/auth/require-auth";
-import { SiteShell } from "@/components/layout/site-shell";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -481,8 +480,8 @@ export default function NotificationsManagementPage() {
       permissions={["ordering.config.manage"]}
       permissionOperator="or"
     >
-      <SiteShell>
-        <div className="mx-auto w-full max-w-4xl px-4 py-6">
+      <>
+        <div className="mx-auto w-full max-w-4xl">
           <header className="mb-6">
             <p className="text-sm font-semibold uppercase tracking-wide text-primary">
               Communications
@@ -499,7 +498,7 @@ export default function NotificationsManagementPage() {
             <EventLogSection />
           </div>
         </div>
-      </SiteShell>
+      </>
     </RequireAuth>
   );
 }

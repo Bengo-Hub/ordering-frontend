@@ -4,7 +4,6 @@ import { useEffect, useMemo, useState } from "react";
 import { Loader2, ShieldCheck, Trash2, UserPlus, Users } from "lucide-react";
 
 import { RequireAuth } from "@/components/auth/require-auth";
-import { SiteShell } from "@/components/layout/site-shell";
 import {
   useAssignRole,
   useAssignments,
@@ -366,8 +365,8 @@ export default function RolesAndPermissionsPage() {
       permissions={["ordering.users.manage"]}
       permissionOperator="or"
     >
-      <SiteShell>
-        <div className="mx-auto w-full max-w-4xl px-4 py-6">
+      <>
+        <div className="mx-auto w-full max-w-4xl">
           <header className="mb-6">
             <p className="text-sm font-semibold uppercase tracking-wide text-primary">
               Team Access
@@ -407,7 +406,7 @@ export default function RolesAndPermissionsPage() {
             <AssignmentsSection />
           </div>
         </div>
-      </SiteShell>
+      </>
     </RequireAuth>
   );
 }

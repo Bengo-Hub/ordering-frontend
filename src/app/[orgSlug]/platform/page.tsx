@@ -16,12 +16,11 @@ import {
   ShoppingBag,
   X,
 } from "lucide-react";
-import { useRouter } from "next/navigation";
-import { useEffect, useState } from "react";
+
+import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 
 import { MetricCard } from "@/components/dashboard/metric-card";
-import { SiteShell } from "@/components/layout/site-shell";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -43,7 +42,8 @@ import {
   useEncryptionKeyStatus,
   useUpdateEncryptionKey,
 } from "@/lib/api/encryption-key";
-import { useServiceConfig } from "@/hooks/use-service-config";
+import { useAdminServiceConfig } from "@/hooks/use-service-config";
+import { FeeConfigCard } from "@/components/settings/fee-config-card";
 import { orgRoute } from "@/lib/routes";
 import { toast } from "@/lib/toast";
 import { apiErrorMessage } from "@/lib/api/error-message";
@@ -56,7 +56,6 @@ export default function PlatformDashboardPage({
   params: { orgSlug?: string };
 }) {
   const orgSlug = params?.orgSlug as string;
-  const router = useRouter();
   const user = useAuthStore((s) => s.user);
   const isPlatformOwner = !!(
     user?.is_platform_owner ||
@@ -66,16 +65,11 @@ export default function PlatformDashboardPage({
 
   const [search, setSearch] = useState("");
 
-  useEffect(() => {
-    if (user && !isPlatformOwner) router.replace(`/${orgSlug}`);
-  }, [user, isPlatformOwner, orgSlug, router]);
 
   const { data, isLoading } = useAdminOrders({ limit: 100 });
 
-  // NOTE: the fee-config, use-case and payment-gateway-status admin endpoints do
-  // not exist in ordering-backend (they previously 404'd and fell back to
-  // placeholders). Their queries have been removed; the corresponding tabs now
-  // render an explicit "not available" state until a real endpoint is built.
+  // Access is enforced by platform/layout.tsx (platform owners only); isPlatformOwner here
+  // only enables the owner-only queries in the tabs.
 
   const orders = data?.orders ?? [];
   const totalOrders = data?.total ?? 0;
@@ -84,11 +78,9 @@ export default function PlatformDashboardPage({
   const processingCount = orders.filter((o) => ["confirmed", "preparing"].includes(o.status)).length;
   const deliveryCount = orders.filter((o) => ["ready", "out_for_delivery"].includes(o.status)).length;
 
-  if (!isPlatformOwner) return null;
-
   return (
-    <SiteShell>
-      <div className="mx-auto w-full max-w-6xl px-4 py-6 space-y-8">
+    <>
+      <div className="space-y-8">
         <header className="mb-6">
           <p className="text-sm font-semibold uppercase tracking-wide text-primary">
             Platform Operations
@@ -229,7 +221,7 @@ export default function PlatformDashboardPage({
           </TabsContent>
         </Tabs>
       </div>
-    </SiteShell>
+    </>
   );
 }
 
@@ -612,79 +604,17 @@ function UseCaseTab({ orgSlug, enabled }: { orgSlug: string; enabled: boolean })
 }
 
 /* ─── Fee Configuration Tab ──────────────────────────────────────────── */
-//
-// Read-only view of the existing `fee_config` service-config item. Field labels
-// mirror the editable FeeConfigCard in the staff settings page so the two views
-// stay consistent. No dedicated fee endpoint — reuses the service-config store.
-
-const PLATFORM_FEE_FIELDS: { key: string; label: string }[] = [
-  { key: "delivery_fee_base", label: "Base delivery fee (KES)" },
-  { key: "delivery_fee_per_km", label: "Per-km rate (KES)" },
-  { key: "free_delivery_minimum", label: "Free-delivery threshold (KES)" },
-  { key: "service_fee_percent", label: "Service fee (%)" },
-  { key: "packaging_fee", label: "Packaging fee (KES)" },
-  { key: "small_order_fee", label: "Small-order fee (KES)" },
-  { key: "small_order_threshold", label: "Small-order threshold (KES)" },
-];
-
-function parsePlatformFeeConfig(
-  raw: string | undefined,
-): Record<string, unknown> {
-  if (!raw) return {};
-  try {
-    const parsed = JSON.parse(raw);
-    return parsed && typeof parsed === "object"
-      ? (parsed as Record<string, unknown>)
-      : {};
-  } catch {
-    return {};
-  }
-}
-
+// The platform default fee_config every tenant inherits until it saves its own. Same form as
+// the staff settings page, scoped to the platform (superuser-only admin endpoint).
 function FeesTab() {
-  const { data: configs = [], isLoading } = useServiceConfig();
+  const { data: configs = [], isLoading } = useAdminServiceConfig();
   const feeConfig = configs.find((c) => c.configKey === "fee_config");
-  const values = parsePlatformFeeConfig(feeConfig?.configValue);
-
-  return (
-    <Card>
-      <CardHeader>
-        <CardTitle className="flex items-center gap-2 text-lg">
-          <DollarSign className="size-5" />
-          Fee Configuration
-          {feeConfig?.isOverride && (
-            <Badge variant="outline" className="ml-1">
-              Override
-            </Badge>
-          )}
-        </CardTitle>
-      </CardHeader>
-      <CardContent>
-        {isLoading ? (
-          <div className="flex items-center justify-center py-12">
-            <Loader2 className="size-8 animate-spin text-primary" />
-          </div>
-        ) : !feeConfig ? (
-          <p className="py-6 text-center text-sm text-muted-foreground">
-            No fee configuration set. Configure delivery &amp; fees from the
-            settings page.
-          </p>
-        ) : (
-          <dl className="grid gap-4 sm:grid-cols-2">
-            {PLATFORM_FEE_FIELDS.map((f) => {
-              const v = values[f.key];
-              const display =
-                v === undefined || v === null || v === "" ? "—" : String(v);
-              return (
-                <div key={f.key} className="space-y-1">
-                  <dt className="text-sm text-muted-foreground">{f.label}</dt>
-                  <dd className="text-base font-medium">{display}</dd>
-                </div>
-              );
-            })}
-          </dl>
-        )}
-      </CardContent>
-    </Card>
-  );
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center py-12">
+        <Loader2 className="size-8 animate-spin text-primary" />
+      </div>
+    );
+  }
+  return <FeeConfigCard scope="platform" item={feeConfig} />;
 }

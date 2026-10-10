@@ -1,19 +1,13 @@
 import {
-  BarChart3,
-  Bell,
   Car,
   CreditCard,
   ExternalLink,
-  FileLock,
   Flower,
-  Gauge,
   Heart,
   HelpCircle,
   Home,
-  MapPin,
   Package,
   Pill,
-  RotateCcw,
   Shield,
   ShoppingCart,
   Tag,
@@ -38,7 +32,8 @@ import { toast } from "@/lib/toast";
 import { cn } from "@/lib/utils";
 import { useOrgSlug } from "@/providers/org-slug-provider";
 import { useAuthStore } from "@/store/auth";
-import { userCanAccess, userHasRole } from "@/lib/auth/permissions";
+import { userHasRole } from "@/lib/auth/permissions";
+import { STAFF_ROLES, useIsPlatformOwner } from "@/components/layout/admin-nav";
 
 interface UserMenuDrawerProps {
   open: boolean;
@@ -54,7 +49,6 @@ export function UserMenuDrawer({ open, onOpenChange }: UserMenuDrawerProps) {
   const { copy } = useOrderingConfig();
   const { hasFeature } = useSubscription();
   // Plan-gated nav entries (exempt tenants pass via hasFeature).
-  const hasAnalytics = hasFeature("advanced_analytics");
   const hasWallet = hasFeature("wallet");
   const hasPromos = hasFeature("promo_codes");
 
@@ -63,33 +57,10 @@ export function UserMenuDrawer({ open, onOpenChange }: UserMenuDrawerProps) {
     onOpenChange(false);
   };
 
-  const isPlatformOwner = !!(
-    user?.is_platform_owner ||
-    user?.isSuperUser ||
-    user?.roles?.includes("superuser")
-  );
-  const hasStaffAccess = userHasRole(user, ["staff", "admin", "superuser", "manager"]);
-  const canManageRefunds = userCanAccess(user, {
-    roles: ["admin", "superuser"],
-    permissions: ["ordering.orders.delete"],
-    permissionOperator: "or",
-  });
-  const canViewSla = userCanAccess(user, {
-    roles: ["admin", "superuser", "manager"],
-    permissions: ["ordering.analytics.view"],
-    permissionOperator: "or",
-  });
-  const canViewAnalytics = userCanAccess(user, {
-    roles: ["admin", "superuser", "manager"],
-    permissions: ["ordering.analytics.view"],
-    permissionOperator: "or",
-  });
-  const canManageCompliance = userHasRole(user, ["admin", "superuser"]);
-  const canManageIntegrations = userCanAccess(user, {
-    roles: ["admin", "superuser", "manager"],
-    permissions: ["ordering.config.manage"],
-    permissionOperator: "or",
-  });
+  // The admin sidebar (useAdminNav) holds every staff and platform link; this menu only
+  // links into it.
+  const isPlatformOwner = useIsPlatformOwner();
+  const hasStaffAccess = userHasRole(user, STAFF_ROLES);
 
   const handleClose = () => {
     onOpenChange(false);
@@ -140,68 +111,13 @@ export function UserMenuDrawer({ open, onOpenChange }: UserMenuDrawerProps) {
         },
       ]
       : []),
-    ...(hasStaffAccess && !isPlatformOwner
+    ...(hasStaffAccess
       ? [
         {
           icon: Package,
-          label: "Staff Dashboard",
+          label: "Staff dashboard",
           href: "/dashboard/staff",
         },
-        {
-          icon: Shield,
-          label: "Roles & Permissions",
-          href: "/dashboard/staff/roles",
-        },
-        {
-          icon: Bell,
-          label: "Notifications",
-          href: "/dashboard/staff/notifications",
-        },
-        ...(canManageRefunds
-          ? [
-            {
-              icon: RotateCcw,
-              label: "Refunds",
-              href: "/dashboard/staff/refunds",
-            },
-          ]
-          : []),
-        ...(canViewAnalytics && hasAnalytics
-          ? [
-            {
-              icon: BarChart3,
-              label: "Analytics",
-              href: "/dashboard/staff/analytics",
-            },
-          ]
-          : []),
-        ...(canViewSla
-          ? [
-            {
-              icon: Gauge,
-              label: "SLA Performance",
-              href: "/dashboard/staff/sla",
-            },
-          ]
-          : []),
-        ...(canManageCompliance
-          ? [
-            {
-              icon: FileLock,
-              label: "Compliance",
-              href: "/dashboard/staff/compliance",
-            },
-          ]
-          : []),
-        ...(canManageIntegrations
-          ? [
-            {
-              icon: MapPin,
-              label: "Google Business",
-              href: "/dashboard/staff/integrations",
-            },
-          ]
-          : []),
       ]
       : []),
     {
