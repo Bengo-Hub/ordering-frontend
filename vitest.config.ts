@@ -10,6 +10,8 @@ export default defineConfig({
     globals: true,
     environment: "jsdom",
     setupFiles: ["./vitest.setup.ts"],
+    // Playwright specs run under `playwright test`, not Vitest.
+    exclude: ["e2e/**", "node_modules/**", ".next/**"],
     pool: "threads",
     coverage: {
       provider: "v8",

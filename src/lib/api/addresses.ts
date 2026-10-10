@@ -30,7 +30,7 @@ export interface CreateAddressRequest {
   label: string;
   addressLine1: string;
   addressLine2?: string;
-  city: string;
+  city?: string;
   county?: string;
   postalCode?: string;
   country?: string;

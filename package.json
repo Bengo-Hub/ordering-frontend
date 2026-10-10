@@ -19,7 +19,7 @@
     "format:write": "prettier --write ."
   },
   "dependencies": {
-    "@bengo-hub/maps": "github:Bengo-Hub/maps#v0.2.6",
+    "@bengo-hub/maps": "github:Bengo-Hub/maps#v0.3.0",
     "@bengo-hub/shared-ui-lib": "github:Bengo-Hub/shared-ui-lib#v0.1.109",
     "@hookform/resolvers": "^3.10.0",
     "@radix-ui/react-dialog": "^1.1.15",
@@ -34,7 +34,6 @@
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
     "framer-motion": "^11.18.2",
-    "leaflet": "^1.9.4",
     "lucide-react": "^0.452.0",
     "maplibre-gl": "^5.21.0",
     "next": "16.3.8",
@@ -43,7 +42,6 @@
     "react": "19.0.0",
     "react-dom": "19.0.0",
     "react-hook-form": "^7.71.1",
-    "react-leaflet": "^5.0.0",
     "sonner": "^1.7.4",
     "tailwind-merge": "^2.6.1",
     "tailwindcss-animate": "^1.0.7",
@@ -63,7 +61,6 @@
     "@testing-library/jest-dom": "^6.9.1",
     "@testing-library/react": "^16.3.2",
     "@testing-library/user-event": "^14.6.1",
-    "@types/leaflet": "^1.9.21",
     "@types/node": "^22.19.11",
     "@types/react": "19.2.2",
     "@types/react-dom": "19.2.2",

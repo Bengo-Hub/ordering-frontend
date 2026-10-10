@@ -6,6 +6,18 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) 
 
 ## [Unreleased]
 
+### Changed
+
+- **Delivery locations and fees from logistics** (Oct 10, 2026): one `DeliveryLocationPicker` for checkout, the header and the save-address page. It preselects the customer's location, names the place and quotes the delivery fee live from logistics-api; pins outside the delivery area cannot be confirmed. Signed-in checkout can use a picked pin. The fee breakdown preview is priced for the pin.
+
+### Removed
+
+- Leaflet map, browser Nominatim geocoding (`src/lib/geocoding.ts`), the Busia geofence (`src/lib/geofence.ts`), the local zones API and hooks, `store/location.ts`, and the staff Delivery Zones page (replaced by a link to logistics-ui).
+
+### Fixed
+
+- Staff fee settings wrote `packaging_fee` and whole-number percentages; they now use the backend keys (`packaging_fee_flat`) and fractions. Stale checkout, orders and auth tests updated to the current API and UI; Playwright specs excluded from Vitest.
+
 ### Added
 
 - **User menu drawer with hamburger navigation** (Dec 8, 2025):

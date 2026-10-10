@@ -125,7 +125,7 @@ describe("useApplyPromoCode", () => {
 
     expect(result.current.data?.valid).toBe(true);
     expect(result.current.data?.discount).toBe(100);
-    expect(result.current.data?.message).toBe("10% off applied!");
+    expect(result.current.data?.message).toBe("Promo code applied");
   });
 });
 

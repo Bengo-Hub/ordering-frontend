@@ -38,6 +38,11 @@ export interface CheckoutRequest {
     modifiers?: CheckoutItemModifier[];
   }[];
   deliveryAddressId?: string;
+  /** A pin picked on the map (used when no saved address is chosen). */
+  deliveryAddress?: string;
+  deliveryLat?: number;
+  deliveryLng?: number;
+  deliveryPlaceName?: string;
   deliveryNotes?: string;
   promoCode?: string;
   orderNotes?: string;
@@ -61,9 +66,20 @@ export async function getCartSummary(slug: string, outletId: string, fulfillment
   return res.data;
 }
 
-export async function getFeeBreakdown(slug: string, outletId: string, fulfillmentType = "delivery", sessionId?: string): Promise<FeeBreakdown> {
+export async function getFeeBreakdown(
+  slug: string,
+  outletId: string,
+  fulfillmentType = "delivery",
+  sessionId?: string,
+  pin?: { lat: number; lng: number } | null,
+): Promise<FeeBreakdown> {
   const params: Record<string, string> = { outlet_id: outletId, fulfillment_type: fulfillmentType };
   if (sessionId) params.session_id = sessionId;
+  // The delivery fee is priced by logistics for this pin; without one it stays 0.
+  if (pin) {
+    params.lat = String(pin.lat);
+    params.lng = String(pin.lng);
+  }
   const res = await api.get(`${slug}/cart/fee-breakdown`, { params });
   return res.data;
 }
@@ -116,6 +132,7 @@ export interface GuestCheckoutRequest {
   deliveryAddress?: string;
   deliveryLat?: number;
   deliveryLng?: number;
+  deliveryPlaceName?: string;
   deliveryNotes?: string;
   scheduledAt?: string;
   idempotencyKey?: string;

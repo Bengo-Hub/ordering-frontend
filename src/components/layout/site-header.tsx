@@ -31,7 +31,7 @@ import { brand } from "@/config/brand";
 import { useCategories, useOutlets } from "@/hooks/use-catalog";
 import { useOrderingConfig } from "@/hooks/use-ordering-config";
 import { userHasRole } from "@/lib/auth/permissions";
-import { getShortLocationName } from "@/lib/geocoding";
+import { shortPlaceName } from "@/lib/api/delivery";
 import { orgRoute } from "@/lib/routes";
 import { useOrgSlug } from "@/providers/org-slug-provider";
 import { useAuthStore } from "@/store/auth";
@@ -147,7 +147,7 @@ export function SiteHeader({ onMenuClick }: SiteHeaderProps) {
       navigator.geolocation.getCurrentPosition(
         async (position) => {
           const { latitude, longitude } = position.coords;
-          const locationName = await getShortLocationName(latitude, longitude);
+          const locationName = (await shortPlaceName(orgSlug, latitude, longitude)) ?? "Current location";
           setDeliveryLocation({
             address: locationName,
             latitude,
@@ -159,7 +159,7 @@ export function SiteHeader({ onMenuClick }: SiteHeaderProps) {
         },
       );
     }
-  }, [deliveryLocation, setDeliveryLocation]);
+  }, [deliveryLocation, setDeliveryLocation, orgSlug]);
 
   return (
     <header ref={headerRef} className="sticky top-0 z-40 border-b border-border bg-background">

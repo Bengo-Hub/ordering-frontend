@@ -9,7 +9,7 @@ import { TenantCard, TenantCardSkeleton } from "@/components/marketplace/tenant-
 import { Button } from "@/components/ui/button";
 import { brand } from "@/config/brand";
 import { useMarketplaceTenants } from "@/hooks/use-marketplace-tenants";
-import { getShortLocationName } from "@/lib/geocoding";
+import { PLATFORM_GEO_SLUG, shortPlaceName } from "@/lib/api/delivery";
 import { useDiningModeStore } from "@/store/dining-mode";
 
 /**
@@ -39,7 +39,7 @@ export default function MarketplaceLandingPage() {
     navigator.geolocation.getCurrentPosition(
       async (position) => {
         const { latitude, longitude } = position.coords;
-        const address = await getShortLocationName(latitude, longitude);
+        const address = (await shortPlaceName(PLATFORM_GEO_SLUG, latitude, longitude)) ?? "Current location";
         setDeliveryLocation({ address, latitude, longitude });
         setLocationStatus("resolved");
       },

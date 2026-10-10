@@ -9,7 +9,8 @@ import { useCheckout, useGuestCheckout, useFeeBreakdown } from "@/hooks/use-cart
 import { useOutlet } from "@/hooks/use-catalog";
 import { useApplyPromoCode } from "@/hooks/use-orders";
 import { usePaymentMethods } from "@/hooks/use-payment-methods";
-import { useZoneCheck } from "@/hooks/use-zones";
+import { useDeliveryQuote } from "@/hooks/use-delivery";
+import type { DeliveryPoint } from "@/components/location/delivery-location-picker";
 import { apiErrorMessage } from "@/lib/api/error-message";
 import { api } from "@/lib/api/base";
 import { payOrderWithWallet } from "@/lib/api/orders";
@@ -152,11 +153,21 @@ export function useCheckoutState() {
   const [guestEmail, setGuestEmail] = useState("");
   const [guestPhone, setGuestPhone] = useState("");
   const [guestName, setGuestName] = useState("");
-  const [guestDeliveryLocation, setGuestDeliveryLocation] = useState<{
-    lat: number;
-    lng: number;
-    address: string;
-  } | null>(null);
+  // A pin picked on the map (guests always; signed-in customers when not using a saved address).
+  const [deliveryLocation, setDeliveryLocationState] = useState<DeliveryPoint | null>(() =>
+    toDeliveryPoint(useDiningModeStore.getState().deliveryLocation),
+  );
+  // The header's browsing location (set from the customer's current position on first visit)
+  // preselects the checkout pin; a pin confirmed at checkout becomes the browsing location.
+  const browsingLocation = useDiningModeStore((s) => s.deliveryLocation);
+  const setBrowsingLocation = useDiningModeStore((s) => s.setDeliveryLocation);
+  const setDeliveryLocation = useCallback(
+    (loc: DeliveryPoint | null) => {
+      setDeliveryLocationState(loc);
+      if (loc) setBrowsingLocation({ address: loc.address, latitude: loc.lat, longitude: loc.lng, placeName: loc.placeName });
+    },
+    [setBrowsingLocation],
+  );
 
   // Wallet payment state
   const [walletPaymentPending, setWalletPaymentPending] = useState(false);
@@ -184,18 +195,22 @@ export function useCheckoutState() {
     [addresses, selectedAddressId],
   );
 
-  // Zone check — use saved address coords OR guest-picked location coords
-  const deliveryLat = fulfillmentMode !== "pickup"
-    ? (selectedAddress?.latitude ?? guestDeliveryLocation?.lat ?? null)
-    : null;
-  const deliveryLng = fulfillmentMode !== "pickup"
-    ? (selectedAddress?.longitude ?? guestDeliveryLocation?.lng ?? null)
-    : null;
-  const { data: zoneResult, isLoading: zoneLoading, isError: zoneError } = useZoneCheck(deliveryLat, deliveryLng);
+  // The pin being delivered to: a saved address with coordinates, else the picked location.
+  const deliveryPin = useMemo(() => {
+    if (fulfillmentMode === "pickup") return null;
+    if (selectedAddress?.latitude != null && selectedAddress?.longitude != null) {
+      return { lat: selectedAddress.latitude, lng: selectedAddress.longitude };
+    }
+    return deliveryLocation ? { lat: deliveryLocation.lat, lng: deliveryLocation.lng } : null;
+  }, [fulfillmentMode, selectedAddress, deliveryLocation]);
+  const hasDeliveryAddress = !!(selectedAddress || deliveryLocation);
 
-  const hasDeliveryAddress = !!(selectedAddress || guestDeliveryLocation);
-  const isOutsideDeliveryZone =
-    fulfillmentMode !== "pickup" && hasDeliveryAddress && !zoneLoading && (zoneError || !zoneResult);
+  // Preselect the browsing location once it is known, unless a saved address is in use.
+  useEffect(() => {
+    if (deliveryLocation || selectedAddressId) return;
+    const p = toDeliveryPoint(browsingLocation);
+    if (p) setDeliveryLocationState(p);
+  }, [browsingLocation, deliveryLocation, selectedAddressId]);
 
   // Resolve outlet ID — from cart item or fetch first outlet as fallback
   const cartOutletId = items[0]?.outletId || null;
@@ -216,10 +231,19 @@ export function useCheckoutState() {
     selectedPickupOutletId || outletId,
   );
 
-  const { data: remoteFees, isLoading: feesLoading } = useFeeBreakdown(outletId, fulfillmentMode, sessionId);
+  const { data: remoteFees, isLoading: feesLoading } = useFeeBreakdown(outletId, fulfillmentMode, sessionId, deliveryPin);
 
   const cartSubtotal = subtotal();
-  const deliveryFee = zoneResult?.delivery_fee ?? remoteFees?.delivery_fee ?? 0;
+  // Delivery is priced by logistics for the pin (areas, geofence, distance rate).
+  const { data: deliveryQuote, isFetching: quoteLoading, isError: quoteError } = useDeliveryQuote(
+    deliveryPin,
+    outletId,
+    cartSubtotal,
+  );
+  const isOutsideDeliveryZone =
+    fulfillmentMode !== "pickup" && !!deliveryPin && !!deliveryQuote && !quoteLoading && !deliveryQuote.serviceable;
+  const isDeliveryPricingUnavailable = fulfillmentMode !== "pickup" && !!deliveryPin && quoteError && !deliveryQuote;
+  const deliveryFee = deliveryQuote?.serviceable ? deliveryQuote.fee : remoteFees?.delivery_fee ?? 0;
 
   // Use backend fee breakdown when available and non-zero; otherwise compute locally
   const feeBreakdown: import("@/lib/api/cart-api").FeeBreakdown | undefined =
@@ -279,8 +303,8 @@ export function useCheckoutState() {
       }
     : null;
 
-  const estimatedTime = zoneResult
-    ? `${zoneResult.estimated_time}-${zoneResult.estimated_time + 15} min`
+  const estimatedTime = deliveryQuote?.eta_minutes
+    ? `${deliveryQuote.eta_minutes}-${deliveryQuote.eta_minutes + 15} min`
     : "35-50 min";
 
   const isGuestMode = checkoutMode === "guest" && status !== "authenticated";
@@ -538,18 +562,27 @@ export function useCheckoutState() {
 
     // Delivery/pickup/schedule validations don't apply to booking carts (tickets/appointments).
     if (!noFulfillment) {
-      if (fulfillmentMode !== "pickup" && !selectedAddressId && addresses.length > 0) {
-        toast.error("Please select a delivery address");
-        return;
-      }
-      // Guest delivery: the address comes from the picked location, not a saved address —
-      // require it so a rider isn't dispatched to an empty/unknown address.
-      if (isGuestMode && fulfillmentMode !== "pickup" && !guestDeliveryLocation?.address?.trim()) {
-        toast.error("Please enter a delivery address");
+      // Every delivery needs a pin so it can be priced and a rider sent to it.
+      if (fulfillmentMode !== "pickup" && !deliveryPin) {
+        toast.error(
+          selectedAddressId
+            ? "That saved address has no map location. Pick your location on the map."
+            : "Please choose your delivery location",
+        );
         return;
       }
       if (isOutsideDeliveryZone) {
-        toast.error("We don't deliver to the selected address. Please choose a different address.");
+        toast.error("We don't deliver to the selected location. Please choose a different one.");
+        return;
+      }
+      if (isDeliveryPricingUnavailable) {
+        toast.error("Delivery pricing is unavailable right now. Try again shortly or choose pickup.");
+        return;
+      }
+      if (deliveryQuote?.below_min_order) {
+        toast.error(
+          `Orders to ${deliveryQuote.zone?.name ?? "this area"} need at least ${deliveryQuote.currency} ${Math.round(deliveryQuote.min_order)}.`,
+        );
         return;
       }
       if (fulfillmentMode === "schedule" && !scheduledTime) {
@@ -611,10 +644,11 @@ export function useCheckoutState() {
           guestPayload.deliveryAddress = selectedAddr.address_line1 ?? "";
           guestPayload.deliveryLat = selectedAddr.latitude ?? 0;
           guestPayload.deliveryLng = selectedAddr.longitude ?? 0;
-        } else if (guestDeliveryLocation) {
-          guestPayload.deliveryAddress = guestDeliveryLocation.address;
-          guestPayload.deliveryLat = guestDeliveryLocation.lat;
-          guestPayload.deliveryLng = guestDeliveryLocation.lng;
+        } else if (deliveryLocation) {
+          guestPayload.deliveryAddress = deliveryLocation.address;
+          guestPayload.deliveryLat = deliveryLocation.lat;
+          guestPayload.deliveryLng = deliveryLocation.lng;
+          if (deliveryLocation.placeName) guestPayload.deliveryPlaceName = deliveryLocation.placeName;
         }
         if (deliveryNotes) guestPayload.deliveryNotes = deliveryNotes;
         if (scheduledTime) guestPayload.scheduledAt = scheduledTime.date.toISOString();
@@ -645,7 +679,16 @@ export function useCheckoutState() {
         if (user?.email) payload.contactEmail = user.email;
         if (user?.fullName) payload.contactName = user.fullName;
         if (user?.phone != null) payload.contactPhone = user.phone;
-        if (fulfillmentMode !== "pickup" && selectedAddressId) payload.deliveryAddressId = selectedAddressId;
+        if (fulfillmentMode !== "pickup") {
+          if (selectedAddressId) {
+            payload.deliveryAddressId = selectedAddressId;
+          } else if (deliveryLocation) {
+            payload.deliveryAddress = deliveryLocation.address;
+            payload.deliveryLat = deliveryLocation.lat;
+            payload.deliveryLng = deliveryLocation.lng;
+            if (deliveryLocation.placeName) payload.deliveryPlaceName = deliveryLocation.placeName;
+          }
+        }
         if (deliveryNotes) payload.deliveryNotes = deliveryNotes;
         if (promoCode) payload.promoCode = promoCode;
         if (orderNotes) payload.orderNotes = orderNotes;
@@ -706,8 +749,8 @@ export function useCheckoutState() {
       toast.error(message);
     }
   }, [
-    isGuestMode, guestEmail, guestPhone, guestName, guestDeliveryLocation,
-    fulfillmentMode, selectedAddressId, addresses, isOutsideDeliveryZone, scheduledTime,
+    isGuestMode, guestEmail, guestPhone, guestName, deliveryLocation, deliveryPin, deliveryQuote,
+    isDeliveryPricingUnavailable, fulfillmentMode, selectedAddressId, isOutsideDeliveryZone, scheduledTime,
     items, sessionId, deliveryNotes, promoCode, orderNotes, requestUtensils, isTicketOnly, noFulfillment,
     checkoutMutation, guestCheckoutMutation, orgSlug, router, clearCart,
     selectedMethod, selectedOption, handleWalletPayment, mpesaCode,
@@ -776,7 +819,9 @@ export function useCheckoutState() {
     selectedAddress,
     setSelectedAddressId,
     isOutsideDeliveryZone,
-    zoneResult,
+    deliveryQuote,
+    deliveryPin,
+    isDeliveryPricingUnavailable,
 
     // Fees
     feeBreakdown,
@@ -821,8 +866,8 @@ export function useCheckoutState() {
     setGuestPhone,
     guestName,
     setGuestName,
-    guestDeliveryLocation,
-    setGuestDeliveryLocation,
+    deliveryLocation,
+    setDeliveryLocation,
     handleSignInForCheckout,
     hasDeliveryAddress,
     outlets,
@@ -858,4 +903,10 @@ export function useCheckoutState() {
     walletPaymentPending,
     handleWalletPayment,
   };
+}
+
+/** The header's browsing location as a delivery point (null when unset or a 0,0 placeholder). */
+function toDeliveryPoint(loc: { address: string; latitude: number; longitude: number; placeName?: string | undefined } | null): DeliveryPoint | null {
+  if (!loc || (loc.latitude === 0 && loc.longitude === 0)) return null;
+  return { lat: loc.latitude, lng: loc.longitude, address: loc.address, placeName: loc.placeName };
 }

@@ -8,6 +8,8 @@ export interface LocationInfo {
   latitude: number;
   longitude: number;
   plusCode?: string;
+  /** Place name from the logistics geocoder, e.g. "Alupe Market". */
+  placeName?: string | undefined;
 }
 
 export interface ScheduledTime {

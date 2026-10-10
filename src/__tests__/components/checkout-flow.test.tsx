@@ -22,6 +22,11 @@ vi.mock("@/components/layout/site-shell", () => ({
   SiteShell: ({ children }: { children: React.ReactNode }) => <div data-testid="site-shell">{children}</div>,
 }));
 
+// The map is WebGL; jsdom cannot render it.
+vi.mock("@bengo-hub/maps", () => ({
+  LocationPicker: () => <div data-testid="location-picker" />,
+}));
+
 // Mock toast
 vi.mock("@/lib/toast", () => ({
   toast: { success: vi.fn(), error: vi.fn() },
@@ -45,13 +50,16 @@ describe("CheckoutPage", () => {
     useAuthStore.setState({ user: null, status: "idle" });
   });
 
-  it("shows sign in message when unauthenticated", () => {
+  it("asks guests how they want to check out", () => {
     useAuthStore.setState({ status: "idle", user: null });
+    useCartStore.setState({
+      items: [{ id: "item-1", name: "Latte", quantity: 1, price: 350, total: 350 }],
+    });
 
     renderCheckout();
 
-    expect(screen.getByText("Sign in to continue")).toBeInTheDocument();
-    expect(screen.getByText(/You need to be signed in/)).toBeInTheDocument();
+    expect(screen.getByText("How would you like to checkout?")).toBeInTheDocument();
+    expect(screen.getByText("Continue as Guest")).toBeInTheDocument();
   });
 
   it("shows empty cart message when authenticated with no items", () => {
@@ -85,22 +93,27 @@ describe("CheckoutPage", () => {
     expect(screen.getByText("Order Summary")).toBeInTheDocument();
   });
 
-  it("shows delivery fee of KES 150 for delivery orders under 2000", () => {
+  it("prices delivery from the logistics quote for the preselected location", async () => {
     useAuthStore.setState({
       status: "authenticated",
       user: { id: "u1", email: "test@test.com", name: "Test" } as never,
     });
     useCartStore.setState({
-      items: [{ id: "item-1", name: "Latte", quantity: 1, price: 350, total: 350 }],
+      items: [{ id: "item-1", name: "Latte", quantity: 1, price: 350, total: 350, outletId: "outlet-1" } as never],
     });
-    useDiningModeStore.setState({ mode: "delivery" });
+    useDiningModeStore.setState({
+      mode: "delivery",
+      deliveryLocation: { address: "Bugengi Market", latitude: 0.47, longitude: 34.16, placeName: "Bugengi Market" },
+    });
 
     renderCheckout();
 
-    expect(screen.getByText("KES 150")).toBeInTheDocument();
+    // The quote (KES 150 for the Bugengi area) shows on the location card and the delivery option.
+    expect(await screen.findByText("KES 150 · Bugengi")).toBeInTheDocument();
+    expect(await screen.findAllByText("KES 150")).not.toHaveLength(0);
   });
 
-  it("shows free delivery for pickup mode", () => {
+  it("shows no delivery charge for pickup", () => {
     useAuthStore.setState({
       status: "authenticated",
       user: { id: "u1", email: "test@test.com", name: "Test" } as never,
@@ -112,12 +125,10 @@ describe("CheckoutPage", () => {
 
     renderCheckout();
 
-    expect(screen.getByText("Free")).toBeInTheDocument();
+    expect(screen.getAllByText("KES 0").length).toBeGreaterThan(0);
   });
 
-  it("toggles between M-Pesa and Cash on Delivery payment methods", async () => {
-    const user = userEvent.setup();
-
+  it("offers the outlet's payment options", async () => {
     useAuthStore.setState({
       status: "authenticated",
       user: { id: "u1", email: "test@test.com", name: "Test" } as never,
@@ -128,18 +139,7 @@ describe("CheckoutPage", () => {
 
     renderCheckout();
 
-    // M-Pesa is default — phone input should be visible
-    expect(screen.getByPlaceholderText("0712345678")).toBeInTheDocument();
-
-    // Click Cash on Delivery
-    await user.click(screen.getByText("Cash on Delivery"));
-
-    // Phone input should be hidden
-    expect(screen.queryByPlaceholderText("0712345678")).not.toBeInTheDocument();
-
-    // Click M-Pesa to switch back
-    await user.click(screen.getByText("M-Pesa"));
-
-    expect(screen.getByPlaceholderText("0712345678")).toBeInTheDocument();
+    expect(await screen.findByText("Pay now — M-Pesa (STK)")).toBeInTheDocument();
+    expect(await screen.findByText("Pay on delivery")).toBeInTheDocument();
   });
 });

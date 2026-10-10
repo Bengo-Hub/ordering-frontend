@@ -1,30 +1,24 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 
 import Link from "next/link";
 
-import type { LatLngTuple } from "leaflet";
 import { CheckCircle2Icon, ShieldCheckIcon } from "lucide-react";
 import { PhoneInputField } from "@bengo-hub/shared-ui-lib/contact";
 
 import { RequireAuth } from "@/components/auth/require-auth";
 import { SiteShell } from "@/components/layout/site-shell";
-import { LocationMap } from "@/components/location/location-map";
-import { LocationSearchInput } from "@/components/location/location-search-input";
+import { DeliveryLocationPicker, type DeliveryPoint } from "@/components/location/delivery-location-picker";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { brand } from "@/config/brand";
 import { useCreateAddress } from "@/hooks/use-addresses";
-import { useUserLocation } from "@/hooks/use-user-location";
-import { isWithinBusia } from "@/lib/geofence";
 import { orgRoute } from "@/lib/routes";
 import { useOrgSlug } from "@/providers/org-slug-provider";
 import { useAuthStore } from "@/store/auth";
-import { getActiveLabel, getActiveLocation, useCustomerLocationStore } from "@/store/location";
-
-const FALLBACK: LatLngTuple = [-0.0607, 34.2855];
+import { useDiningModeStore } from "@/store/dining-mode";
 
 export default function CustomerSignupPage() {
   return (
@@ -50,69 +44,28 @@ function SaveDeliveryAddressPage() {
     setContactPhone(user?.phone ?? "");
   }, [user?.fullName, user?.phone]);
 
-  const defaultLocation = useCustomerLocationStore((state) => state.defaultLocation);
-  const customLocation = useCustomerLocationStore((state) => state.customLocation);
-  const setDefaultLocation = useCustomerLocationStore((state) => state.setDefaultLocation);
-  const setCustomLocation = useCustomerLocationStore((state) => state.setCustomLocation);
-  const clearCustomLocation = useCustomerLocationStore((state) => state.clearCustomLocation);
-
-  const activeLocation = useCustomerLocationStore(getActiveLocation);
-  const activeLabel = useCustomerLocationStore(getActiveLabel);
-
-  const { coords, status, error, requestLocation } = useUserLocation({
-    fallback: defaultLocation ?? FALLBACK,
-  });
-
-  useEffect(() => {
-    if (status === "idle") {
-      requestLocation();
-    }
-  }, [requestLocation, status]);
-
-  useEffect(() => {
-    if (status === "resolved") {
-      setDefaultLocation(coords, "My current location");
-      if (!customLocation) {
-        setCustomLocation(coords, "My current location");
-      }
-    }
-  }, [coords, customLocation, setCustomLocation, setDefaultLocation, status]);
-
-  const pinLabel = useMemo(() => formatCoord(activeLocation), [activeLocation]);
-
-  const handleSelect = (coords: LatLngTuple, label: string) => {
-    if (!isWithinBusia(coords)) {
-      setLocationFeedback("Please choose a delivery point within Busia County.");
-      return;
-    }
-    setLocationFeedback(null);
-    setCustomLocation(coords, label);
-  };
-
-  const handleMapChange = (coords: LatLngTuple) => {
-    if (!isWithinBusia(coords)) {
-      setLocationFeedback("That pin is outside our delivery radius.");
-      return;
-    }
-    setLocationFeedback(null);
-    setCustomLocation(coords, formatCoord(coords));
-  };
+  // Start from the location the customer already browses with (header), if any.
+  const browsing = useDiningModeStore((state) => state.deliveryLocation);
+  const [point, setPoint] = useState<DeliveryPoint | null>(
+    browsing && (browsing.latitude !== 0 || browsing.longitude !== 0)
+      ? { lat: browsing.latitude, lng: browsing.longitude, address: browsing.address, placeName: browsing.placeName }
+      : null,
+  );
 
   const onSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
-    if (!customLocation) {
-      setLocationFeedback("Please pick a delivery point on the map or search for your address.");
+    if (!point) {
+      setLocationFeedback("Pick your delivery point on the map or search for your area.");
       return;
     }
     setLocationFeedback(null);
     try {
       await createAddress.mutateAsync({
         label: label.trim() || "Home",
-        addressLine1: activeLabel ?? formatCoord(activeLocation),
-        city: "Busia",
+        addressLine1: point.address,
         country: "KE",
-        latitude: activeLocation[0],
-        longitude: activeLocation[1],
+        latitude: point.lat,
+        longitude: point.lng,
         contactName: contactName.trim(),
         contactPhone: contactPhone.trim(),
         isDefault: true,
@@ -131,7 +84,7 @@ function SaveDeliveryAddressPage() {
             Save your delivery address
           </h1>
           <p className="text-base text-muted-foreground">
-            Add a delivery point within Busia so checkout is one tap next time you order from{" "}
+            Add your delivery point so checkout is one tap next time you order from{" "}
             {brand.shortName}.
           </p>
         </div>
@@ -191,28 +144,22 @@ function SaveDeliveryAddressPage() {
                     placeholder="07xx xxx xxx"
                   />
                 </div>
-                <div className="space-y-3">
-                  <LocationSearchInput
-                    value={activeLabel}
-                    status={status}
-                    error={error}
-                    helper={locationFeedback}
-                    onSelect={handleSelect}
-                    onUseCurrent={requestLocation}
-                    onClear={() => {
-                      clearCustomLocation();
+                <div className="space-y-2">
+                  <p className="text-xs font-semibold uppercase text-muted-foreground">Delivery point</p>
+                  {point && (
+                    <p className="text-sm">
+                      Saved point: <span className="font-medium">{point.address}</span>
+                    </p>
+                  )}
+                  <DeliveryLocationPicker
+                    value={point}
+                    confirmLabel={point ? "Update this point" : "Use this point"}
+                    onConfirm={(p) => {
+                      setPoint(p);
                       setLocationFeedback(null);
                     }}
-                    canClear={!!customLocation}
-                    placeholder="Search within Busia (estate, street, landmark)"
                   />
-                  <LocationMap
-                    value={activeLocation}
-                    defaultCenter={defaultLocation ?? FALLBACK}
-                    onChange={handleMapChange}
-                    height={240}
-                  />
-                  <div className="text-xs text-muted-foreground">Pin coordinates: {pinLabel}</div>
+                  {locationFeedback && <p className="text-sm text-destructive">{locationFeedback}</p>}
                 </div>
                 {createAddress.isError ? (
                   <p className="text-sm text-destructive">
@@ -291,6 +238,3 @@ function SaveDeliveryAddressPage() {
   );
 }
 
-function formatCoord([lat, lng]: LatLngTuple) {
-  return `${lat.toFixed(4)}, ${lng.toFixed(4)}`;
-}

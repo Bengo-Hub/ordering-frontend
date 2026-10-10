@@ -17,8 +17,8 @@ import { useOrgSlug } from "@/providers/org-slug-provider";
 
 export const cartApiKeys = {
   all: ["cart-api"] as const,
-  feeBreakdown: (outletId: string, fulfillmentType: string) =>
-    [...cartApiKeys.all, "fee-breakdown", outletId, fulfillmentType] as const,
+  feeBreakdown: (outletId: string, fulfillmentType: string, pinKey = "") =>
+    [...cartApiKeys.all, "fee-breakdown", outletId, fulfillmentType, pinKey] as const,
 };
 
 // ─── Queries ─────────────────────────────────────────────────────────
@@ -28,11 +28,17 @@ export const cartApiKeys = {
  * Requires outletId to identify which cart/outlet to compute fees for.
  * Pass fulfillmentType to get accurate delivery vs pickup fees.
  */
-export function useFeeBreakdown(outletId: string | null, fulfillmentType = "delivery", sessionId?: string) {
+export function useFeeBreakdown(
+  outletId: string | null,
+  fulfillmentType = "delivery",
+  sessionId?: string,
+  pin?: { lat: number; lng: number } | null,
+) {
   const slug = useOrgSlug();
+  const pinKey = pin ? `${pin.lat.toFixed(4)},${pin.lng.toFixed(4)}` : "";
   return useQuery<FeeBreakdown>({
-    queryKey: cartApiKeys.feeBreakdown(outletId ?? "", fulfillmentType),
-    queryFn: () => getFeeBreakdown(slug, outletId!, fulfillmentType, sessionId),
+    queryKey: cartApiKeys.feeBreakdown(outletId ?? "", fulfillmentType, pinKey),
+    queryFn: () => getFeeBreakdown(slug, outletId!, fulfillmentType, sessionId, pin),
     enabled: !!outletId,
     staleTime: 60_000,
   });

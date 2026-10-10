@@ -37,7 +37,7 @@ import {
   useSelectGateway,
   useSelectedGateways,
 } from "@/hooks/use-gateways";
-import { listZones } from "@/lib/api/zones";
+import { DeliveryAreasCard } from "@/components/delivery/delivery-areas-card";
 import { useUseCaseConfig } from "@/lib/api/use-case";
 import {
   useEncryptionKeyStatus,
@@ -76,15 +76,6 @@ export default function PlatformDashboardPage({
   // not exist in ordering-backend (they previously 404'd and fell back to
   // placeholders). Their queries have been removed; the corresponding tabs now
   // render an explicit "not available" state until a real endpoint is built.
-
-  // Delivery zones: repointed to the real tenant zones endpoint
-  // GET /api/v1/{tenant}/zones (zones handler -> ListZones). Returns the tenant's
-  // active delivery zones; an empty list is the normal "none configured" state.
-  const { data: deliveryZones } = useQuery({
-    queryKey: ["platform", "delivery-zones", orgSlug],
-    queryFn: () => listZones(orgSlug),
-    enabled: isPlatformOwner,
-  });
 
   const orders = data?.orders ?? [];
   const totalOrders = data?.total ?? 0;
@@ -128,7 +119,7 @@ export default function PlatformDashboardPage({
             </TabsTrigger>
             <TabsTrigger value="zones">
               <MapPin className="mr-1.5 size-4" />
-              Delivery Zones
+              Delivery Areas
             </TabsTrigger>
             <TabsTrigger value="encryption">
               <KeyRound className="mr-1.5 size-4" />
@@ -229,44 +220,7 @@ export default function PlatformDashboardPage({
 
           {/* ─── Delivery Zones Tab ────────────────────────────────── */}
           <TabsContent value="zones" className="space-y-6">
-            <Card>
-              <CardHeader className="flex flex-row items-center justify-between space-y-0">
-                <CardTitle className="text-lg">Delivery Zones</CardTitle>
-                <Button
-                  size="sm"
-                  variant="outline"
-                  onClick={() =>
-                    router.push(orgRoute(orgSlug, "/dashboard/staff/delivery-zones"))
-                  }
-                >
-                  <MapPin className="mr-1.5 size-4" />
-                  Manage Geofences
-                </Button>
-              </CardHeader>
-              <CardContent>
-                {(deliveryZones?.length ?? 0) === 0 ? (
-                  <p className="py-6 text-center text-sm text-muted-foreground">
-                    No delivery zones configured. Click &quot;Manage Geofences&quot; to set up zones.
-                  </p>
-                ) : (
-                  <div className="divide-y">
-                    {deliveryZones?.map((zone) => (
-                      <div key={zone.id} className="flex items-center justify-between py-3">
-                        <div>
-                          <p className="text-sm font-medium">{zone.name}</p>
-                          <p className="text-xs text-muted-foreground">
-                            Base fee: KES {zone.deliveryFee.toLocaleString()}
-                          </p>
-                        </div>
-                        <Badge variant={zone.isActive ? "default" : "outline"}>
-                          {zone.isActive ? "Active" : "Inactive"}
-                        </Badge>
-                      </div>
-                    ))}
-                  </div>
-                )}
-              </CardContent>
-            </Card>
+            <DeliveryAreasCard orgSlug={orgSlug} />
           </TabsContent>
 
           {/* ─── Credential Encryption Key Tab ─────────────────────── */}

@@ -40,9 +40,9 @@ Sprint 1 focuses on building the customer-facing web application with menu brows
 - **Query Hooks**: TanStack Query hooks
 
 ### Maps & Location
-- **Maps**: Leaflet with React Leaflet
-- **Geocoding**: Mapbox/Google Maps API
-- **Geofence**: Custom Busia geofence validation
+- **Maps**: MapLibre through `@bengo-hub/maps` (self-hosted tiles)
+- **Geocoding**: logistics-api geocode proxy (`/routing/geocode/search|reverse`)
+- **Geofence and delivery fees**: logistics-api delivery quote (`/zones/quote`), configured per tenant in logistics-ui (updated 2026-10-10)
 
 ---
 

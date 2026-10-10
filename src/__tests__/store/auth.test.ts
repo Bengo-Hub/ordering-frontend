@@ -5,6 +5,8 @@ import { useAuthStore } from "@/store/auth";
 vi.mock("@/lib/auth/api", () => ({
   loginWithEmail: vi.fn(),
   logout: vi.fn(),
+  revokeServerSession: vi.fn().mockResolvedValue(undefined),
+  buildLogoutUrl: vi.fn((redirect?: string) => `https://sso.test/logout?redirect=${redirect ?? ""}`),
   fetchProfile: vi.fn(),
   refreshSession: vi.fn(),
   fetchOrderSummary: vi.fn().mockResolvedValue([]),

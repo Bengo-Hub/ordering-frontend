@@ -169,7 +169,8 @@ export const handlers = [
   http.get("*/outlets/:id", () => HttpResponse.json(outlets.data[0])),
 
   // Orders
-  http.get("*/orders", () => HttpResponse.json(orders)),
+  // ordering-backend lists orders as { data, total }
+  http.get("*/orders", () => HttpResponse.json({ data: orders.orders, total: orders.total })),
   http.get("*/orders/:id", () => HttpResponse.json(orderDetail)),
   http.get("*/orders/:id/tracking", () =>
     HttpResponse.json({ status: "en_route", riderName: "John", eta: "15 min", updatedAt: "2026-02-16T10:15:00Z" }),
@@ -187,15 +188,70 @@ export const handlers = [
   http.get("*/payments/intents/:id", () =>
     HttpResponse.json({ id: "pi-1", status: "completed", paymentMethod: "mpesa", amount: 1050, currency: "KES" }),
   ),
-  http.post("*/orders/promo/validate", () =>
-    HttpResponse.json({ valid: true, discount: 100, message: "10% off applied!" }),
+  http.post("*/promo-codes/validate", () =>
+    HttpResponse.json({ valid: true, discountAmount: 100, errorMessage: "" }),
   ),
 
   // Loyalty
   http.get("*/loyalty/account", () => HttpResponse.json(loyaltyAccount)),
   http.get("*/loyalty/transactions", () => HttpResponse.json(loyaltyTransactions)),
   http.get("*/loyalty/tier-benefits", () => HttpResponse.json(tierBenefits)),
+
+  // Tenant config and checkout payment options
+  http.get("*/test-org/config", () => HttpResponse.json({})),
+  http.get("*/payment-methods", () => HttpResponse.json(paymentMethods)),
+  // Server cart preview: empty cart, so checkout computes the breakdown locally.
+  http.get("*/cart/fee-breakdown", () => HttpResponse.json({ item_total: 0, delivery_fee: 0, grand_total: 0 })),
+
+  // Logistics delivery areas, quotes and place names (logistics-api owns delivery pricing)
+  http.get("*/zones/coverage", () => HttpResponse.json(deliveryCoverage)),
+  http.get("*/zones/quote", () => HttpResponse.json(deliveryQuote)),
+  http.get("*/routing/geocode/reverse", () => HttpResponse.json(reversePlace)),
+  http.get("*/routing/geocode/search", () => HttpResponse.json([reversePlace])),
 ];
+
+const paymentMethods = {
+  gateways: [
+    { type: "mpesa", name: "M-Pesa", icon: "mpesa", enabled: true },
+    { type: "cod", name: "Pay on delivery", icon: "cash", enabled: true },
+  ],
+  wallet: null,
+  saved_methods: [],
+};
+
+const deliveryCoverage = {
+  zones: [
+    { id: "z-town", name: "Busia Town", zone_type: "delivery", color: "#16a34a", fee: 0, free: true, boundary: [] },
+    { id: "z-bugengi", name: "Bugengi", zone_type: "delivery", color: "#3b82f6", fee: 150, free: false, boundary: [] },
+  ],
+  outlets: [{ id: "outlet-1", name: "Urban Loft Busia", location: { lat: 0.4545662, lng: 34.1272854 } }],
+  center: { lat: 0.4545662, lng: 34.1272854 },
+  min_fee: 0,
+  has_free_zone: true,
+  currency: "KES",
+};
+
+const deliveryQuote = {
+  serviceable: true,
+  method: "zone",
+  fee: 150,
+  free: false,
+  currency: "KES",
+  zone: { id: "z-bugengi", name: "Bugengi" },
+  distance_km: 4.2,
+  eta_minutes: 32,
+  min_order: 0,
+  policy_version: "test",
+};
+
+const reversePlace = {
+  name: "Bugengi Market",
+  display_name: "Bugengi Market, Busia",
+  location: { lat: 0.47, lng: 34.16 },
+  source: "geocoder",
+  area: { id: "z-bugengi", name: "Bugengi" },
+  area_km: 0,
+};
 
 // Re-export mock data for assertions in tests
 export const mockData = {
@@ -207,4 +263,6 @@ export const mockData = {
   loyaltyAccount,
   loyaltyTransactions,
   tierBenefits,
+  deliveryQuote,
+  deliveryCoverage,
 };

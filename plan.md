@@ -39,14 +39,15 @@
 - **Landing page revamp**: Complete redesign with modern, mobile-first responsive layout. Removed cafe-specific marketing content, keeping only ordering-focused features.
 - **Component structure consolidation**: Removed `components/primitives/` duplication, standardized all components to use `@/components/ui/` following shadcn/ui best practices.
 - Unified light/dark theming with CSS variables, shadcn components, and mobile-ready navigation/headers/footers.
-- Delivered location-aware experiences: reusable Leaflet map component, geolocation hooks, and customer address selectors with autocomplete.
+- Delivered location-aware experiences: one `DeliveryLocationPicker` (MapLibre `LocationPicker` from `@bengo-hub/maps`) used by checkout, the header location dialog and the save-address page. It preselects the customer's current location, names the place and shows the live delivery fee from logistics-api, and blocks pins outside the delivery area.
+- **2026-10-10 delivery centralisation**: delivery areas, geofencing, delivery fees and place search come from logistics-api (`src/lib/api/delivery.ts`, `src/hooks/use-delivery.ts`). Removed the Leaflet map, browser Nominatim calls, the hard-coded Busia geofence and fallback coordinate, the local zones API and the staff Delivery Zones page; staff and platform pages show a read-only `DeliveryAreasCard` linking to logistics-ui Zones. Signed-in customers can check out to a picked pin, not only a saved address. The staff fee form keeps only ordering-owned fees with the backend's key names (percentages stored as fractions).
 - Implemented role-based auth hub with customer sign-up and account management.
 - Wired Sprint 0 identity UX to live backend OAuth/JWT endpoints, with centralized axios services, session refresh logic, and RBAC-aware dashboard guards.
 
 ## Upcoming Focus
 
 - Integrate brand configuration, logo management, and copy overrides with backend admin APIs (`look_and_feel` settings).
-- Persist customer/rider address books via backend location services, including reverse geocoding and Busia geofence validation on the server, keyed by shared `tenant_slug` and outlet identifiers.
+- Done 2026-10-10: reverse geocoding and geofence validation run server-side in logistics-api for every tenant (no Busia-specific code remains).
 - **Rider Onboarding Integration**:
   - **Tenant Service Check**: Before rider onboarding, verify tenant has logistics service enabled in subscription plan
   - **Option A - API Push**: If tenant has logistics service, call ordering-backend endpoint which pushes to logistics-service API (`POST /v1/{tenant}/fleet-members`)

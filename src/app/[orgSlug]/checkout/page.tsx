@@ -139,9 +139,14 @@ export default function CheckoutPage() {
                   addresses={state.addresses}
                   selectedId={state.selectedAddressId}
                   onSelect={state.setSelectedAddressId}
-                  onGuestLocationSelect={state.setGuestDeliveryLocation}
-                  guestAddress={state.guestDeliveryLocation}
-                  onAddNew={() => {/* handled inside modal */}}
+                  onLocationSelect={(loc) => {
+                    state.setDeliveryLocation(loc);
+                    if (loc) state.setSelectedAddressId(null);
+                  }}
+                  pickedLocation={state.deliveryLocation}
+                  quote={state.deliveryQuote}
+                  outletId={state.outletId}
+                  orderTotal={state.cartSubtotal}
                   isGuest={state.isGuestMode}
                   scheduledTime={state.scheduledTime}
                   onSchedule={state.handleScheduleSelect}
@@ -159,9 +164,11 @@ export default function CheckoutPage() {
                 <div className="flex items-start gap-3 rounded-xl border border-destructive/50 bg-destructive/10 p-4 text-sm text-destructive">
                   <AlertTriangle className="mt-0.5 size-5 shrink-0" />
                   <div>
-                    <p className="font-medium">We don&apos;t deliver to this address</p>
+                    <p className="font-medium">We don&apos;t deliver to this location yet</p>
                     <p className="mt-1 text-muted-foreground">
-                      The selected address is outside our delivery area. Please choose a different address.
+                      {state.deliveryQuote?.nearest_area
+                        ? `The nearest area we deliver to is ${state.deliveryQuote.nearest_area.name}. Choose a different location or pick up instead.`
+                        : "Choose a different location or pick up instead."}
                     </p>
                   </div>
                 </div>
@@ -173,7 +180,7 @@ export default function CheckoutPage() {
               <FulfillmentToggle
                 mode={state.fulfillmentMode}
                 onModeChange={state.handleFulfillmentChange}
-                deliveryTotal={state.zoneResult?.delivery_fee ?? state.feeBreakdown?.delivery_fee ?? 0}
+                deliveryTotal={state.deliveryQuote?.serviceable ? state.deliveryQuote.fee : state.feeBreakdown?.delivery_fee ?? 0}
                 pickupTotal={0}
                 estimatedTime={state.estimatedTime}
                 allowSchedule={showScheduledDelivery}
