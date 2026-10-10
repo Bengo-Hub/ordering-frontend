@@ -142,7 +142,12 @@ export interface Outlet {
   rating: number;
   reviewCount: number;
   deliveryTime: string;
+  /** "free", "free-nearby", a fee, "from N" (no pin yet) or "not-deliverable". */
   deliveryFee: string;
+  /** Distance to the customer's pin, e.g. "4.2 km". */
+  distance?: string;
+  /** False when this outlet does not deliver to the customer's pin. */
+  deliverable?: boolean;
   minimumOrder?: number;
   cuisines: string[];
   image?: string | undefined;

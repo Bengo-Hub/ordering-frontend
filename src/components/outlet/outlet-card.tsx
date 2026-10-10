@@ -71,9 +71,14 @@ export function OutletCard({
   const outletUrl = href || `/${orgSlug}/outlet/${id}`;
 
   // Format delivery fee display
+  // Labels from the logistics quote (with the customer's pin) or the cheapest area fee.
   const formatDeliveryFee = (fee: string) => {
-    if (fee.toLowerCase() === "free") return "Free delivery";
-    if (fee.match(/^\d+$/)) return `KES${fee} Delivery Fee`;
+    const f = fee.toLowerCase();
+    if (f === "free") return "Free delivery";
+    if (f === "free-nearby") return "Free delivery nearby";
+    if (f === "not-deliverable") return "Doesn't deliver to you";
+    if (f.startsWith("from ")) return `Delivery from KES ${fee.slice(5)}`;
+    if (fee.match(/^\d+$/)) return `KES ${fee} delivery`;
     return fee;
   };
 

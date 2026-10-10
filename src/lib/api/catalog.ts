@@ -296,6 +296,24 @@ interface BackendOutlet {
   isOpen?: boolean;
   is_open?: boolean;
   bookingDepositPercent?: number;
+  // Discovery listing fields (ordering-backend OutletWithMeta). Delivery details come
+  // from the logistics quote for the customer's pin, or the cheapest area fee without one.
+  image_url?: string;
+  average_rating?: number;
+  total_ratings?: number;
+  delivery_fee?: number;
+  estimated_time_minutes?: number;
+  distance_km?: number;
+  deliverable?: boolean;
+}
+
+/** Card label for the listing fee: "free", a number, "from N", or "not-deliverable". */
+export function listingDeliveryFee(o: Pick<BackendOutlet, "delivery_fee" | "deliverable">): string {
+  if (o.deliverable === false) return "not-deliverable";
+  if (o.delivery_fee == null) return "";
+  const fee = Math.round(o.delivery_fee);
+  if (o.deliverable === undefined) return fee === 0 ? "free-nearby" : `from ${fee}`;
+  return fee === 0 ? "free" : String(fee);
 }
 
 function backendOutletToOutlet(o: BackendOutlet): Outlet {
@@ -308,7 +326,7 @@ function backendOutletToOutlet(o: BackendOutlet): Outlet {
     longitude: o.longitude ?? 0,
     phone: o.phone ?? "",
     email: o.email ?? "",
-    image: getMediaUrl(o.imageUrl),
+    image: getMediaUrl(o.imageUrl ?? o.image_url),
     isOpen: o.isOpen ?? o.is_open ?? o.status === "active",
     // No vertical fallback here — this module has no tenant context to guess
     // from. Defaulting to "food" previously forced every outlet with a
@@ -320,11 +338,12 @@ function backendOutletToOutlet(o: BackendOutlet): Outlet {
     // Per-outlet booking deposit % (drives the deposit-at-checkout breakdown for
     // ticket/appointment carts). Absent/undefined → treated as 0 (pay in full).
     ...(o.bookingDepositPercent != null ? { bookingDepositPercent: o.bookingDepositPercent } : {}),
-    // These fields may be populated by future enhancements
-    rating: 0,
-    reviewCount: 0,
-    deliveryTime: "",
-    deliveryFee: "",
+    rating: o.average_rating ?? 0,
+    reviewCount: o.total_ratings ?? 0,
+    deliveryTime: o.estimated_time_minutes ? String(o.estimated_time_minutes) : "",
+    deliveryFee: listingDeliveryFee(o),
+    ...(o.distance_km ? { distance: `${o.distance_km.toFixed(1)} km` } : {}),
+    ...(o.deliverable !== undefined ? { deliverable: o.deliverable } : {}),
     cuisines: [],
   };
 }

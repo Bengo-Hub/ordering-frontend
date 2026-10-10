@@ -1,7 +1,10 @@
 "use client";
 
-import { Calendar, Clock, MapPin, Plus, X } from "lucide-react";
+import { BookmarkPlus, Calendar, Check, Clock, Loader2, MapPin, Plus, X } from "lucide-react";
 import { useState } from "react";
+
+import { useCreateAddress } from "@/hooks/use-addresses";
+import { toast } from "@/lib/toast";
 
 import { DeliveryLocationPicker, type DeliveryPoint } from "@/components/location/delivery-location-picker";
 import { Button } from "@/components/ui/button";
@@ -47,6 +50,28 @@ export function AddressSelector({
   const displayLabel = selectedAddress?.label ?? pickedLocation?.placeName ?? "Delivery location";
   const displayAddress = selectedAddress?.address_line1 ?? pickedLocation?.address ?? "";
 
+  // Signed-in customers can keep a picked location for next time.
+  const createAddress = useCreateAddress();
+  const [savedKey, setSavedKey] = useState<string | null>(null);
+  const pickedKey = pickedLocation ? `${pickedLocation.lat.toFixed(5)},${pickedLocation.lng.toFixed(5)}` : null;
+  const canSave = !isGuest && !selectedAddress && !!pickedLocation && savedKey !== pickedKey;
+  const savePicked = async () => {
+    if (!pickedLocation) return;
+    try {
+      await createAddress.mutateAsync({
+        label: pickedLocation.placeName || "Saved place",
+        addressLine1: pickedLocation.address,
+        latitude: pickedLocation.lat,
+        longitude: pickedLocation.lng,
+        isDefault: addresses.length === 0,
+      });
+      setSavedKey(pickedKey);
+      toast.success("Saved to your addresses");
+    } catch {
+      toast.error("Could not save this address");
+    }
+  };
+
   return (
     <section className="rounded-xl border border-border p-4">
       <div className="mb-3 flex items-center gap-2 text-sm font-medium">
@@ -77,6 +102,21 @@ export function AddressSelector({
             <Plus className="size-4" />
             Choose delivery location
           </Button>
+        </div>
+      )}
+
+      {(canSave || (savedKey !== null && savedKey === pickedKey)) && (
+        <div className="mt-2 flex justify-end">
+          {savedKey === pickedKey ? (
+            <span className="flex items-center gap-1 text-xs text-muted-foreground">
+              <Check className="size-3.5" /> Saved to your addresses
+            </span>
+          ) : (
+            <Button type="button" variant="ghost" size="sm" className="gap-1.5 text-xs" onClick={savePicked} disabled={createAddress.isPending}>
+              {createAddress.isPending ? <Loader2 className="size-3.5 animate-spin" /> : <BookmarkPlus className="size-3.5" />}
+              Save to my addresses
+            </Button>
+          )}
         </div>
       )}
 

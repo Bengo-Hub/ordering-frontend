@@ -46,6 +46,7 @@ export function toCardProps(
     reviewCount: number;
     deliveryTime: string;
     deliveryFee: string;
+    distance?: string | undefined;
     cuisines: string[];
     businessType?: string | undefined;
     isOpen: boolean;
@@ -67,6 +68,7 @@ export function toCardProps(
     reviewCount: o.reviewCount,
     deliveryTime: o.deliveryTime,
     deliveryFee: o.deliveryFee,
+    ...(o.distance && { distance: o.distance }),
     cuisines: o.cuisines,
     businessType: o.businessType || fallbackUseCase,
     isOpen: o.isOpen,
