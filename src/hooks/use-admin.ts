@@ -125,7 +125,7 @@ export function useDeleteAdminOrder() {
 export function useAvailableRiders(enabled = false) {
   const slug = useOrgSlug();
   return useQuery({
-    queryKey: ["logistics", "riders", slug],
+    queryKey: ["admin", "riders", slug],
     queryFn: () => listAvailableRiders(slug),
     enabled: !!slug && enabled,
     staleTime: 30_000,

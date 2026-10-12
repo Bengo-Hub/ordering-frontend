@@ -32,7 +32,7 @@ import {
 import { toast } from "@/lib/toast";
 import { apiErrorMessage } from "@/lib/api/error-message";
 import type { AdminOrder } from "@/lib/api/admin";
-import { riderName, type FleetMember } from "@/lib/api/logistics";
+import { riderName, type Rider } from "@/lib/api/logistics";
 import { LOGISTICS_UI_URL } from "@/lib/app-urls";
 import { useOrgSlug } from "@/providers/org-slug-provider";
 import { awaitingPaymentLabel } from "@/lib/payment-retry";
@@ -337,7 +337,7 @@ function OrderCard({
   onDelete: (orderId: string) => void;
   isUpdating: boolean;
   onAssignRider: (orderId: string, fleetMemberId: string) => void;
-  availableRiders: FleetMember[];
+  availableRiders: Rider[];
   ridersLoading: boolean;
   showRiderPicker: boolean;
   onToggleRiderPicker: (orderId: string) => void;
@@ -518,6 +518,9 @@ function OrderCard({
                           >
                             <UserCheck className="size-3.5 text-muted-foreground shrink-0" />
                             <span className="truncate">{name}</span>
+                            {rider.employment === "staff" && (
+                              <Badge variant="outline" className="ml-auto shrink-0 text-[10px]">Staff</Badge>
+                            )}
                           </button>
                         );
                       })
