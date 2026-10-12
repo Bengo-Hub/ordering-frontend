@@ -225,8 +225,26 @@ export async function getOrderTracking(
   eta?: string;
   updatedAt: string;
 }> {
-  const res = await api.get(`${tenantSlug}/orders/${orderId}/tracking`);
-  return res.data;
+  // The backend route is /delivery/tracking and answers in snake_case (fulfilment.TrackingInfo).
+  const res = await api.get(`${tenantSlug}/orders/${orderId}/delivery/tracking`);
+  const d = res.data as {
+    status: string;
+    rider_name?: string;
+    rider_phone?: string;
+    rider_latitude?: number;
+    rider_longitude?: number;
+    eta_minutes?: number;
+    last_updated_at: string;
+  };
+  return {
+    status: d.status,
+    updatedAt: d.last_updated_at,
+    ...(d.rider_name ? { riderName: d.rider_name } : {}),
+    ...(d.rider_phone ? { riderPhone: d.rider_phone } : {}),
+    ...(d.rider_latitude != null ? { riderLat: d.rider_latitude } : {}),
+    ...(d.rider_longitude != null ? { riderLng: d.rider_longitude } : {}),
+    ...(d.eta_minutes != null ? { eta: `${d.eta_minutes} min` } : {}),
+  };
 }
 
 export async function payOrderWithWallet(

@@ -32,6 +32,9 @@ import {
 import { toast } from "@/lib/toast";
 import { apiErrorMessage } from "@/lib/api/error-message";
 import type { AdminOrder } from "@/lib/api/admin";
+import { riderName, type FleetMember } from "@/lib/api/logistics";
+import { LOGISTICS_UI_URL } from "@/lib/app-urls";
+import { useOrgSlug } from "@/providers/org-slug-provider";
 import { awaitingPaymentLabel } from "@/lib/payment-retry";
 
 const STATUS_TABS = [
@@ -334,11 +337,12 @@ function OrderCard({
   onDelete: (orderId: string) => void;
   isUpdating: boolean;
   onAssignRider: (orderId: string, fleetMemberId: string) => void;
-  availableRiders: import("@/lib/api/logistics").FleetMember[];
+  availableRiders: FleetMember[];
   ridersLoading: boolean;
   showRiderPicker: boolean;
   onToggleRiderPicker: (orderId: string) => void;
 }) {
+  const orgSlug = useOrgSlug();
   const isDeliveryOrder = isDeliveryType(order.fulfillmentType);
   const actions = nextActions(order);
   const [dialog, setDialog] = useState<"reject" | "verify" | "delete" | null>(null);
@@ -491,10 +495,21 @@ function OrderCard({
                         <Loader2 className="size-3 animate-spin" /> Loading riders…
                       </div>
                     ) : availableRiders.length === 0 ? (
-                      <p className="px-3 py-2 text-sm text-muted-foreground">No available riders</p>
+                      <div className="space-y-1 px-3 py-2 text-sm">
+                        <p className="text-muted-foreground">No active riders yet.</p>
+                        {/* The one add-rider form lives in logistics; link to it, never copy it. */}
+                        <a
+                          href={`${LOGISTICS_UI_URL}/${orgSlug}/riders?invite=1`}
+                          target="_blank"
+                          rel="noreferrer"
+                          className="font-medium text-primary hover:underline"
+                        >
+                          Add a rider in Logistics
+                        </a>
+                      </div>
                     ) : (
                       availableRiders.map((rider) => {
-                        const name = rider.edges?.user?.full_name || rider.edges?.user?.email || rider.id;
+                        const name = riderName(rider);
                         return (
                           <button
                             key={rider.id}

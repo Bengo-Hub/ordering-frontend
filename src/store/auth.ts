@@ -14,7 +14,6 @@ import {
     revokeServerSession,
     updatePreferences,
     updateProfile,
-    updateSecurity,
 } from "@/lib/auth/api";
 import {
     consumeState,
@@ -31,7 +30,6 @@ import type {
     OrderSummary,
     PreferencesUpdateInput,
     ProfileUpdateInput,
-    SecurityUpdateInput,
     SessionTokens,
     UserProfile,
 } from "@/lib/auth/types";
@@ -57,7 +55,6 @@ interface AuthState {
   logout: () => Promise<void>;
   updateProfile: (input: ProfileUpdateInput) => Promise<void>;
   updatePreferences: (input: PreferencesUpdateInput) => Promise<void>;
-  updateSecurity: (input: SecurityUpdateInput) => Promise<void>;
   refreshOrders: () => Promise<void>;
   hydrateFromWebAuthn: (tokens: { accessToken: string; refreshToken: string; expiresIn: number }, tenantSlug?: string) => Promise<void>;
   /** Subscription info loaded lazily after auth — never blocks login. */
@@ -383,19 +380,6 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     } catch (error) {
       set({ status: "error", error: "Could not update preferences right now." });
       toast.error(await apiErrorMessage(error, "Failed to update preferences."));
-      throw error;
-    }
-  },
-
-  updateSecurity: async (input) => {
-    set({ status: "loading", error: null });
-    try {
-      const response = await updateSecurity(input);
-      applyAuthResponse(set, response);
-      toast.success("Security settings updated.");
-    } catch (error) {
-      set({ status: "error", error: "Unable to update security settings." });
-      toast.error(await apiErrorMessage(error, "Failed to update security settings."));
       throw error;
     }
   },

@@ -254,25 +254,6 @@ export async function fetchCategories(
   });
 }
 
-export async function fetchCategory(tenantSlug: string, id: string): Promise<MenuCategory> {
-  const response = await api.get<BackendMenuCategory>(`${tenantSlug}/catalog/categories/${id}`);
-  const cat = response.data;
-  const { emoji, image } = resolveCategoryIcon(cat.icon, cat.imageUrl, cat.name);
-  return {
-    id: cat.id,
-    name: cat.name,
-    description: cat.description ?? "",
-    image: image ?? "",
-    ...(emoji ? { emoji } : {}),
-    sortOrder: cat.sortOrder ?? 0,
-    itemCount: cat.itemCount,
-    parentId: cat.parentId ?? null,
-    ...(cat.parentName ? { parentName: cat.parentName } : {}),
-    depth: cat.depth ?? 0,
-    ...(cat.path ? { path: cat.path } : {}),
-  };
-}
-
 // =============================================================================
 // OUTLETS API (GET /outlets returns list for tenant)
 // =============================================================================

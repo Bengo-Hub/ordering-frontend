@@ -172,8 +172,15 @@ export const handlers = [
   // ordering-backend lists orders as { data, total }
   http.get("*/orders", () => HttpResponse.json({ data: orders.orders, total: orders.total })),
   http.get("*/orders/:id", () => HttpResponse.json(orderDetail)),
-  http.get("*/orders/:id/tracking", () =>
-    HttpResponse.json({ status: "en_route", riderName: "John", eta: "15 min", updatedAt: "2026-02-16T10:15:00Z" }),
+  // ordering-backend GET /orders/{orderId}/delivery/tracking answers fulfilment.TrackingInfo (snake_case)
+  http.get("*/orders/:id/delivery/tracking", () =>
+    HttpResponse.json({
+      status: "en_route",
+      rider_name: "John",
+      rider_phone: "+254700000000",
+      eta_minutes: 15,
+      last_updated_at: "2026-02-16T10:15:00Z",
+    }),
   ),
   http.post("*/orders", async ({ request }) => {
     const body = await request.json();

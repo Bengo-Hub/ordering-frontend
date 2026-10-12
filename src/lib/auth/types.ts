@@ -221,11 +221,6 @@ export interface PreferencesUpdateInput {
   language?: "en" | "sw";
 }
 
-export interface SecurityUpdateInput {
-  enableTwoFactor?: boolean;
-  disableTwoFactor?: boolean;
-}
-
 export interface OrderSummary {
   id: string;
   status: "pending" | "preparing" | "enroute" | "delivered" | "cancelled";

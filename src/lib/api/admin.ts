@@ -104,15 +104,6 @@ export interface MenuItemVariant {
   isDefault: boolean;
 }
 
-export interface CreateCategoryRequest {
-  name: string;
-  description?: string;
-  imageUrl?: string;
-  parentId?: string;
-  displayOrder?: number;
-  isActive?: boolean;
-}
-
 /** Override-based create/update request for the proxy catalog model */
 export interface CreateMenuItemRequest {
   /** Inventory SKU of the item to add to this tenant's menu */
@@ -280,23 +271,8 @@ export async function listCategories(
 // upstream inventory/catalog service. These POST/PUT/DELETE calls 404 today, so
 // their UI actions have been removed from staff/menu. Repoint these to the
 // inventory/catalog-service API once a client base for it exists.
-export async function createCategory(slug: string, data: CreateCategoryRequest): Promise<Category> {
-  const res = await api.post(`${slug}/catalog/categories`, data);
-  return res.data;
-}
-
-export async function updateCategory(
-  slug: string,
-  id: string,
-  data: Partial<CreateCategoryRequest>,
-): Promise<Category> {
-  const res = await api.put(`${slug}/catalog/categories/${id}`, data);
-  return res.data;
-}
-
-export async function deleteCategory(slug: string, id: string): Promise<void> {
-  await api.delete(`${slug}/catalog/categories/${id}`);
-}
+// Categories are owned by inventory-api; ordering has no category write routes, so the
+// storefront only reads them (listCategories).
 
 function normalizeMenuItem(raw: Record<string, unknown>): MenuItem {
   const sku = (raw.sku ?? raw.inventorySku ?? raw.inventory_sku ?? "") as string;

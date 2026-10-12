@@ -14,7 +14,6 @@ vi.mock("@/lib/auth/api", () => ({
   completeGoogleOAuth: vi.fn(),
   updateProfile: vi.fn(),
   updatePreferences: vi.fn(),
-  updateSecurity: vi.fn(),
 }));
 
 vi.mock("@/lib/auth/session", () => ({

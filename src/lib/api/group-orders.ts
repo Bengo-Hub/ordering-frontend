@@ -29,7 +29,7 @@ export async function joinGroupOrder(slug: string, code: string): Promise<GroupO
 }
 
 export async function lockGroupOrder(slug: string, groupOrderId: string): Promise<GroupOrder> {
-  const res = await api.post(`${slug}/group-orders/${groupOrderId}/lock`);
+  const res = await api.put(`${slug}/group-orders/${groupOrderId}/lock`);
   return res.data;
 }
 

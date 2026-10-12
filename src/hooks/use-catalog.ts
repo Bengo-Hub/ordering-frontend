@@ -8,7 +8,6 @@ import { keepPreviousData, useInfiniteQuery, useQuery } from "@tanstack/react-qu
 import {
   fetchBrands,
   fetchCategories,
-  fetchCategory,
   fetchFeaturedItems,
   fetchMenuItem,
   fetchMenuItems,
@@ -143,16 +142,6 @@ export function useCategories(tenantSlug: string, outletId?: string, useCase?: s
 /**
  * Hook to fetch a single category by ID
  */
-export function useCategory(tenantSlug: string, id: string) {
-  return useQuery({
-    queryKey: [tenantSlug, ...catalogKeys.category(id)],
-    queryFn: () => fetchCategory(tenantSlug, id),
-    enabled: !!tenantSlug && !!id,
-    staleTime: CATALOG_STALE_MS,
-    gcTime: CATALOG_GC_MS,
-  });
-}
-
 // =============================================================================
 // BRANDS HOOKS
 // =============================================================================

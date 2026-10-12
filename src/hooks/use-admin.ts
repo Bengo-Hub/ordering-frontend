@@ -6,9 +6,7 @@ import {
   cancelAdminOrder,
   assignOrderRider,
   deleteAdminOrder,
-  createCategory,
   createMenuItem,
-  deleteCategory,
   deleteMenuItem,
   getAdminOrder,
   getAdminOrderCounts,
@@ -16,12 +14,10 @@ import {
   listCategories,
   listMenuItems,
   setOutletBookingDeposit,
-  updateCategory,
   updateMenuItem,
   updateOrderStatus,
   verifyOrderPayment,
   type AdminOrderFilters,
-  type CreateCategoryRequest,
   type CreateMenuItemRequest,
 } from "@/lib/api/admin";
 import { listAvailableRiders } from "@/lib/api/logistics";
@@ -159,40 +155,6 @@ export function useCategories(params?: { isActive?: boolean; search?: string }) 
     queryKey: adminKeys.categoryList(params ?? {}),
     queryFn: () => listCategories(slug, params),
     staleTime: 60_000,
-  });
-}
-
-export function useCreateCategory() {
-  const slug = useOrgSlug();
-  const queryClient = useQueryClient();
-  return useMutation({
-    mutationFn: (data: CreateCategoryRequest) => createCategory(slug, data),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: adminKeys.categories() });
-    },
-  });
-}
-
-export function useUpdateCategory() {
-  const slug = useOrgSlug();
-  const queryClient = useQueryClient();
-  return useMutation({
-    mutationFn: ({ id, data }: { id: string; data: Partial<CreateCategoryRequest> }) =>
-      updateCategory(slug, id, data),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: adminKeys.categories() });
-    },
-  });
-}
-
-export function useDeleteCategory() {
-  const slug = useOrgSlug();
-  const queryClient = useQueryClient();
-  return useMutation({
-    mutationFn: (id: string) => deleteCategory(slug, id),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: adminKeys.categories() });
-    },
   });
 }
 

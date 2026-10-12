@@ -28,40 +28,31 @@ logisticsApi.interceptors.request.use((config) => {
   return config;
 });
 
+/** A rider as logistics returns it (handlers.FleetMemberResponse): names and contact are top level. */
 export interface FleetMember {
   id: string;
   user_id: string;
   fleet_id: string;
   status: string;
-  id_number?: string;
-  license_no?: string;
+  first_name: string;
+  last_name: string;
+  email: string;
+  phone: string;
   average_rating: number;
   total_ratings: number;
-  edges?: {
-    user?: {
-      id: string;
-      full_name: string;
-      email: string;
-      phone?: string;
-    };
-    vehicle?: {
-      id: string;
-      vehicle_type: string;
-      make?: string;
-      model?: string;
-      license_plate?: string;
-    };
-  };
 }
 
+/** Display name for a rider: full name, else email, else a short id. */
+export function riderName(m: Pick<FleetMember, "first_name" | "last_name" | "email" | "id">): string {
+  return `${m.first_name ?? ""} ${m.last_name ?? ""}`.trim() || m.email || m.id.slice(0, 8);
+}
+
+/** Active riders of the tenant. Logistics answers with the shared pagination envelope ({data, total}). */
 export async function listAvailableRiders(tenantSlug: string): Promise<FleetMember[]> {
-  const res = await logisticsApi.get<{ members: FleetMember[] } | FleetMember[]>(
-    `/${tenantSlug}/fleet/members`,
-    { params: { status: "active" } }
-  );
-  const data = res.data;
-  if (Array.isArray(data)) return data;
-  return (data as { members: FleetMember[] }).members ?? [];
+  const res = await logisticsApi.get<{ data?: FleetMember[] }>(`/${tenantSlug}/fleet/members`, {
+    params: { status: "active", limit: 100 },
+  });
+  return res.data?.data ?? [];
 }
 
 export async function assignRiderToTask(

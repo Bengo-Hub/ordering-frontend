@@ -6,7 +6,6 @@ import type {
     Permission,
     PreferencesUpdateInput,
     ProfileUpdateInput,
-    SecurityUpdateInput,
     UserProfile,
     UserRole,
 } from "./types";
@@ -223,16 +222,6 @@ export async function updatePreferences(input: PreferencesUpdateInput, tenantSlu
   const slug = getTenantSlug(tenantSlug);
   if (!slug) return Promise.reject(new Error("Tenant slug required"));
   const { data } = await api.patch<AuthResponse>(`${slug}/users/preferences`, input);
-  return data;
-}
-
-/**
- * Update security settings via ordering-backend. Requires tenant in path.
- */
-export async function updateSecurity(input: SecurityUpdateInput, tenantSlug?: string): Promise<AuthResponse> {
-  const slug = getTenantSlug(tenantSlug);
-  if (!slug) return Promise.reject(new Error("Tenant slug required"));
-  const { data } = await api.post<AuthResponse>(`${slug}/users/security`, input);
   return data;
 }
 
