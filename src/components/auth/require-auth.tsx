@@ -12,6 +12,17 @@ import { useAuthStore } from "@/store/auth";
 import type { Permission, UserRole } from "@/lib/auth/types";
 import { userCanAccess } from "@/lib/auth/permissions";
 
+/**
+ * True when the signed-in session belongs to a different organisation than the page's. The
+ * browser shares one session across every /{orgSlug} on this origin, so an admin of one tenant
+ * must not carry their roles into another tenant's staff area. Platform owners may cross.
+ */
+function isForeignTenantSession(user: { tenant_slug?: string; is_platform_owner?: boolean; isSuperUser?: boolean } | null, orgSlug: string): boolean {
+  if (!user?.tenant_slug || !orgSlug) return false;
+  if (user.is_platform_owner || user.isSuperUser) return false;
+  return user.tenant_slug.toLowerCase() !== orgSlug.toLowerCase();
+}
+
 interface RequireAuthProps {
   children: ReactNode;
   roles?: UserRole[];
@@ -66,7 +77,7 @@ export function RequireAuth({
       if (permissions) accessParams.permissions = permissions;
       if (roleOperator) accessParams.roleOperator = roleOperator;
       if (permissionOperator) accessParams.permissionOperator = permissionOperator;
-      const permitted = userCanAccess(user, accessParams);
+      const permitted = userCanAccess(user, accessParams) && !(roles?.length && isForeignTenantSession(user, orgSlug));
       if (!permitted) {
         router.replace((redirectTo ?? orgRoute(orgSlug, "/unauthorized")) as Parameters<typeof router.replace>[0]);
       }
@@ -106,7 +117,7 @@ export function RequireAuth({
   if (permissions) accessParams2.permissions = permissions;
   if (roleOperator) accessParams2.roleOperator = roleOperator;
   if (permissionOperator) accessParams2.permissionOperator = permissionOperator;
-  const canAccess = userCanAccess(user, accessParams2);
+  const canAccess = userCanAccess(user, accessParams2) && !(roles?.length && isForeignTenantSession(user, orgSlug));
   if (!canAccess) {
     router.replace(orgRoute(orgSlug, "/unauthorized") as Parameters<typeof router.replace>[0]);
     return null;
