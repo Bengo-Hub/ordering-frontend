@@ -29,8 +29,10 @@ export interface DeliveryQuote {
   zone?: ZoneRef;
   nearest_area?: ZoneRef;
   nearest_area_km?: number;
-  /** How far from the outlet deliveries reach, and how far this pin is (straight line). */
-  furthest_area_km?: number;
+  /** Where an out-of-range pin sits against our delivery routes: nearest route (towards route_area), how far off it, compass direction and distance from the outlet. */
+  route_area?: ZoneRef;
+  route_off_km?: number;
+  direction?: string;
   outlet_km?: number;
   /** A distance-priced fee: the customer is sent the area, distance and fee to confirm. */
   needs_confirmation?: boolean;
@@ -89,10 +91,10 @@ export const NOT_SERVICEABLE_TEXT: Record<string, string> = {
   invalid_location: "Pick a valid location.",
 };
 
-/** How far out of range a pin is, when deliveries reach a known distance from the outlet. */
-export function reachNote(q: Pick<DeliveryQuote, "furthest_area_km" | "outlet_km">): string | null {
-  if (!q.furthest_area_km || !q.outlet_km || q.outlet_km <= q.furthest_area_km) return null;
-  return `We deliver up to about ${Math.round(q.furthest_area_km)} km from the outlet and this is about ${Math.round(q.outlet_km)} km away.`;
+/** Why a pin is out of range: which way it lies and how far it is from our delivery routes. */
+export function reachNote(q: Pick<DeliveryQuote, "route_area" | "route_off_km" | "direction" | "outlet_km">): string | null {
+  if (!q.route_area || !q.route_off_km || !q.outlet_km || !q.direction) return null;
+  return `This is about ${Math.round(q.outlet_km)} km ${q.direction} of the outlet, ${Math.round(q.route_off_km)} km away from our nearest delivery route (towards ${q.route_area.name}).`;
 }
 
 export async function fetchDeliveryCoverage(slug: string, outletId?: string): Promise<DeliveryCoverage> {
