@@ -28,6 +28,7 @@ import {
   type CheckoutPaymentOptionId,
 } from "@/hooks/use-checkout-state";
 import { useSubscription } from "@/hooks/use-subscription";
+import { reachNote } from "@/lib/api/delivery";
 import { cn } from "@/lib/utils";
 import { orgRoute } from "@/lib/routes";
 
@@ -166,9 +167,11 @@ export default function CheckoutPage() {
                   <div>
                     <p className="font-medium">We don&apos;t deliver to this location yet</p>
                     <p className="mt-1 text-muted-foreground">
-                      {state.deliveryQuote?.nearest_area
-                        ? `The nearest area we deliver to is ${state.deliveryQuote.nearest_area.name}. Choose a different location or pick up instead.`
-                        : "Choose a different location or pick up instead."}
+                      {state.deliveryQuote && reachNote(state.deliveryQuote)
+                        ? `${reachNote(state.deliveryQuote)} Choose a different location or pick up instead.`
+                        : state.deliveryQuote?.nearest_area
+                          ? `The nearest area we deliver to is ${state.deliveryQuote.nearest_area.name}. Choose a different location or pick up instead.`
+                          : "Choose a different location or pick up instead."}
                     </p>
                   </div>
                 </div>

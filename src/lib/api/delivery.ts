@@ -29,6 +29,11 @@ export interface DeliveryQuote {
   zone?: ZoneRef;
   nearest_area?: ZoneRef;
   nearest_area_km?: number;
+  /** How far from the outlet deliveries reach, and how far this pin is (straight line). */
+  furthest_area_km?: number;
+  outlet_km?: number;
+  /** A distance-priced fee: the customer is sent the area, distance and fee to confirm. */
+  needs_confirmation?: boolean;
   distance_km: number;
   distance_type?: string;
   eta_minutes?: number;
@@ -83,6 +88,12 @@ export const NOT_SERVICEABLE_TEXT: Record<string, string> = {
   no_delivery_coverage: "Delivery isn't set up yet.",
   invalid_location: "Pick a valid location.",
 };
+
+/** How far out of range a pin is, when deliveries reach a known distance from the outlet. */
+export function reachNote(q: Pick<DeliveryQuote, "furthest_area_km" | "outlet_km">): string | null {
+  if (!q.furthest_area_km || !q.outlet_km || q.outlet_km <= q.furthest_area_km) return null;
+  return `We deliver up to about ${Math.round(q.furthest_area_km)} km from the outlet and this is about ${Math.round(q.outlet_km)} km away.`;
+}
 
 export async function fetchDeliveryCoverage(slug: string, outletId?: string): Promise<DeliveryCoverage> {
   const { data } = await logistics.get(`${slug}/zones/coverage`, { params: outletId ? { outlet_id: outletId } : undefined });

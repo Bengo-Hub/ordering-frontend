@@ -7,7 +7,7 @@ import type { ZoneShape } from "@bengo-hub/maps";
 
 import { Button } from "@/components/ui/button";
 import { useDeliveryCoverage, useDeliveryQuote, usePlaceSearch, useReversePlace } from "@/hooks/use-delivery";
-import { NOT_SERVICEABLE_TEXT, quoteLabel, type DeliveryQuote, type LatLng } from "@/lib/api/delivery";
+import { NOT_SERVICEABLE_TEXT, quoteLabel, reachNote, type DeliveryQuote, type LatLng } from "@/lib/api/delivery";
 import { cn } from "@/lib/utils";
 
 const DeliveryMap = dynamic(() => import("./delivery-map"), {
@@ -173,13 +173,23 @@ export function DeliveryLocationPicker({
                 <span className="flex flex-wrap items-center gap-2 text-destructive">
                   <XCircle className="size-4" />
                   {NOT_SERVICEABLE_TEXT[q.reason ?? ""] ?? "We cannot deliver here yet."}
-                  {q.nearest_area && <span className="text-muted-foreground">Nearest area: {q.nearest_area.name}</span>}
+                  {reachNote(q) ? (
+                    <span className="text-muted-foreground">{reachNote(q)}</span>
+                  ) : (
+                    q.nearest_area && <span className="text-muted-foreground">Nearest area: {q.nearest_area.name}</span>
+                  )}
                 </span>
               )
             ) : quote.isError ? (
               <span className="text-amber-600">Delivery pricing is unavailable right now.</span>
             ) : null}
           </div>
+          {q?.serviceable && q.method === "per_km" && q.needs_confirmation && (
+            <p className="mt-1 text-xs text-muted-foreground">
+              This place is outside our listed areas, so the fee comes from the distance. We email you the distance and fee with your
+              order confirmation so you can check them.
+            </p>
+          )}
           {q?.below_min_order && (
             <p className="mt-1 text-xs text-amber-600">
               Orders to {q.zone?.name ?? "this area"} need at least {q.currency} {Math.round(q.min_order).toLocaleString()}.
