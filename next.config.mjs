@@ -37,6 +37,15 @@ const nextConfig = {
         hostname: "accounts.codevertexafrica.com",
         pathname: "/images/**",
       },
+      // The shared public media bucket (Cloudflare R2): tenant logos and app icons from
+      // auth-api, item and menu images, avatars. Since the 2026-10-17 move to object storage,
+      // a missing entry here made the optimizer 400 on urban-loft's "Urban Eats" icon and
+      // TenantLogo fell back to the default mark.
+      {
+        protocol: "https",
+        hostname: "media.codevertexafrica.com",
+        pathname: "/**",
+      },
     ],
     // Serve optimized images in modern formats with quality 80
     formats: ["image/avif", "image/webp"],
