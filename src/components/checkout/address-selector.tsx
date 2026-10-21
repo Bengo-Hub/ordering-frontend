@@ -123,7 +123,7 @@ export function AddressSelector({
       {showModal && (
         <div className="fixed inset-0 z-50 flex items-end justify-center sm:items-center sm:p-4">
           <div className="absolute inset-0 bg-black/50" onClick={() => setShowModal(false)} />
-          <div className="relative flex max-h-[92vh] w-full max-w-lg flex-col overflow-hidden rounded-t-2xl bg-background shadow-xl sm:rounded-2xl">
+          <div className="relative flex max-h-[92dvh] w-full max-w-lg flex-col overflow-hidden rounded-t-2xl bg-background shadow-xl sm:rounded-2xl">
             <div className="flex items-center justify-between border-b px-5 py-4">
               <h2 className="text-lg font-bold">Delivery location</h2>
               <button

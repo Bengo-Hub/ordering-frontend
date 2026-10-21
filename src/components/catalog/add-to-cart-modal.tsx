@@ -156,7 +156,7 @@ export function AddToCartModal({ item, onClose, onAdded }: AddToCartModalProps) 
 
   return (
     <Dialog open={!!item} onOpenChange={(open) => !open && onClose()}>
-      <DialogContent className="flex max-h-[85vh] flex-col gap-0 overflow-hidden p-0 sm:max-w-lg">
+      <DialogContent className="flex max-h-[85dvh] flex-col gap-0 overflow-hidden p-0 sm:max-w-lg">
         {item && (
           <>
             <div className="relative h-40 w-full shrink-0 bg-muted sm:h-48">
