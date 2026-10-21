@@ -1,6 +1,7 @@
 "use client";
 
 import Image from "next/image";
+import { mediaImageLoaderFor } from "@bengo-hub/shared-ui-lib/media";
 import { useEffect, useState } from "react";
 
 import { Skeleton } from "@/components/ui/skeleton";
@@ -78,6 +79,7 @@ export function ImageWithFallback({
 
   const imageProps = {
     src: resolved,
+    loader: mediaImageLoaderFor(resolved),
     alt,
     onLoad: () => setIsLoaded(true),
     onError: () => setLoadError(true),

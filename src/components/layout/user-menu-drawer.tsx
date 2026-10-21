@@ -17,6 +17,7 @@ import {
   Zap
 } from "lucide-react";
 import Image from "next/image";
+import { mediaImageLoaderFor } from "@bengo-hub/shared-ui-lib/media";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 
@@ -241,6 +242,7 @@ export function UserMenuDrawer({ open, onOpenChange }: UserMenuDrawerProps) {
                 {avatarUrl ? (
                   <Image
                     src={avatarUrl}
+                    loader={mediaImageLoaderFor(avatarUrl)}
                     alt="Profile"
                     width={56}
                     height={56}

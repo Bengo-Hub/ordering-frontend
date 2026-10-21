@@ -1,5 +1,4 @@
 "use client";
-
 /**
  * RetailHomeView — the retail/pharmacy/wholesale homepage. Unlike FoodHomeView
  * (Uber-Eats-shaped, outlet-ranking sections), this leads with browsing the
@@ -14,6 +13,7 @@ import { Headset, MapPin, ShieldCheck, Tag, Truck } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useMemo, useState } from "react";
+import { MediaImage } from "@bengo-hub/shared-ui-lib/media";
 
 import { CategorySidebar } from "@/components/category/category-sidebar";
 import {
@@ -27,6 +27,7 @@ import { FlashSaleStrip } from "@/components/promo/flash-sale-strip";
 import { PromoBannerCarousel, type PromoBanner } from "@/components/promo/promo-banner-carousel";
 import { Button } from "@/components/ui/button";
 import { useBrands, useCategories, useCatalogItems, useOutlets } from "@/hooks/use-catalog";
+
 import { useOrderingConfig } from "@/hooks/use-ordering-config";
 import { usePromoBanners } from "@/hooks/use-promo-banners";
 import { usePromoDeals } from "@/hooks/use-promo-deals";
@@ -348,8 +349,7 @@ export function RetailHomeView() {
                   >
                     <span className="flex size-14 items-center justify-center overflow-hidden rounded-full bg-muted sm:size-16">
                       {brand.logoUrl ? (
-                        // eslint-disable-next-line @next/next/no-img-element
-                        <img src={brand.logoUrl} alt={brand.name} className="size-full object-cover" />
+                        <MediaImage src={brand.logoUrl} alt={brand.name} displayWidth={64} fit="cover" aspect={1} className="size-full object-cover" />
                       ) : (
                         <span className="text-lg font-bold text-muted-foreground">
                           {brand.name.charAt(0).toUpperCase()}
