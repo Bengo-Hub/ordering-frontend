@@ -96,7 +96,7 @@ export default function CheckoutPage() {
           <h1 className="text-xl font-bold sm:text-2xl">Checkout</h1>
         </div>
 
-        <div className="space-y-4 pb-28 sm:space-y-6 sm:pb-6">
+        <div className="space-y-4 pb-28 sm:space-y-6 md:pb-6">
           {/* Guest contact info */}
           {state.isGuestMode && (
             <GuestContactForm

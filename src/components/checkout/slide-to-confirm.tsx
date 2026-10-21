@@ -28,8 +28,8 @@ export function SlideToConfirm({
 
   return (
     <>
-      {/* Mobile: slide gesture — fixed to bottom so it's always visible */}
-      <div className="fixed inset-x-0 bottom-0 z-30 border-t border-border bg-background/95 px-4 py-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] backdrop-blur-sm sm:hidden">
+      {/* Phones (including landscape): slide gesture, fixed to the bottom so it is always visible */}
+      <div className="fixed inset-x-0 bottom-0 z-30 border-t border-border bg-background/95 px-4 py-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] backdrop-blur-sm md:hidden">
         {disabled ? (
           <div className="flex h-14 items-center justify-center rounded-full bg-muted text-sm font-medium text-muted-foreground">
             Select delivery address or pickup to continue
@@ -44,7 +44,7 @@ export function SlideToConfirm({
       </div>
 
       {/* Desktop: regular button */}
-      <div className="hidden sm:block">
+      <div className="hidden md:block">
         <Button
           className="w-full min-h-[48px]"
           size="lg"
@@ -86,20 +86,23 @@ function SlideTrack({
     return trackRef.current.clientWidth - thumbSize - 8; // 8px for padding
   }, []);
 
+  // Pointer events cover touch, pen and mouse (a narrow desktop window gets the slider too);
+  // pointer capture keeps the drag alive when the finger leaves the thumb.
   const handleTouchStart = useCallback(
-    (e: React.TouchEvent) => {
+    (e: React.PointerEvent) => {
       if (loading || confirmed) return;
+      e.currentTarget.setPointerCapture(e.pointerId);
       setIsDragging(true);
-      startXRef.current = e.touches[0].clientX - offsetX;
+      startXRef.current = e.clientX - offsetX;
     },
     [loading, confirmed, offsetX],
   );
 
   const handleTouchMove = useCallback(
-    (e: React.TouchEvent) => {
+    (e: React.PointerEvent) => {
       if (!isDragging || loading || confirmed) return;
       const maxOffset = getMaxOffset();
-      const x = Math.max(0, Math.min(e.touches[0].clientX - startXRef.current, maxOffset));
+      const x = Math.max(0, Math.min(e.clientX - startXRef.current, maxOffset));
       setOffsetX(x);
     },
     [isDragging, loading, confirmed, getMaxOffset],
@@ -156,8 +159,12 @@ function SlideTrack({
       {/* Draggable thumb */}
       {!loading && (
         <div
+          role="button"
+          tabIndex={0}
+          aria-label={`Slide to confirm, ${label}. Press Enter to confirm without sliding.`}
           className={cn(
-            "relative z-10 flex items-center justify-center rounded-full bg-white shadow-md",
+            // touch-none stops the page scrolling while the thumb is dragged
+            "relative z-10 flex touch-none items-center justify-center rounded-full bg-white shadow-md",
             isDragging ? "scale-105" : "transition-transform",
           )}
           style={{
@@ -166,9 +173,18 @@ function SlideTrack({
             transform: `translateX(${offsetX}px)`,
             transition: isDragging ? "none" : "transform 0.3s ease",
           }}
-          onTouchStart={handleTouchStart}
-          onTouchMove={handleTouchMove}
-          onTouchEnd={handleTouchEnd}
+          onPointerDown={handleTouchStart}
+          onPointerMove={handleTouchMove}
+          onPointerUp={handleTouchEnd}
+          onPointerCancel={handleTouchEnd}
+          onKeyDown={(e) => {
+            // Keyboard and screen-reader users cannot slide; Enter or Space confirms.
+            if ((e.key === "Enter" || e.key === " ") && !confirmed) {
+              e.preventDefault();
+              setConfirmed(true);
+              onConfirm();
+            }
+          }}
         >
           <ArrowRight className="size-5 text-primary" />
         </div>

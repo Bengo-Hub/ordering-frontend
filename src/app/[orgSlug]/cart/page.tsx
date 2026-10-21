@@ -50,6 +50,10 @@ export default function CartPage() {
   const serviceFee = noFulfillment ? 0 : (feeData?.service_fee ?? 0);
   const total = noFulfillment ? cartSubtotal : (feeData?.grand_total ?? cartSubtotal + deliveryFee + serviceFee);
 
+  // Outlet details for the address line. Called before the empty-cart return so the hook order
+  // never changes when the last item is removed (a hook after an early return crashes React).
+  const { data: outletData } = useOutlet(orgSlug, outletId ?? "");
+
   if (items.length === 0) {
     return (
       <SiteShell>
@@ -68,12 +72,10 @@ export default function CartPage() {
   // Group items by outlet for display
   const outletName = items[0]?.outletName;
 
-  // Fetch outlet details for address display
-  const { data: outletData } = useOutlet(orgSlug, outletId ?? "");
-
   return (
     <SiteShell hideBottomNav>
-      <div className="container mx-auto max-w-2xl px-4 py-8">
+      {/* pb-32 on phones keeps the last card clear of the pinned checkout bar below. */}
+      <div className="container mx-auto max-w-2xl px-4 pb-32 pt-6 md:py-8">
         {/* Back to store navigation */}
         {outletId ? (
           <Link
@@ -127,14 +129,14 @@ export default function CartPage() {
                 <div className="flex items-start gap-3 sm:items-center sm:gap-4">
                   {/* Item info */}
                   <div className="min-w-0 flex-1">
-                    <p className="truncate font-medium">{item.name}</p>
+                    <p className="line-clamp-2 break-words font-medium">{item.name}</p>
                     <p className="text-sm text-muted-foreground">{formatCurrency(item.price)} each</p>
                   </div>
 
-                  {/* Remove - top right on mobile */}
+                  {/* Remove - top right on mobile; 40px tap target on phones */}
                   <button
                     onClick={() => removeItem(item.id)}
-                    className="shrink-0 p-1 text-muted-foreground hover:text-destructive active:text-destructive"
+                    className="flex size-10 shrink-0 items-center justify-center rounded-md text-muted-foreground hover:text-destructive active:text-destructive sm:size-8"
                     aria-label="Remove item"
                   >
                     <Trash2 className="h-4 w-4" />
@@ -153,7 +155,7 @@ export default function CartPage() {
                           updateQuantity(item.id, item.quantity - 1);
                         }
                       }}
-                      className="flex h-8 w-8 items-center justify-center rounded-full border hover:bg-muted active:bg-muted/80 sm:h-7 sm:w-7"
+                      className="flex h-10 w-10 items-center justify-center rounded-full border hover:bg-muted active:bg-muted/80 sm:h-8 sm:w-8"
                       aria-label="Decrease quantity"
                     >
                       <Minus className="h-3 w-3" />
@@ -161,7 +163,7 @@ export default function CartPage() {
                     <span className="w-6 text-center text-sm font-medium">{item.quantity}</span>
                     <button
                       onClick={() => updateQuantity(item.id, item.quantity + 1)}
-                      className="flex h-8 w-8 items-center justify-center rounded-full border hover:bg-muted active:bg-muted/80 sm:h-7 sm:w-7"
+                      className="flex h-10 w-10 items-center justify-center rounded-full border hover:bg-muted active:bg-muted/80 sm:h-8 sm:w-8"
                       aria-label="Increase quantity"
                     >
                       <Plus className="h-3 w-3" />
@@ -276,8 +278,9 @@ export default function CartPage() {
             </div>
           </CardContent>
           <CardFooter className="flex flex-col gap-3">
+            {/* Phones use the pinned bar below; this one is for wider screens. */}
             <Button
-              className="w-full"
+              className="hidden w-full md:inline-flex"
               size="lg"
               onClick={() => router.push(orgRoute(orgSlug, "/checkout"))}
             >
@@ -288,6 +291,24 @@ export default function CartPage() {
             </Button>
           </CardFooter>
         </Card>
+      </div>
+
+      {/* Phones: the total and "Proceed to Checkout" stay pinned to the bottom of the screen, so
+          the customer never has to scroll past every card (or open the cart drawer) to find it. */}
+      <div className="fixed inset-x-0 bottom-0 z-30 border-t border-border bg-background/95 px-4 pt-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] backdrop-blur-sm md:hidden">
+        <div className="mx-auto flex max-w-2xl items-center gap-3">
+          <div className="min-w-0 shrink-0">
+            <p className="text-xs text-muted-foreground">Total</p>
+            <p className="text-base font-semibold">{formatCurrency(total)}</p>
+          </div>
+          <Button
+            className="min-h-12 flex-1"
+            size="lg"
+            onClick={() => router.push(orgRoute(orgSlug, "/checkout"))}
+          >
+            Proceed to Checkout
+          </Button>
+        </div>
       </div>
     </SiteShell>
   );

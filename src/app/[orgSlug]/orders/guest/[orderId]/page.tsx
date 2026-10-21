@@ -492,7 +492,8 @@ function GuestOrderContent() {
                     </div>
                     <span
                       className={cn(
-                        "text-center text-[10px] leading-tight sm:text-xs truncate max-w-[60px] sm:max-w-none",
+                        // Wrap (never clip) the step name: "Out for delivery" must stay readable on a phone.
+                        "max-w-[64px] break-words text-center text-[10px] leading-tight sm:max-w-none sm:text-xs",
                         reached ? "font-medium text-foreground" : "text-muted-foreground",
                       )}
                     >
@@ -514,8 +515,8 @@ function GuestOrderContent() {
         <CardContent className="space-y-3">
           {(order.items ?? []).map((item, i) => (
             <div key={i} className="flex items-start justify-between gap-2 text-sm">
-              <div className="flex-1">
-                <p className="font-medium text-foreground">{item.name}</p>
+              <div className="min-w-0 flex-1">
+                <p className="break-words font-medium text-foreground">{item.name}</p>
                 <p className="text-xs text-muted-foreground">
                   {item.quantity} x KES {item.unitPrice.toLocaleString()}
                 </p>
@@ -609,11 +610,11 @@ function GuestOrderContent() {
 
       {/* Actions */}
       <div className="flex flex-col gap-3 sm:flex-row">
-        <Button asChild variant="outline" className="gap-2">
+        <Button asChild variant="outline" className="min-h-11 w-full gap-2 sm:w-auto">
           <Link href={orgRoute(orgSlug, "/menu")}>Continue Shopping</Link>
         </Button>
         {!["delivered", "completed", "cancelled", "failed"].includes(order.status) && (
-          <Button asChild variant="outline" className="gap-2">
+          <Button asChild variant="outline" className="min-h-11 w-full gap-2 sm:w-auto">
             <a
               href={`${
                 LOGISTICS_UI_URL

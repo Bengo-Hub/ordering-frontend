@@ -201,7 +201,8 @@ export default function OrderDetailPage() {
                             </div>
                             <span
                               className={cn(
-                                "text-center text-[10px] leading-tight sm:text-xs truncate max-w-[60px] sm:max-w-none",
+                                // Wrap (never clip) the step name: "Out for delivery" must stay readable on a phone.
+                                "max-w-[64px] break-words text-center text-[10px] leading-tight sm:max-w-none sm:text-xs",
                                 reached ? "font-medium text-foreground" : "text-muted-foreground",
                               )}
                             >
@@ -288,8 +289,8 @@ export default function OrderDetailPage() {
                       key={i}
                       className="flex items-start justify-between gap-2 text-sm"
                     >
-                      <div className="flex-1">
-                        <p className="font-medium text-foreground">{item.name}</p>
+                      <div className="min-w-0 flex-1">
+                        <p className="break-words font-medium text-foreground">{item.name}</p>
                         <p className="text-xs text-muted-foreground">
                           {item.quantity} x KES {item.unitPrice.toLocaleString()}
                         </p>
@@ -376,7 +377,7 @@ export default function OrderDetailPage() {
               <div className="flex flex-col gap-3 sm:flex-row">
                 <Button
                   variant="outline"
-                  className="gap-2"
+                  className="min-h-11 w-full gap-2 sm:w-auto"
                   onClick={handleReorder}
                 >
                   <RefreshCw className="size-4" />
@@ -384,7 +385,7 @@ export default function OrderDetailPage() {
                 </Button>
 
                 {isActive && (
-                  <Button variant="outline" className="gap-2" asChild>
+                  <Button variant="outline" className="min-h-11 w-full gap-2 sm:w-auto" asChild>
                     <a
                       href={`${
                         LOGISTICS_UI_URL
@@ -399,7 +400,7 @@ export default function OrderDetailPage() {
                 {canCancel && !showCancelReason && (
                   <Button
                     variant="outline"
-                    className="gap-2 text-destructive hover:bg-destructive hover:text-destructive-foreground"
+                    className="min-h-11 w-full gap-2 text-destructive hover:bg-destructive hover:text-destructive-foreground sm:w-auto"
                     onClick={() => setShowCancelReason(true)}
                   >
                     <XCircle className="size-4" />
