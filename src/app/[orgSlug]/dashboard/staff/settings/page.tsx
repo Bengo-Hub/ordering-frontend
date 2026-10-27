@@ -13,7 +13,6 @@ import {
   Lock,
   Package,
   Pencil,
-  Plus,
   Save,
   Settings,
   ShieldAlert,
@@ -84,15 +83,6 @@ interface Branding {
   from_email: string;
   from_name: string;
   logo_url: string;
-}
-
-interface Addon {
-  id: string;
-  code: string;
-  name: string;
-  description: string;
-  monthly_price: number;
-  is_active?: boolean;
 }
 
 type ActiveTab =
@@ -598,60 +588,47 @@ function NotificationSettingsTab({ tenantSlug }: { tenantSlug: string }) {
 
 // ── Subscription Add-ons ─────────────────────────────────────────────────────
 
-function SubscriptionAddonsTab({ tenantSlug }: { tenantSlug: string }) {
-  const [availableAddons, setAvailableAddons] = useState<Addon[]>([]);
-  const [activeAddons, setActiveAddons] = useState<Addon[]>([]);
+/** A tenant's custom add-on as subscriptions-api returns it (GET /api/v1/custom-addons). */
+interface CustomAddon {
+  id: string;
+  name: string;
+  description?: string;
+  billing_cycle?: string;
+  unit_price_kes?: number;
+  quantity?: number;
+  status?: string;
+}
+
+const SUBSCRIPTIONS_UI_URL = process.env.NEXT_PUBLIC_SUBSCRIPTIONS_UI_URL || "https://pricing.codevertexafrica.com";
+
+/**
+ * The tenant's add-ons, read only. subscriptions-api has no tenant subscribe/remove routes
+ * (add-ons are set up by Codevertex; the tenant sees them at /custom-addons), so plan and
+ * add-on changes link to the subscriptions app. This tab used to call /{slug}/addons/available,
+ * /active, /subscribe and DELETE routes that never existed, so it only ever showed an error.
+ */
+function SubscriptionAddonsTab({ tenantSlug: _tenantSlug }: { tenantSlug: string }) {
+  const [addons, setAddons] = useState<CustomAddon[]>([]);
   const [isLoading, setIsLoading] = useState(true);
-  const [subscribing, setSubscribing] = useState<string | null>(null);
-  const [unsubscribing, setUnsubscribing] = useState<string | null>(null);
   const [loadError, setLoadError] = useState(false);
 
-  const fetchData = useCallback(async () => {
-    setLoadError(false);
-    const [avRes, actRes] = await Promise.allSettled([
-      subscriptionsApi.get(`/api/v1/${tenantSlug}/addons/available`),
-      subscriptionsApi.get(`/api/v1/${tenantSlug}/addons/active`),
-    ]);
-    if (avRes.status === "fulfilled") setAvailableAddons(avRes.value.data || []);
-    if (actRes.status === "fulfilled") setActiveAddons(actRes.value.data || []);
-    // Surface a clear error state instead of silently degrading to empty.
-    if (avRes.status === "rejected" && actRes.status === "rejected") {
-      setLoadError(true);
-    }
-    setIsLoading(false);
-  }, [tenantSlug]);
-
-  useEffect(() => { fetchData(); }, [fetchData]);
-
-  const activeCodes = new Set(activeAddons.map((a) => a.code));
-
-  const handleSubscribe = async (addonCode: string) => {
-    setSubscribing(addonCode);
-    try {
-      await subscriptionsApi.post(`/api/v1/${tenantSlug}/addons/subscribe`, {
-        product_code: addonCode,
+  useEffect(() => {
+    let cancelled = false;
+    subscriptionsApi
+      .get<{ data?: CustomAddon[] }>("/api/v1/custom-addons")
+      .then((res) => {
+        if (!cancelled) setAddons(res.data?.data ?? []);
+      })
+      .catch(() => {
+        if (!cancelled) setLoadError(true);
+      })
+      .finally(() => {
+        if (!cancelled) setIsLoading(false);
       });
-      toast.success("Add-on activated");
-      fetchData();
-    } catch (e) {
-      toast.error(await apiErrorMessage(e, "Failed to activate add-on"));
-    } finally {
-      setSubscribing(null);
-    }
-  };
-
-  const handleUnsubscribe = async (addonCode: string) => {
-    setUnsubscribing(addonCode);
-    try {
-      await subscriptionsApi.delete(`/api/v1/${tenantSlug}/addons/${addonCode}`);
-      toast.success("Add-on removed");
-      fetchData();
-    } catch (e) {
-      toast.error(await apiErrorMessage(e, "Failed to remove add-on"));
-    } finally {
-      setUnsubscribing(null);
-    }
-  };
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   if (isLoading) {
     return (
@@ -662,123 +639,50 @@ function SubscriptionAddonsTab({ tenantSlug }: { tenantSlug: string }) {
   }
 
   return (
-    <div className="space-y-6">
-      {loadError && (
-        <div className="rounded-lg border border-destructive/40 bg-destructive/10 px-4 py-3 text-sm text-destructive">
-          Could not load subscription add-ons. Please retry or contact support if this persists.
-        </div>
-      )}
-      {/* Active Add-ons */}
-      {activeAddons.length > 0 && (
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Check className="size-5 text-green-500" />
-              Active Add-ons
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-3">
-              {activeAddons.map((addon) => (
-                <div
-                  key={addon.code}
-                  className="flex items-center justify-between rounded-lg border border-green-200 bg-green-50 dark:border-green-800 dark:bg-green-900/20 p-4"
-                >
-                  <div>
-                    <p className="font-medium">{addon.name}</p>
-                    <p className="text-xs text-muted-foreground">{addon.description}</p>
-                  </div>
-                  <div className="flex items-center gap-3">
-                    <span className="text-sm font-bold">KES {addon.monthly_price}/mo</span>
-                    {unsubscribing === addon.code ? (
-                      <div className="flex gap-2">
-                        <Button
-                          size="sm"
-                          variant="destructive"
-                          onClick={() => handleUnsubscribe(addon.code)}
-                        >
-                          Confirm
-                        </Button>
-                        <Button
-                          size="sm"
-                          variant="ghost"
-                          onClick={() => setUnsubscribing(null)}
-                        >
-                          Cancel
-                        </Button>
-                      </div>
-                    ) : (
-                      <Button
-                        size="sm"
-                        variant="ghost"
-                        className="text-destructive hover:text-destructive"
-                        onClick={() => setUnsubscribing(addon.code)}
-                      >
-                        <X className="size-3 mr-1" /> Remove
-                      </Button>
-                    )}
-                  </div>
+    <Card>
+      <CardHeader className="flex flex-row items-center justify-between gap-3 space-y-0">
+        <CardTitle className="flex items-center gap-2">
+          <Package className="size-5" />
+          Add-ons on your plan
+        </CardTitle>
+        <Button asChild size="sm" variant="outline">
+          <a href={`${SUBSCRIPTIONS_UI_URL}/plans`} target="_blank" rel="noopener noreferrer">
+            Manage plan
+          </a>
+        </Button>
+      </CardHeader>
+      <CardContent>
+        {loadError ? (
+          <p className="rounded-lg border border-destructive/40 bg-destructive/10 px-4 py-3 text-sm text-destructive">
+            Could not load your add-ons. Please try again, or open Manage plan.
+          </p>
+        ) : addons.length === 0 ? (
+          <p className="py-6 text-center text-sm text-muted-foreground">
+            No add-ons on your plan. Open Manage plan to see what is available.
+          </p>
+        ) : (
+          <ul className="space-y-3">
+            {addons.map((a) => (
+              <li key={a.id} className="flex items-center justify-between gap-3 rounded-lg border border-border p-4">
+                <div>
+                  <p className="font-medium">{a.name}</p>
+                  {a.description && <p className="text-xs text-muted-foreground">{a.description}</p>}
                 </div>
-              ))}
-            </div>
-          </CardContent>
-        </Card>
-      )}
-
-      {/* Available Add-ons */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Package className="size-5" />
-            Available Add-ons
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          {availableAddons.length === 0 ? (
-            <div className="text-center py-8">
-              <Package className="size-8 text-muted-foreground mx-auto mb-2" />
-              <p className="text-sm text-muted-foreground">No add-on products available at this time.</p>
-            </div>
-          ) : (
-            <div className="grid gap-4 sm:grid-cols-2">
-              {availableAddons
-                .filter((a) => !activeCodes.has(a.code))
-                .map((addon) => (
-                  <div
-                    key={addon.code}
-                    className="rounded-lg border border-border p-4 flex flex-col justify-between"
-                  >
-                    <div className="mb-3">
-                      <p className="font-medium">{addon.name}</p>
-                      <p className="text-xs text-muted-foreground mt-1">{addon.description}</p>
-                    </div>
-                    <div className="flex items-center justify-between">
-                      <span className="text-sm font-bold">KES {addon.monthly_price}/mo</span>
-                      <Button
-                        size="sm"
-                        disabled={subscribing === addon.code}
-                        onClick={() => handleSubscribe(addon.code)}
-                      >
-                        {subscribing === addon.code ? (
-                          <Loader2 className="size-3 animate-spin mr-1" />
-                        ) : (
-                          <Plus className="size-3 mr-1" />
-                        )}
-                        Add
-                      </Button>
-                    </div>
-                  </div>
-                ))}
-              {availableAddons.filter((a) => !activeCodes.has(a.code)).length === 0 && (
-                <p className="text-sm text-muted-foreground col-span-2 text-center py-4">
-                  All available add-ons are already active.
-                </p>
-              )}
-            </div>
-          )}
-        </CardContent>
-      </Card>
-    </div>
+                <div className="text-right text-sm">
+                  {a.unit_price_kes != null && (
+                    <p className="font-bold">
+                      KES {(a.unit_price_kes * (a.quantity || 1)).toLocaleString()}
+                      {a.billing_cycle ? ` / ${a.billing_cycle}` : ""}
+                    </p>
+                  )}
+                  {a.status && <p className="text-xs capitalize text-muted-foreground">{a.status}</p>}
+                </div>
+              </li>
+            ))}
+          </ul>
+        )}
+      </CardContent>
+    </Card>
   );
 }
 

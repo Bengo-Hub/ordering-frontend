@@ -11,8 +11,8 @@ export type ItemType = "GOODS" | "SERVICE" | "RECIPE" | "INGREDIENT" | "VOUCHER"
 export interface MenuItem {
   id: string;
   /** Raw inventory-api item UUID (distinct from `id`, which prefers the SKU when present).
-   *  Needed to cross-reference pos-api promotion rule `scope_ids` (item-scoped deals), which
-   *  reference inventory-api item IDs, not SKUs. */
+   *  pos-api promotion rules reference SKUs (matched through `id`); the UUID is kept for
+   *  older rules and inventory links. */
   inventoryId?: string;
   name: string;
   description: string;

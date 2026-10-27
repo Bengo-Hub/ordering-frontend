@@ -1,7 +1,7 @@
 "use client";
 
 import Image from "next/image";
-import { mediaImageLoaderFor } from "@bengo-hub/shared-ui-lib/media";
+import { mediaLoaderProps } from "@/lib/media-loader";
 import { useEffect, useState } from "react";
 
 import { brand } from "@/config/brand";
@@ -36,7 +36,7 @@ export function TenantLogo({ src, alt, className, priority = false }: TenantLogo
   return (
     <Image
       src={imgSrc}
-      loader={mediaImageLoaderFor(imgSrc)}
+      {...mediaLoaderProps(imgSrc)}
       alt={alt}
       width={160}
       height={40}

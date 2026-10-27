@@ -46,3 +46,39 @@ export function useCountdown(endAt: string | null | undefined, intervalMs = 30_0
 
   return label;
 }
+
+export interface CountdownParts {
+  hours: number;
+  minutes: number;
+  seconds: number;
+}
+
+/**
+ * Hours, minutes and seconds left until `endAt`, ticking every second, for a hero timer. Only
+ * ever fed a promotion's real end_at; null when there is none or it has passed, so callers
+ * render no timer rather than an invented one.
+ */
+export function useCountdownParts(endAt: string | null | undefined): CountdownParts | null {
+  const [parts, setParts] = useState<CountdownParts | null>(null);
+
+  useEffect(() => {
+    const end = endAt ? new Date(endAt).getTime() : NaN;
+    if (Number.isNaN(end)) {
+      setParts(null);
+      return;
+    }
+    const tick = () => {
+      const left = Math.max(0, Math.floor((end - Date.now()) / 1000));
+      if (left === 0) {
+        setParts(null);
+        return;
+      }
+      setParts({ hours: Math.floor(left / 3600), minutes: Math.floor((left % 3600) / 60), seconds: left % 60 });
+    };
+    tick();
+    const id = setInterval(tick, 1000);
+    return () => clearInterval(id);
+  }, [endAt]);
+
+  return parts;
+}

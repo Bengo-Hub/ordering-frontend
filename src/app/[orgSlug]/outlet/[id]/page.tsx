@@ -274,10 +274,10 @@ function GenericOutletView({ orgSlug, outletId }: { orgSlug: string; outletId: s
             className="object-cover"
             sizes="100vw"
             priority
-            fallbackClassName="bg-gradient-to-br from-primary/20 to-primary/5"
+            fallbackClassName="bg-secondary"
             iconClassName="size-16"
           />
-          <div className="absolute inset-0 bg-gradient-to-t from-background/80 to-transparent" />
+          <div className="absolute inset-0 bg-black/25" />
 
           {/* Back Button */}
           <button

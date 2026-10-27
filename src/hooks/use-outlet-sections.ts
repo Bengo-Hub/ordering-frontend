@@ -13,7 +13,7 @@ interface LocationParam {
  * Parallel TanStack queries for each landing-page outlet section.
  * Each query runs independently so sections load as data arrives.
  */
-export function useOutletSections(location?: LocationParam | null) {
+export function useOutletSections(location?: LocationParam | null, { withAllStores = true } = {}) {
   const orgSlug = useOrgSlug();
 
   const loc: Pick<OutletFilters, "lat" | "lng"> =
@@ -34,8 +34,9 @@ export function useOutletSections(location?: LocationParam | null) {
   // Today's offers
   const todaysOffers = useOutlets(orgSlug, { offers: true, ...loc }, 1, 8);
 
-  // All stores (initial page, larger batch)
-  const allStores = useOutlets(orgSlug, { sort: "relevance", ...loc }, 1, 50);
+  // All stores (initial page). Views that page through stores themselves (the food view's
+  // infinite list) pass withAllStores: false, so the same listing is not fetched twice.
+  const allStores = useOutlets(orgSlug, { sort: "relevance", ...loc }, 1, 50, { enabled: withAllStores });
 
   return { featured, mostReviewed, nearYou, popular, todaysOffers, allStores };
 }

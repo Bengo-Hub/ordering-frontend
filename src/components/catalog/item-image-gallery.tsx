@@ -2,7 +2,7 @@
 
 import { ChevronLeft, ChevronRight, X } from "lucide-react";
 import Image from "next/image";
-import { mediaImageLoaderFor } from "@bengo-hub/shared-ui-lib/media";
+import { mediaLoaderProps } from "@/lib/media-loader";
 import { useCallback, useRef, useState } from "react";
 
 import { UseCaseIllustration } from "@/components/ui/use-case-icon";
@@ -59,7 +59,7 @@ export function ItemImageGallery({ images, alt, useCase }: ItemImageGalleryProps
         >
           <Image
             src={getMediaUrl(images[0])!}
-            loader={mediaImageLoaderFor(getMediaUrl(images[0]))}
+            {...mediaLoaderProps(getMediaUrl(images[0]))}
             alt={alt}
             fill
             className="object-cover"
@@ -91,7 +91,7 @@ export function ItemImageGallery({ images, alt, useCase }: ItemImageGalleryProps
         >
           <Image
             src={getMediaUrl(images[0])!}
-            loader={mediaImageLoaderFor(getMediaUrl(images[0]))}
+            {...mediaLoaderProps(getMediaUrl(images[0]))}
             alt={alt}
             fill
             className="object-cover"
@@ -118,7 +118,7 @@ export function ItemImageGallery({ images, alt, useCase }: ItemImageGalleryProps
                 i === 0 ? "ring-primary" : "ring-transparent hover:ring-primary/50",
               )}
             >
-              <Image src={getMediaUrl(src)!} loader={mediaImageLoaderFor(getMediaUrl(src))} alt={`${alt} ${i + 1}`} fill className="object-cover" sizes="64px" />
+              <Image src={getMediaUrl(src)!} {...mediaLoaderProps(getMediaUrl(src))} alt={`${alt} ${i + 1}`} fill className="object-cover" sizes="64px" />
             </button>
           ))}
         </div>
@@ -188,7 +188,7 @@ function Lightbox({
       >
         <Image
           src={getMediaUrl(images[index])!}
-          loader={mediaImageLoaderFor(getMediaUrl(images[index]))}
+          {...mediaLoaderProps(getMediaUrl(images[index]))}
           alt={`${alt} ${index + 1}`}
           fill
           className="object-contain"

@@ -78,7 +78,6 @@ export function ServicesHomeView() {
         title={`Featured ${copy.outletLabelPlural}`}
         subtitle="Promoted picks and top rated"
         icon={<Zap className="size-5" />}
-        seeAllHref={orgRoute(orgSlug, "/catalog?filter=featured")}
         outlets={featuredOutlets}
         isLoading={featured.isLoading}
         variant="scroll"
@@ -95,7 +94,6 @@ export function ServicesHomeView() {
             : "Based on your location"
         }
         icon={<MapPin className="size-5" />}
-        seeAllHref={orgRoute(orgSlug, "/catalog?sort=distance")}
         outlets={nearYouOutlets}
         isLoading={nearYou.isLoading}
         variant="logos"
@@ -109,7 +107,6 @@ export function ServicesHomeView() {
         title="Popular in your area"
         subtitle="Highest-rated near you"
         icon={<Star className="size-5" />}
-        seeAllHref={orgRoute(orgSlug, "/catalog?sort=rating&min_rating=4")}
         outlets={popularOutlets}
         isLoading={popular.isLoading}
         variant="scroll"

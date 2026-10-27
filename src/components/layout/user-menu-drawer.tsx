@@ -17,7 +17,7 @@ import {
   Zap
 } from "lucide-react";
 import Image from "next/image";
-import { mediaImageLoaderFor } from "@bengo-hub/shared-ui-lib/media";
+import { mediaLoaderProps } from "@/lib/media-loader";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 
@@ -242,7 +242,7 @@ export function UserMenuDrawer({ open, onOpenChange }: UserMenuDrawerProps) {
                 {avatarUrl ? (
                   <Image
                     src={avatarUrl}
-                    loader={mediaImageLoaderFor(avatarUrl)}
+                    {...mediaLoaderProps(avatarUrl)}
                     alt="Profile"
                     width={56}
                     height={56}
@@ -322,15 +322,12 @@ export function UserMenuDrawer({ open, onOpenChange }: UserMenuDrawerProps) {
 
           {/* Footer Items */}
           <ul className="space-y-1 py-2">
+            {/* Business sign-up starts on the Codevertex website (plans and onboarding). The
+                /business and /add-outlet links this replaced pointed at pages that never existed. */}
             <li>
-              <Link href={orgRoute(orgSlug, "/business")} onClick={handleClose} className="block px-5 py-2 text-sm font-medium text-foreground hover:underline">
-                Create a business account
-              </Link>
-            </li>
-            <li>
-              <Link href={orgRoute(orgSlug, "/add-outlet")} onClick={handleClose} className="block px-5 py-2 text-sm font-medium text-foreground hover:underline">
+              <a href="https://codevertexafrica.com/pricing" target="_blank" rel="noopener noreferrer" onClick={handleClose} className="block px-5 py-2 text-sm font-medium text-foreground hover:underline">
                 {copy.addOutletCTA}
-              </Link>
+              </a>
             </li>
             <li>
               <a href={`https://riderapp.codevertexafrica.com/join?org=${orgSlug}`} target="_blank" rel="noopener noreferrer" onClick={handleClose} className="block px-5 py-2 text-sm font-medium text-foreground hover:underline">

@@ -93,24 +93,26 @@ export function dealBadge(rule: DealRule | null | undefined): string | null {
   return null;
 }
 
-/** Resolve the (item, matching deal) pairs for a "Top Deals"/"Today's offers" item grid:
- *  cross-references each deal's rule.scope_ids against the loaded catalog items, matching
- *  item-scoped deals by item id/inventoryId and category-scoped deals by categoryId.
- *  "all"-scope deals are skipped here — they're banner-appropriate, not a per-item grid
- *  concern. Shared by every home view that renders a deals grid (retail, food). */
+/** Resolve the (item, matching deal) pairs for a deals grid. Matches the way pos-api applies a
+ *  rule at the till and at checkout: an item rule's scope_ids are SKUs (item.id holds the SKU)
+ *  and a category rule's are category names, both compared without case. Ids are still accepted
+ *  for older rules. "all"-scope deals are skipped (banner material, not a per-item grid).
+ *  Shared by every home view that renders a deals grid. */
 export function resolveDealItems(items: MenuItem[], deals: Deal[]): { item: MenuItem; deal: Deal }[] {
   const out: { item: MenuItem; deal: Deal }[] = [];
   const seen = new Set<string>();
+  const norm = (v: string | undefined | null) => (v ?? "").trim().toLowerCase();
   for (const deal of deals) {
     const rule = deal.rule;
     if (!rule || rule.scopeType === "all") continue;
     if (rule.discountType === "bogo") continue; // doesn't reduce to a single price badge
+    const scope = new Set(rule.scopeIds.map(norm));
     for (const item of items) {
       if (seen.has(item.id)) continue;
       const matches =
         rule.scopeType === "item"
-          ? rule.scopeIds.includes(item.id) || (item.inventoryId != null && rule.scopeIds.includes(item.inventoryId))
-          : rule.scopeIds.includes(item.categoryId);
+          ? scope.has(norm(item.id)) || scope.has(norm(item.inventoryId))
+          : scope.has(norm(item.category)) || scope.has(norm(item.categoryId));
       if (matches) {
         seen.add(item.id);
         out.push({ item, deal });

@@ -51,6 +51,8 @@ export function normalizeOrderingUseCase(useCase?: string | null): OrderingProfi
     case 'ecommerce':
     case 'electronics':
     case 'hardware':
+    case 'grocery':
+    case 'supermarket':
       return 'retail';
     case 'services':
     case 'salon':

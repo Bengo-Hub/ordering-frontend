@@ -1,17 +1,25 @@
 import "@bengo-hub/shared-ui-lib/contact/style.css";
 import "@/styles/globals.css";
 import type { Metadata, Viewport } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
-import type { CSSProperties } from "react";
+import { Bricolage_Grotesque, Figtree, Geist_Mono } from "next/font/google";
 
 import { Toaster } from "@/components/ui/sonner";
 import { brand } from "@/config/brand";
 import { cn } from "@/lib/utils";
 import { AppProviders } from "@/providers/app-providers";
 
-const geistSans = Geist({
+// Figtree for reading, Bricolage Grotesque for headings and prices (the Codevertex type pair).
+const body = Figtree({
   subsets: ["latin"],
-  variable: "--font-geist-sans",
+  variable: "--font-body",
+  display: "swap",
+});
+
+const display = Bricolage_Grotesque({
+  subsets: ["latin"],
+  weight: ["600", "700", "800"],
+  variable: "--font-display",
+  display: "swap",
 });
 
 const geistMono = Geist_Mono({
@@ -62,22 +70,16 @@ export const viewport: Viewport = {
   ],
 };
 
-const brandCssVariables = {
-  "--brand-primary": brand.cssVariables.primary,
-  "--brand-emphasis": brand.cssVariables.emphasis,
-  "--brand-contrast": brand.cssVariables.contrast,
-  "--brand-muted": brand.cssVariables.muted,
-  "--brand-surface": brand.cssVariables.surface,
-  "--brand-dark": brand.cssVariables.dark,
-} satisfies Record<string, string>;
-
+// The platform palette lives in globals.css (:root). It is not repeated as an inline style here:
+// an inline style on <body> redeclared the brand variables below <html>, so the tenant colours
+// BrandThemeSync writes on <html> never reached the page.
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
   return (
     <html lang="en" suppressHydrationWarning>
       <body
-        style={brandCssVariables as CSSProperties}
         className={cn(
-          geistSans.variable,
+          body.variable,
+          display.variable,
           geistMono.variable,
           "font-sans antialiased min-h-[100dvh] overflow-x-hidden",
         )}

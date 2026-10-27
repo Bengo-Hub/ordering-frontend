@@ -17,6 +17,9 @@ export interface ResolvedOrderingConfig {
   config: OrderingConfig;
   /** Industry terminology strings. */
   copy: UseCaseCopy;
+  /** True while the tenant config is still loading and nothing else names the vertical, so the
+   *  page can wait instead of flashing the generic layout before the real one. */
+  resolving: boolean;
 }
 
 /**
@@ -36,7 +39,7 @@ export interface ResolvedOrderingConfig {
  * (use-tenant-config.ts) whose only other job (a `copy` lookup) duplicated this one.
  */
 export function useOrderingConfig(override?: string | null): ResolvedOrderingConfig {
-  const { data: brandConfig } = useBrandConfig();
+  const { data: brandConfig, isLoading: brandLoading } = useBrandConfig();
   const selectedOutlet = useOutletFilterStore((s) => s.selectedOutlet);
   const setTenantUseCase = useDiningModeStore((s) => s.setTenantUseCase);
 
@@ -52,13 +55,16 @@ export function useOrderingConfig(override?: string | null): ResolvedOrderingCon
     }
   }, [override, brandConfig?.useCase, setTenantUseCase]);
 
+  const resolving = brandLoading && !override?.trim() && !selectedOutlet?.useCase?.trim();
+
   return useMemo<ResolvedOrderingConfig>(
     () => ({
       useCase,
       profile: normalizeOrderingUseCase(useCase),
       config: orderingConfigFor(useCase),
       copy: getUseCaseCopy(useCase),
+      resolving,
     }),
-    [useCase],
+    [useCase, resolving],
   );
 }

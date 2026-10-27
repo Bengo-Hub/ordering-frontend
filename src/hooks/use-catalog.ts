@@ -169,11 +169,12 @@ export function useOutlets(
   filters?: OutletFilters,
   page = 1,
   limit = 20,
+  { enabled = true }: { enabled?: boolean } = {},
 ) {
   return useQuery({
     queryKey: [tenantSlug, ...outletKeys.list(filters), page, limit],
     queryFn: () => fetchOutlets(tenantSlug, filters, page, limit),
-    enabled: !!tenantSlug,
+    enabled: !!tenantSlug && enabled,
     placeholderData: keepPreviousData,
     staleTime: CATALOG_STALE_MS,
     gcTime: CATALOG_GC_MS,

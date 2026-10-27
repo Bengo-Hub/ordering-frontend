@@ -10,12 +10,18 @@
     "liga" 1,
     "kern" 1;
   text-rendering: optimizeLegibility;
-  --brand-primary: 107 42 27;
-  --brand-emphasis: 243 106 12;
+  /* Codevertex marketplace palette (website scene): plum, gold, mist, night. A tenant's own
+     colours replace --brand-primary/--brand-emphasis and --primary at runtime (BrandThemeSync). */
+  --brand-primary: 155 44 107;
+  --brand-emphasis: 200 150 62;
   --brand-contrast: 255 255 255;
-  --brand-muted: 249 237 229;
-  --brand-surface: 244 230 220;
-  --brand-dark: 67 23 13;
+  --brand-muted: 248 240 244;
+  --brand-surface: 253 231 241;
+  --brand-dark: 30 15 27;
+  --night: 30 15 27;
+  --gold: 200 150 62;
+  --mist: 248 240 244;
+  --sale: 220 38 38;
 }
 
 * {
@@ -69,58 +75,60 @@ button:focus-visible {
 }
 
 @layer base {
+  /* Light: mist page, white cards, ink text, plum primary (#9B2C6B, 7:1 on white).
+     Dark: night page, lifted plum (#D46AA4) so text on it and links stay readable. */
   :root {
-    --background: 24 62% 94%;
-    --foreground: 18 36% 18%;
-    --card: 24 62% 96%;
-    --card-foreground: 18 36% 18%;
-    --popover: 24 62% 96%;
-    --popover-foreground: 18 36% 18%;
-    --primary: 24 91% 50%;
+    --background: 330 36% 96%;
+    --foreground: 263 13% 12%;
+    --card: 0 0% 100%;
+    --card-foreground: 263 13% 12%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 263 13% 12%;
+    --primary: 326 56% 39%;
     --primary-foreground: 0 0% 100%;
-    --secondary: 24 45% 88%;
-    --secondary-foreground: 18 36% 18%;
-    --muted: 24 40% 86%;
-    --muted-foreground: 18 20% 40%;
-    --accent: 24 62% 94%;
-    --accent-foreground: 18 36% 18%;
-    --destructive: 4 84% 48%;
+    --secondary: 330 60% 94%;
+    --secondary-foreground: 315 62% 30%;
+    --muted: 330 30% 93%;
+    --muted-foreground: 275 6% 42%;
+    --accent: 330 60% 94%;
+    --accent-foreground: 315 62% 30%;
+    --destructive: 0 72% 51%;
     --destructive-foreground: 0 0% 100%;
-    --border: 24 35% 82%;
-    --input: 24 35% 82%;
-    --ring: 24 91% 50%;
-    --chart-1: 24 91% 50%;
-    --chart-2: 12 68% 35%;
-    --chart-3: 34 70% 55%;
-    --chart-4: 18 40% 65%;
-    --chart-5: 42 78% 60%;
-    --radius: 0.75rem;
+    --border: 278 16% 90%;
+    --input: 278 16% 86%;
+    --ring: 326 56% 39%;
+    --chart-1: 326 56% 39%;
+    --chart-2: 38 56% 51%;
+    --chart-3: 315 62% 30%;
+    --chart-4: 330 40% 70%;
+    --chart-5: 38 70% 70%;
+    --radius: 1rem;
   }
   .dark {
-    --background: 18 42% 13%;
-    --foreground: 24 82% 95%;
-    --card: 18 38% 17%;
-    --card-foreground: 24 82% 95%;
-    --popover: 18 38% 17%;
-    --popover-foreground: 24 82% 95%;
-    --primary: 24 88% 65%;
-    --primary-foreground: 16 40% 10%;
-    --secondary: 18 34% 24%;
-    --secondary-foreground: 24 82% 95%;
-    --muted: 18 28% 28%;
-    --muted-foreground: 24 46% 82%;
-    --accent: 18 32% 26%;
-    --accent-foreground: 24 82% 95%;
-    --destructive: 3 68% 46%;
+    --background: 312 33% 9%;
+    --foreground: 330 36% 96%;
+    --card: 312 25% 13%;
+    --card-foreground: 330 36% 96%;
+    --popover: 312 25% 13%;
+    --popover-foreground: 330 36% 96%;
+    --primary: 327 55% 62%;
+    --primary-foreground: 312 33% 9%;
+    --secondary: 312 22% 19%;
+    --secondary-foreground: 330 36% 96%;
+    --muted: 312 20% 18%;
+    --muted-foreground: 330 15% 72%;
+    --accent: 312 22% 19%;
+    --accent-foreground: 330 36% 96%;
+    --destructive: 0 68% 55%;
     --destructive-foreground: 0 0% 100%;
-    --border: 18 32% 32%;
-    --input: 18 32% 32%;
-    --ring: 24 88% 65%;
-    --chart-1: 24 88% 65%;
-    --chart-2: 12 68% 45%;
-    --chart-3: 34 70% 55%;
-    --chart-4: 18 45% 70%;
-    --chart-5: 42 78% 60%;
+    --border: 312 20% 22%;
+    --input: 312 20% 26%;
+    --ring: 327 55% 62%;
+    --chart-1: 327 55% 62%;
+    --chart-2: 38 56% 58%;
+    --chart-3: 315 50% 50%;
+    --chart-4: 330 30% 75%;
+    --chart-5: 38 70% 72%;
   }
 }
 
@@ -145,57 +153,24 @@ button:focus-visible {
     touch-action: manipulation;
   }
 
-  /* Brand Utils */
-  .magical-card {
-    position: relative;
-    overflow: hidden;
-    border-radius: 1rem;
-    background-color: color-mix(in srgb, white, transparent 90%);
-    backdrop-filter: blur(12px);
-    border: 1px solid color-mix(in srgb, #ea8022, transparent 80%);
-    transition: all 0.5s ease;
+  /* Display face (Bricolage Grotesque) for headings, numbers and prices. */
+  .font-display {
+    font-family: var(--font-display), var(--font-body), ui-sans-serif, system-ui, sans-serif;
+    letter-spacing: -0.01em;
   }
-
-  .magical-card:hover {
-    border-color: color-mix(in srgb, #ea8022, transparent 50%);
-    box-shadow: 0 0 30px color-mix(in srgb, #ea8022, transparent 70%);
+  .tabular {
+    font-variant-numeric: tabular-nums;
   }
+}
 
-  .electrical-border {
-    position: relative;
-  }
-
-  .electrical-border::after {
-    content: '';
-    position: absolute;
-    inset: -1px;
-    border-radius: inherit;
-    pointer-events: none;
-    background: linear-gradient(90deg, transparent, #ea8022, #ae6221, #d46c1a, transparent);
-    background-size: 200% 100%;
-    animation: wave-move 3s linear infinite;
-    mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
-    mask-composite: exclude;
-    z-index: 10;
-    opacity: 0.2;
-    transition: opacity 0.5s ease;
-  }
-
-  .electrical-border:hover::after {
-    opacity: 0.8;
-    animation-duration: 1.5s;
-  }
-
-  .glass-morphism {
-    backdrop-filter: blur(12px);
-    background-color: color-mix(in srgb, white, transparent 90%);
-    border: 1px solid color-mix(in srgb, #ea8022, transparent 90%);
-    transition: all 0.5s ease;
-  }
-
-  @keyframes wave-move {
-    0% { background-position: 200% 0; }
-    100% { background-position: -200% 0; }
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
   }
 }
 

@@ -133,10 +133,10 @@ export function FoodOutletView({ orgSlug, outletId }: FoodOutletViewProps) {
           className="object-cover"
           sizes="100vw"
           priority
-          fallbackClassName="bg-gradient-to-br from-primary/20 to-primary/5"
+          fallbackClassName="bg-secondary"
           iconClassName="size-16"
         />
-        <div className="absolute inset-0 bg-gradient-to-t from-background/80 to-transparent" />
+        <div className="absolute inset-0 bg-black/25" />
         <button
           onClick={() => router.back()}
           className="absolute left-4 top-4 flex items-center gap-2 rounded-full bg-background/90 px-3 py-2 text-sm font-medium shadow-sm backdrop-blur-sm hover:bg-background"

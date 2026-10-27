@@ -7,6 +7,8 @@
  * pharmacy, manufacturing, e_commerce, warehousing, other.
  */
 
+import { normalizeOrderingUseCase, type OrderingProfile } from "./use-case-config";
+
 export type UseCaseKey =
   | "hospitality"
   | "retail"
@@ -192,13 +194,29 @@ const COPY_MAP: Record<UseCaseKey, UseCaseCopy> = {
   },
 };
 
+/** Copy set for each layout profile, so every raw value the profile accepts gets its words. */
+const PROFILE_COPY: Record<OrderingProfile, UseCaseKey> = {
+  hospitality: "hospitality",
+  quick_service: "quick_service",
+  pharmacy: "pharmacy",
+  retail: "retail",
+  services: "services",
+  wholesale: "warehousing",
+  ticketing: "other",
+  general: "other",
+};
+
 /**
- * Get the copy strings for a given use case.
- * Falls back to "other" for unknown use cases.
+ * Get the copy strings for a given use case. A value with its own entry (e_commerce,
+ * manufacturing) uses it; any other value goes through normalizeOrderingUseCase, the same
+ * mapping that picks the page layout, so "restaurant", "cafe", "salon" or "electronics" get
+ * restaurant, services or shop words instead of the generic set.
  */
 export function getUseCaseCopy(useCase: string | undefined | null): UseCaseCopy {
-  const key = (useCase ?? "other") as UseCaseKey;
-  return COPY_MAP[key] ?? COPY_MAP.other;
+  const raw = (useCase ?? "").toLowerCase().trim();
+  const own = COPY_MAP[raw as UseCaseKey];
+  if (own) return own;
+  return COPY_MAP[PROFILE_COPY[normalizeOrderingUseCase(raw)]] ?? COPY_MAP.other;
 }
 
 /**

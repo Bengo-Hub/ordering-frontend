@@ -106,8 +106,10 @@ interface PromoBannerCardProps {
 }
 
 function PromoBannerCard({ banner }: PromoBannerCardProps) {
-  const bgColor = banner.backgroundColor || "#f87171"; // Default coral/red
-  const textColor = banner.textColor || "#000000";
+  // A banner's own colours (set on the POS Discounts page) win; otherwise the storefront's dark
+  // night panel with white text, matching the marketplace hero.
+  const custom = !!banner.backgroundColor;
+  const textColor = banner.textColor || (custom ? "#000000" : undefined);
   const countdown = useCountdown(banner.isFlashSale ? banner.endAt : null);
   // A real image gets its own boxed photo area; without one, a separate muted-gray fallback
   // box next to a solid brand-color background looks like two mismatched surfaces glued
@@ -118,11 +120,14 @@ function PromoBannerCard({ banner }: PromoBannerCardProps) {
   return (
     <Link
       href={banner.ctaLink as any}
-      className="group relative flex h-full min-w-[280px] grow overflow-hidden rounded-xl transition-transform hover:scale-[1.01] sm:min-w-[340px]"
-      style={{ backgroundColor: bgColor }}
+      className={cn(
+        "group relative flex h-full min-w-[280px] grow overflow-hidden rounded-3xl transition-transform hover:scale-[1.01] sm:min-w-[340px]",
+        !custom && "bg-night text-white dark:bg-card dark:ring-1 dark:ring-white/10",
+      )}
+      style={custom ? { backgroundColor: banner.backgroundColor } : undefined}
     >
       {/* Text Content */}
-      <div className="relative z-10 flex flex-1 flex-col justify-center p-4 sm:p-6 md:p-8" style={{ color: textColor }}>
+      <div className="relative z-10 flex flex-1 flex-col justify-center p-4 sm:p-6 md:p-8" style={textColor ? { color: textColor } : undefined}>
         {banner.isFlashSale && (
           <div className="mb-1.5 flex items-center gap-2">
             <span className="inline-flex items-center gap-1 rounded-full bg-destructive px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-destructive-foreground">
@@ -136,7 +141,7 @@ function PromoBannerCard({ banner }: PromoBannerCardProps) {
             )}
           </div>
         )}
-        <h3 className="text-lg font-bold leading-tight sm:text-2xl md:text-3xl">{banner.title}</h3>
+        <h3 className="font-display text-lg font-bold leading-tight sm:text-2xl md:text-3xl">{banner.title}</h3>
         <p className="mt-1 max-w-md text-xs opacity-90 sm:mt-2 sm:text-sm md:text-base">{banner.subtitle}</p>
         {banner.priceBadge && (
           <div className="mt-3">
@@ -149,7 +154,7 @@ function PromoBannerCard({ banner }: PromoBannerCardProps) {
           <Button
             variant="secondary"
             size="sm"
-            className="mt-4 w-fit bg-white text-black hover:bg-white/90"
+            className={cn("mt-4 w-fit rounded-full font-semibold", custom ? "bg-white text-black hover:bg-white/90" : "bg-gold text-night hover:bg-gold/90")}
           >
             {banner.ctaText}
           </Button>

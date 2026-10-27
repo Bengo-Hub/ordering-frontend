@@ -1,7 +1,7 @@
 "use client";
 
 import Image from "next/image";
-import { mediaImageLoaderFor } from "@bengo-hub/shared-ui-lib/media";
+import { mediaLoaderProps } from "@/lib/media-loader";
 import { useEffect, useState } from "react";
 
 import { Skeleton } from "@/components/ui/skeleton";
@@ -66,7 +66,7 @@ export function ImageWithFallback({
       <div
         className={cn(
           fill && "absolute inset-0",
-          "flex items-center justify-center bg-gradient-to-br from-muted to-muted/50",
+          "flex items-center justify-center bg-muted",
           !fill && "size-full",
           fallbackClassName,
         )}
@@ -79,7 +79,7 @@ export function ImageWithFallback({
 
   const imageProps = {
     src: resolved,
-    loader: mediaImageLoaderFor(resolved),
+    ...mediaLoaderProps(resolved),
     alt,
     onLoad: () => setIsLoaded(true),
     onError: () => setLoadError(true),

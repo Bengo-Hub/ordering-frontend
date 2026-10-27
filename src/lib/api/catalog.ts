@@ -286,6 +286,12 @@ interface BackendOutlet {
   estimated_time_minutes?: number;
   distance_km?: number;
   deliverable?: boolean;
+  // The discovery listing sends these in snake_case (outlet_discovery.go); reading only the
+  // camelCase useCase lost every listing's vertical and offer badge.
+  use_case?: string;
+  has_offers?: boolean;
+  promo_badge?: string;
+  promo_text?: string;
 }
 
 /** Card label for the listing fee: "free", a number, "from N", or "not-deliverable". */
@@ -315,7 +321,8 @@ function backendOutletToOutlet(o: BackendOutlet): Outlet {
     // regardless of its real business type. Callers with tenant context
     // (e.g. the homepage) should fall back to the tenant's own resolved
     // use_case instead of a hardcoded vertical.
-    businessType: (o.useCase as Outlet["businessType"] | undefined) ?? undefined,
+    businessType: ((o.useCase ?? o.use_case) as Outlet["businessType"] | undefined) ?? undefined,
+    ...(o.has_offers ? { offerBadge: o.promo_badge || o.promo_text || "Offer" } : {}),
     // Per-outlet booking deposit % (drives the deposit-at-checkout breakdown for
     // ticket/appointment carts). Absent/undefined → treated as 0 (pay in full).
     ...(o.bookingDepositPercent != null ? { bookingDepositPercent: o.bookingDepositPercent } : {}),

@@ -8,7 +8,6 @@ import {
   GiftIcon,
   Loader2,
   ShoppingBagIcon,
-  SparklesIcon,
   StarIcon,
   TrendingUpIcon,
   UtensilsIcon,
@@ -157,7 +156,7 @@ export default function CustomerDashboardPage() {
                 <CardContent>
                   <div className="flex flex-col items-center gap-4 py-6 text-center">
                     <div className="flex size-16 items-center justify-center rounded-full bg-muted">
-                      <SparklesIcon className="size-8 text-muted-foreground" />
+                      <GiftIcon className="size-8 text-muted-foreground" />
                     </div>
                     <div>
                       <p className="font-semibold text-foreground">Loyalty Program</p>
@@ -190,7 +189,7 @@ export default function CustomerDashboardPage() {
                   /* Not registered — join CTA */
                   <div className="flex flex-col items-center gap-4 py-6 text-center">
                     <div className="flex size-16 items-center justify-center rounded-full bg-brand-emphasis/10">
-                      <SparklesIcon className="size-8 text-brand-emphasis" />
+                      <GiftIcon className="size-8 text-brand-emphasis" />
                     </div>
                     <div>
                       <p className="font-semibold text-foreground">Join the Loyalty Program</p>
@@ -220,7 +219,7 @@ export default function CustomerDashboardPage() {
                       {registerLoyalty.isPending ? (
                         <><Loader2 className="mr-2 size-4 animate-spin" />Joining…</>
                       ) : (
-                        <><SparklesIcon className="mr-2 size-4" />Join Now — It&apos;s Free</>
+                        <><GiftIcon className="mr-2 size-4" />Join free</>
                       )}
                     </Button>
                   </div>
@@ -264,7 +263,7 @@ export default function CustomerDashboardPage() {
                     {progress === null && (
                       <div className="rounded-xl border border-border bg-muted/20 p-3 flex items-center gap-2">
                         <BadgeCheckIcon className="size-5 text-brand-emphasis shrink-0" />
-                        <p className="text-sm font-medium">You&apos;ve reached Platinum status — the highest tier!</p>
+                        <p className="text-sm font-medium">You have reached Platinum, the highest tier.</p>
                       </div>
                     )}
 
@@ -400,7 +399,7 @@ export default function CustomerDashboardPage() {
               <CardHeader>
                 <div className="flex items-center justify-between">
                   <CardTitle className="flex items-center gap-2 text-lg">
-                    <SparklesIcon className="size-5 text-brand-emphasis" />
+                    <GiftIcon className="size-5 text-brand-emphasis" />
                     Points Activity
                   </CardTitle>
                   <Button variant="ghost" size="sm" asChild>

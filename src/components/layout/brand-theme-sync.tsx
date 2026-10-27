@@ -2,35 +2,25 @@
 
 import { useEffect } from "react";
 import { useBrandConfig } from "@/hooks/use-brand";
-
-/** Converts hex (#rrggbb or rrggbb) to space-separated "r g b" for CSS variables. */
-function hexToRgbTriplet(hex: string): string {
-  const trimmed = hex.replace(/^#/, "").trim();
-  if (!/^[0-9a-fA-F]{6}$/.test(trimmed)) return "107 42 27"; // fallback
-  const r = parseInt(trimmed.slice(0, 2), 16);
-  const g = parseInt(trimmed.slice(2, 4), 16);
-  const b = parseInt(trimmed.slice(4, 6), 16);
-  return `${r} ${g} ${b}`;
-}
+import { brandThemeVariables } from "@/lib/brand-theme";
 
 /**
- * Applies tenant brand colors from GET /api/v1/{tenant}/config to CSS variables
- * when available. Runs client-side only; static brand from layout remains until
- * config loads.
+ * Applies a tenant's brand colours from GET /api/v1/{tenant}/config to the CSS variables on
+ * <html>: the --brand-* tokens and, when the colour is dark enough for white text (WCAG AA),
+ * the shadcn --primary/--ring tokens behind every primary button and link. A colour too light
+ * for white text keeps the platform plum for those, so buttons stay readable. Client-side only;
+ * the platform palette from globals.css shows until the config loads.
  */
 export function BrandThemeSync() {
   const { data } = useBrandConfig();
 
   useEffect(() => {
-    if (!data?.primaryColor) return;
+    const vars = brandThemeVariables(data?.primaryColor, data?.secondaryColor);
     const root = document.documentElement;
-    root.style.setProperty("--brand-primary", hexToRgbTriplet(data.primaryColor));
-    if (data.secondaryColor) {
-      root.style.setProperty("--brand-emphasis", hexToRgbTriplet(data.secondaryColor));
-    }
+    const names = Object.keys(vars);
+    for (const name of names) root.style.setProperty(name, vars[name]);
     return () => {
-      root.style.removeProperty("--brand-primary");
-      root.style.removeProperty("--brand-emphasis");
+      for (const name of names) root.style.removeProperty(name);
     };
   }, [data?.primaryColor, data?.secondaryColor]);
 

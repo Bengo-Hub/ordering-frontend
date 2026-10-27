@@ -7,7 +7,6 @@ import {
   Crown,
   Gift,
   Loader2,
-  Sparkles,
   Star,
   TrendingUp,
   Trophy,
@@ -36,10 +35,10 @@ const TIER_COLORS: Record<string, string> = {
   platinum: "text-violet-500 dark:text-violet-400",
 };
 const TIER_BG: Record<string, string> = {
-  bronze: "from-amber-50 to-orange-50 dark:from-amber-950/30 dark:to-orange-950/30",
-  silver: "from-slate-50 to-gray-50 dark:from-slate-950/30 dark:to-gray-950/30",
-  gold: "from-yellow-50 to-amber-50 dark:from-yellow-950/30 dark:to-amber-950/30",
-  platinum: "from-violet-50 to-purple-50 dark:from-violet-950/30 dark:to-purple-950/30",
+  bronze: "bg-amber-50 dark:bg-amber-950/30",
+  silver: "bg-slate-50 dark:bg-slate-950/30",
+  gold: "bg-gold/15",
+  platinum: "bg-secondary",
 };
 
 function tierIcon(tier: string) {
@@ -51,7 +50,7 @@ function tierIcon(tier: string) {
     case "silver":
       return <Star className="size-6" />;
     default:
-      return <Sparkles className="size-6" />;
+      return <Gift className="size-6" />;
   }
 }
 
@@ -99,7 +98,7 @@ export default function LoyaltyPage() {
           ) : (
             <>
               {/* Hero Balance Card */}
-              <Card className={cn("overflow-hidden bg-gradient-to-br", TIER_BG[tier] ?? TIER_BG.bronze)}>
+              <Card className={cn("overflow-hidden", TIER_BG[tier] ?? TIER_BG.bronze)}>
                 <CardContent className="py-8">
                   <div className="flex flex-col items-center gap-4 text-center">
                     <div className={cn("flex size-16 items-center justify-center rounded-full bg-white/60 dark:bg-white/10", TIER_COLORS[tier])}>

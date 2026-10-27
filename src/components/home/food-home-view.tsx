@@ -23,7 +23,7 @@ import {
   CategoryCarousel,
   type Category,
 } from "@/components/category/category-carousel";
-import { toCardProps } from "@/components/home/home-helpers";
+import { toCardProps, toOutletFilters } from "@/components/home/home-helpers";
 import { PickupLayout } from "@/components/pickup/pickup-layout";
 import { FilterBar, defaultFilters, type ActiveFilters } from "@/components/layout/filter-bar";
 import { SiteShell } from "@/components/layout/site-shell";
@@ -65,15 +65,24 @@ export function FoodHomeView() {
   );
 
   // ------- Section queries (parallel) -------
-  const { featured, mostReviewed, nearYou, popular, todaysOffers, allStores } =
-    useOutletSections(location);
+  const { featured, mostReviewed, nearYou, popular, todaysOffers } =
+    useOutletSections(location, { withAllStores: false });
 
-  // ------- All Stores infinite scroll -------
-  const allStoresInfinite = useInfiniteOutlets(orgSlug, { sort: "relevance", ...( location ? { lat: location.lat, lng: location.lng } : {}) }, 20);
+  // ------- All stores: one paged list, narrowed by the filter bar -------
+  // Any active filter turns the page into a results view: the rails hide and the list below
+  // shows only matching stores.
+  const filtersActive = JSON.stringify(filters) !== JSON.stringify(defaultFilters);
+  const outletFilters = useMemo(() => toOutletFilters(filters, deliveryLocation), [filters, deliveryLocation]);
+  const allStoresInfinite = useInfiniteOutlets(
+    orgSlug,
+    { sort: "relevance", ...(location ? { lat: location.lat, lng: location.lng } : {}), ...outletFilters },
+    20,
+  );
 
   // ------- Featured items (menu items, not outlets) -------
-  const firstOutletId = allStores.data?.data?.[0]?.id ?? "";
-  const firstOutletName = allStores.data?.data?.[0]?.name ?? "";
+  const firstOutlet = allStoresInfinite.data?.pages?.[0]?.data?.[0];
+  const firstOutletId = firstOutlet?.id ?? "";
+  const firstOutletName = firstOutlet?.name ?? "";
   const { profile, useCase: effectiveUseCase } = useOrderingConfig();
   const { data: categoriesData } = useCategories(orgSlug, firstOutletId || undefined, effectiveUseCase);
   const { data: featuredData } = useFeaturedItems(orgSlug, firstOutletId || undefined, 10);
@@ -104,15 +113,13 @@ export function FoodHomeView() {
   const popularOutlets = useMemo(() => mapOutlets(popular.data), [popular.data, mapOutlets]);
   const todaysOffersOutlets = useMemo(() => mapOutlets(todaysOffers.data), [todaysOffers.data, mapOutlets]);
 
-  // All stores: combine infinite pages or fall back to section query
-  const allStoresOutlets = useMemo(() => {
-    if (allStoresInfinite.data?.pages) {
-      return allStoresInfinite.data.pages.flatMap((page) =>
+  const allStoresOutlets = useMemo(
+    () =>
+      allStoresInfinite.data?.pages.flatMap((page) =>
         page.data.map((o) => toCardProps(o, orgSlug, effectiveUseCase)),
-      );
-    }
-    return mapOutlets(allStores.data);
-  }, [allStoresInfinite.data, allStores.data, mapOutlets, orgSlug, effectiveUseCase]);
+      ) ?? [],
+    [allStoresInfinite.data, orgSlug, effectiveUseCase],
+  );
 
   const featuredItems: FeaturedItemProps[] = useMemo(
     () =>
@@ -261,6 +268,9 @@ export function FoodHomeView() {
         </div>
       </section>
 
+      {/* Rails show while browsing; any active filter hides them so the results are what's seen. */}
+      {!filtersActive && (
+      <>
       {/* Promo Banners — active pos-api-sourced promotions flagged for the storefront */}
       {promoBanners != null && promoBanners.length > 0 && (
         <section className="bg-background py-4 sm:py-6">
@@ -281,7 +291,7 @@ export function FoodHomeView() {
                 <p className="text-xs text-muted-foreground sm:text-sm">Menu items on sale right now</p>
               </div>
               <Button variant="ghost" size="sm" className="h-9 text-primary" asChild>
-                <Link href={orgRoute(orgSlug, "/catalog?filter=deals")}>See all</Link>
+                <Link href={orgRoute(orgSlug, "/catalog?filter=flash_sale")}>See all</Link>
               </Button>
             </div>
             <FeaturedItemsCarousel>
@@ -307,7 +317,7 @@ export function FoodHomeView() {
                 </p>
               </div>
               <Button variant="ghost" size="sm" className="h-9 text-primary" asChild>
-                <Link href={orgRoute(orgSlug, "/catalog?featured=true")}>See all</Link>
+                <Link href={orgRoute(orgSlug, "/catalog")}>See all</Link>
               </Button>
             </div>
             <FeaturedItemsCarousel>
@@ -324,7 +334,6 @@ export function FoodHomeView() {
         title="Featured"
         subtitle="Promoted stores and top picks"
         icon={<Zap className="size-5" />}
-        seeAllHref={orgRoute(orgSlug, "/catalog?filter=featured")}
         outlets={featuredOutlets}
         isLoading={featured.isLoading}
         variant="scroll"
@@ -337,7 +346,6 @@ export function FoodHomeView() {
         title="Most reviewed"
         subtitle="Loved by the community"
         icon={<Star className="size-5" />}
-        seeAllHref={orgRoute(orgSlug, "/catalog?sort=rating")}
         outlets={mostReviewedOutlets}
         isLoading={mostReviewed.isLoading}
         variant="scroll"
@@ -355,7 +363,6 @@ export function FoodHomeView() {
             : "Based on your location"
         }
         icon={<MapPin className="size-5" />}
-        seeAllHref={orgRoute(orgSlug, "/catalog?sort=distance")}
         outlets={nearYouOutlets}
         isLoading={nearYou.isLoading}
         variant="logos"
@@ -368,7 +375,6 @@ export function FoodHomeView() {
         title="Popular in your area"
         subtitle="Highest-rated stores nearby"
         icon={<TrendingUp className="size-5" />}
-        seeAllHref={orgRoute(orgSlug, "/catalog?sort=rating&min_rating=4")}
         outlets={popularOutlets}
         isLoading={popular.isLoading}
         variant="scroll"
@@ -382,7 +388,6 @@ export function FoodHomeView() {
         title="Today's offers"
         subtitle="Special deals just for today"
         icon={<Tag className="size-5" />}
-        seeAllHref={orgRoute(orgSlug, "/catalog?filter=offers")}
         outlets={todaysOffersOutlets}
         isLoading={todaysOffers.isLoading}
         variant="scroll"
@@ -394,7 +399,6 @@ export function FoodHomeView() {
       <OutletSection
         title="Top 10 local spots"
         subtitle="Neighbourhood favourites"
-        seeAllHref={orgRoute(orgSlug, "/catalog?sort=rating")}
         outlets={mostReviewedOutlets.slice(0, 10)}
         isLoading={mostReviewed.isLoading}
         variant="numbered"
@@ -403,19 +407,29 @@ export function FoodHomeView() {
         className="bg-muted/30"
       />
 
-      {/* All stores */}
+      </>
+      )}
+
+      {/* All stores (or the filtered results) */}
       <section className="py-4 sm:py-6">
         <div className="mx-auto w-full max-w-6xl px-3 sm:px-4 lg:px-8">
           <div className="mb-3 flex items-center justify-between sm:mb-4">
             <div>
-              <h2 className="text-base font-bold text-foreground sm:text-xl">All stores</h2>
+              <h2 className="font-display text-base font-bold text-foreground sm:text-xl">
+                {filtersActive ? "Matching stores" : "All stores"}
+              </h2>
               <p className="text-xs text-muted-foreground sm:text-sm">
-                Browse everything available
+                {filtersActive ? "Stores that match your filters" : "Browse everything available"}
               </p>
             </div>
+            {filtersActive && (
+              <Button variant="ghost" size="sm" className="h-9 text-primary" onClick={() => setFilters(defaultFilters)}>
+                Clear filters
+              </Button>
+            )}
           </div>
 
-          {allStores.isLoading ? (
+          {allStoresInfinite.isLoading ? (
             <div className="grid grid-cols-2 gap-3 sm:gap-4 md:grid-cols-3 xl:grid-cols-4">
               {Array.from({ length: 8 }).map((_, i) => (
                 <div key={i} className="overflow-hidden rounded-xl">

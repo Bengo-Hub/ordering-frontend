@@ -14,7 +14,11 @@ import { ServicesHomeView } from "@/components/home/services-home-view";
 import { useOrderingConfig } from "@/hooks/use-ordering-config";
 
 export default function HomePage() {
-  const { profile } = useOrderingConfig();
+  const { profile, resolving } = useOrderingConfig();
+
+  // Until the tenant's use case is known, show a neutral page instead of the generic services
+  // layout, which used to flash before a shop or restaurant layout replaced it.
+  if (resolving) return <HomeResolving />;
 
   switch (profile) {
     case "hospitality":
@@ -30,4 +34,20 @@ export default function HomePage() {
     default:
       return <ServicesHomeView />;
   }
+}
+
+function HomeResolving() {
+  return (
+    <div className="min-h-dvh bg-background" aria-busy="true" aria-label="Loading the store">
+      <div className="h-16 border-b border-border bg-card" />
+      <div className="mx-auto w-full max-w-7xl space-y-6 px-4 py-6 sm:px-6 lg:px-8">
+        <div className="h-56 animate-pulse rounded-3xl bg-muted" />
+        <div className="grid grid-cols-2 gap-3 sm:grid-cols-4 lg:grid-cols-6">
+          {Array.from({ length: 6 }).map((_, i) => (
+            <div key={i} className="aspect-square animate-pulse rounded-2xl bg-muted" />
+          ))}
+        </div>
+      </div>
+    </div>
+  );
 }

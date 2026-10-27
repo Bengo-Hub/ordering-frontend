@@ -2,13 +2,15 @@ type PaletteKey = "primary" | "emphasis" | "contrast" | "muted" | "surface" | "d
 
 const HEX_COLOR_REGEX = /^#?(?:[0-9a-fA-F]{6})$/;
 
+// Codevertex palette (plum, gold, mist, night), the same as globals.css. Used for theme-color
+// and the manifest; the page colours themselves come from the CSS tokens.
 const defaultPalette: Record<PaletteKey, string> = {
-  primary: "#6b2a1b",
-  emphasis: "#f36a0c",
+  primary: "#9B2C6B",
+  emphasis: "#C8963E",
   contrast: "#ffffff",
-  muted: "#f9ede5",
-  surface: "#f4e6dc",
-  dark: "#43170d",
+  muted: "#F8F0F4",
+  surface: "#FDE7F1",
+  dark: "#1E0F1B",
 };
 
 const sanitizeHex = (value: string | undefined, fallback: string): string => {
@@ -45,24 +47,26 @@ const getPalette = (): Record<PaletteKey, string> => {
 
 const brandPalette = getPalette();
 
-const brandName = process.env.NEXT_PUBLIC_BRAND_NAME?.trim() || "Order App";
-const brandShortName = process.env.NEXT_PUBLIC_BRAND_SHORT_NAME?.trim() || "Order App";
+const brandName = process.env.NEXT_PUBLIC_BRAND_NAME?.trim() || "Codevertex";
+const brandShortName = process.env.NEXT_PUBLIC_BRAND_SHORT_NAME?.trim() || "Codevertex";
 const brandTagline =
   process.env.NEXT_PUBLIC_BRAND_TAGLINE?.trim() ||
-  "Online ordering platform for delivery and shipping. Fast, reliable, and integrated.";
+  "Shop local stores, restaurants and services. Pay with M-Pesa and track your order to the door.";
 const brandDescription =
   process.env.NEXT_PUBLIC_BRAND_DESCRIPTION?.trim() ||
-  "Multi-business online ordering platform with flexible catalog management, real-time tracking, and seamless payment integration.";
+  "Order from local shops, restaurants, pharmacies and service providers in one place, pay with M-Pesa or card, and follow your order until it arrives.";
 const supportEmail =
   process.env.NEXT_PUBLIC_BRAND_SUPPORT_EMAIL?.trim() || "support@codevertexafrica.com";
 const supportPhone = process.env.NEXT_PUBLIC_BRAND_SUPPORT_PHONE?.trim() || "+254 743 793 901";
 const headquarters =
   process.env.NEXT_PUBLIC_BRAND_HQ?.trim() ||
   "Oginga Road, Pioneer House, Second Floor, Kisumu, Kenya";
-// Generic platform mark (fork+spoon glyph) — NOT a specific tenant's logo. A
-// real tenant's own logo always comes from its branding record (TenantBrand.logoUrl);
-// this is only the last-resort default before any tenant has resolved.
-const logo = process.env.NEXT_PUBLIC_BRAND_LOGO_URL?.trim() || "/icons/icon-512x512.png";
+// Platform marks (the Codevertex tick), NOT a tenant's logo. A tenant's own logo always comes
+// from its branding record (TenantBrand.logoUrl); these brand the marketplace shell and are the
+// last-resort default before a tenant has resolved. logoFull has the wordmark (light and dark).
+const logo = process.env.NEXT_PUBLIC_BRAND_LOGO_URL?.trim() || "/brand/logo-mark.png";
+const logoFull = "/brand/logo-full.png";
+const logoFullOnDark = "/brand/logo-full-light.png";
 
 // Brand defaults are env-configurable per tenant. Backend-managed settings planned for post-MVP.
 export const brand = {
@@ -91,6 +95,8 @@ export const brand = {
   },
   assets: {
     logo,
+    logoFull,
+    logoFullOnDark,
   },
 } as const;
 

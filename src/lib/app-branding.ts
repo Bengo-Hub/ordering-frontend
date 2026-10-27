@@ -19,7 +19,7 @@ const AUTH_API_BASE =
   process.env.NEXT_PUBLIC_AUTH_API_URL ||
   "https://sso.codevertexafrica.com";
 
-export const DEFAULT_THEME_COLOR = "#f97316";
+export const DEFAULT_THEME_COLOR = "#9B2C6B";
 
 export type AppBranding = AppIdentity;
 

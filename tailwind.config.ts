@@ -49,6 +49,12 @@ const config: Config = {
           surface: withOpacityValue("--brand-surface"),
           dark: withOpacityValue("--brand-dark"),
         },
+        // Fixed marketplace colours (not re-themed by a tenant): the dark hero, gold accents,
+        // the mist page tone and the sale red used on discount badges.
+        night: withOpacityValue("--night"),
+        gold: withOpacityValue("--gold"),
+        mist: withOpacityValue("--mist"),
+        sale: withOpacityValue("--sale"),
         neutral: {
           "25": "#fafafa",
           "50": "#f5f5f5",
@@ -102,7 +108,8 @@ const config: Config = {
         },
       },
       fontFamily: {
-        sans: ["var(--font-geist-sans)", ...defaultTheme.fontFamily.sans],
+        sans: ["var(--font-body)", ...defaultTheme.fontFamily.sans],
+        display: ["var(--font-display)", "var(--font-body)", ...defaultTheme.fontFamily.sans],
         mono: ["var(--font-geist-mono)", ...defaultTheme.fontFamily.mono],
       },
       fontSize: {
@@ -167,8 +174,8 @@ const config: Config = {
         "screen-app": "1360px",
       },
       boxShadow: {
-        soft: "0 10px 40px -20px rgba(107, 42, 27, 0.35)",
-        floating: "0 20px 60px -25px rgba(17, 24, 39, 0.35)",
+        soft: "0 10px 30px -18px rgba(30, 15, 27, 0.28)",
+        floating: "0 20px 50px -24px rgba(30, 15, 27, 0.45)",
       },
       transitionTimingFunction: {
         "ease-out-expo": "cubic-bezier(0.16, 1, 0.3, 1)",

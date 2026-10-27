@@ -126,7 +126,16 @@ export async function listAdminOrders(
   slug: string,
   filters?: AdminOrderFilters,
 ): Promise<{ orders: AdminOrder[]; total: number }> {
-  const res = await api.get(`${slug}/admin/orders`, { params: filters });
+  // ordering-backend reads snake_case query keys (payment_status, date_from, date_to); sending the
+  // camelCase field names silently dropped those filters.
+  const { paymentStatus, dateFrom, dateTo, ...rest } = filters ?? {};
+  const params = {
+    ...rest,
+    ...(paymentStatus ? { payment_status: paymentStatus } : {}),
+    ...(dateFrom ? { date_from: dateFrom } : {}),
+    ...(dateTo ? { date_to: dateTo } : {}),
+  };
+  const res = await api.get(`${slug}/admin/orders`, { params });
   const raw = res.data;
   // Backend returns { data: [...], total, limit, page } — normalize to { orders, total }
   const orders: AdminOrder[] = (raw.data ?? raw.orders ?? []).map(normalizeOrder);

@@ -3,7 +3,7 @@
 import { fetchPublicEvent, type PublicEvent } from "@/lib/api/events";
 import { ImageWithFallback } from "@/components/ui/image-with-fallback";
 import { useCartStore } from "@/store/cart";
-import { CalendarDays, Clock, Loader2, MapPin, Minus, Plus, Share2, Sparkles, Ticket } from "lucide-react";
+import { CalendarDays, Clock, Loader2, MapPin, Minus, Plus, Share2, Ticket } from "lucide-react";
 import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
@@ -151,7 +151,7 @@ export default function PublicEventPage() {
               <div className="flex items-start justify-between gap-3">
                 <div className="min-w-0">
                   <p className="font-bold text-foreground truncate">{tier.name}</p>
-                  <p className="mt-0.5 text-lg font-extrabold bg-gradient-to-r from-primary to-primary/70 bg-clip-text text-transparent">
+                  <p className="font-display mt-0.5 text-lg font-extrabold text-primary">
                     {formatMoney(tier.price)}
                   </p>
                   {disabled ? (
@@ -201,9 +201,9 @@ export default function PublicEventPage() {
           <button
             onClick={handleAddToCart}
             disabled={totalSeats === 0}
-            className="w-full flex items-center justify-center gap-2 px-5 py-3.5 rounded-2xl bg-gradient-to-r from-primary to-primary/80 text-primary-foreground font-bold shadow-lg shadow-primary/30 hover:shadow-primary/40 hover:brightness-105 active:scale-[0.99] disabled:opacity-40 disabled:shadow-none disabled:cursor-not-allowed transition-all"
+            className="w-full flex items-center justify-center gap-2 px-5 py-3.5 rounded-full bg-primary text-primary-foreground font-bold hover:bg-primary/90 active:scale-[0.99] disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
           >
-            <Sparkles className="h-4 w-4" />
+            <Ticket className="h-4 w-4" />
             {totalSeats === 0 ? "Select tickets" : "Book now"}
           </button>
         </div>
@@ -213,16 +213,6 @@ export default function PublicEventPage() {
 
   return (
     <div className="relative min-h-screen">
-      {/* Ambient blurred backdrop from the event image — immersive depth */}
-      {event.image_url && (
-        <div
-          aria-hidden
-          className="pointer-events-none fixed inset-0 -z-10 opacity-30 blur-3xl scale-110"
-          style={{ backgroundImage: `url(${event.image_url})`, backgroundSize: "cover", backgroundPosition: "center" }}
-        />
-      )}
-      <div aria-hidden className="pointer-events-none fixed inset-0 -z-10 bg-gradient-to-b from-background/60 via-background/90 to-background" />
-
       <div className="max-w-6xl mx-auto p-4 sm:p-6 lg:p-8">
         {/* ── Hero ───────────────────────────────────────────────────────── */}
         <div className="relative rounded-[1.75rem] overflow-hidden shadow-2xl shadow-black/20 ring-1 ring-white/10 aspect-[16/10] sm:aspect-[21/9]">
@@ -236,12 +226,12 @@ export default function PublicEventPage() {
               priority
             />
           ) : (
-            <div className="absolute inset-0 bg-gradient-to-br from-primary/30 via-primary/10 to-background flex items-center justify-center">
+            <div className="absolute inset-0 bg-night flex items-center justify-center">
               <Ticket className="h-20 w-20 text-primary/40" />
             </div>
           )}
-          {/* Legibility gradient */}
-          <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/35 to-black/10" />
+          {/* Solid scrim so the title stays readable on any photo */}
+          <div className="absolute inset-0 bg-black/45" />
 
           {/* Share (floating, glassy) */}
           <button
@@ -254,7 +244,7 @@ export default function PublicEventPage() {
           {/* Title + meta overlay */}
           <div className="absolute inset-x-0 bottom-0 p-5 sm:p-8 space-y-3">
             <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-primary/90 text-primary-foreground text-[11px] font-bold uppercase tracking-wider shadow-lg">
-              <Sparkles className="h-3 w-3" /> Live Event
+              <Ticket className="h-3 w-3" /> Event
             </span>
             <h1 className="text-3xl sm:text-5xl font-black text-white tracking-tight drop-shadow-lg max-w-3xl leading-[1.05]">
               {event.name}
@@ -286,7 +276,7 @@ export default function PublicEventPage() {
             {event.description && (
               <section className="rounded-3xl border border-border/60 bg-card/50 backdrop-blur-sm p-5 sm:p-6">
                 <h2 className="text-lg font-bold mb-2 flex items-center gap-2">
-                  <Sparkles className="h-4 w-4 text-primary" /> About this event
+                  <CalendarDays className="h-4 w-4 text-primary" /> About this event
                 </h2>
                 <p className="text-sm sm:text-base leading-relaxed text-foreground/80 whitespace-pre-line">
                   {event.description}
@@ -328,13 +318,13 @@ export default function PublicEventPage() {
 
       {/* Mobile sticky checkout bar */}
       {totalSeats > 0 && (
-        <div className="lg:hidden sticky bottom-0 inset-x-0 z-20 p-3 bg-gradient-to-t from-background via-background/95 to-transparent">
+        <div className="lg:hidden sticky bottom-0 inset-x-0 z-20 border-t border-border bg-background p-3">
           <button
             onClick={handleAddToCart}
-            className="w-full flex items-center justify-between gap-3 px-5 py-4 rounded-2xl bg-gradient-to-r from-primary to-primary/80 text-primary-foreground font-bold shadow-xl shadow-primary/30 active:scale-[0.99] transition-transform"
+            className="w-full flex items-center justify-between gap-3 px-5 py-4 rounded-full bg-primary text-primary-foreground font-bold active:scale-[0.99] transition-transform"
           >
             <span className="flex items-center gap-2"><Ticket className="h-5 w-5" /> {totalSeats} ticket{totalSeats !== 1 ? "s" : ""}</span>
-            <span className="flex items-center gap-1.5">{formatMoney(total)} <Sparkles className="h-4 w-4" /></span>
+            <span className="flex items-center gap-1.5">{formatMoney(total)} <Ticket className="h-4 w-4" /></span>
           </button>
         </div>
       )}
