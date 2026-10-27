@@ -38,7 +38,7 @@ NEXT_PUBLIC_CAFE_WEBSITE_URL=https://theurbanloftcafe.com
 
 # App-first UX (Design notes)
 
-- Landing behaviour: the landing page is a feed-first experience — on mobile the app shows the available items / outlet menu immediately (no marketing gate). On desktop it shows the same feed / a prominent search bar and outlet selector.
+- Landing behaviour (2026-10-27): the root `/` is the Codevertex marketplace (stores, live deals, store banners, built from `/marketplace/tenants` and `/marketplace/deals`); each tenant's own storefront is `/{slug}`, laid out for its use case (retail, food or services). Location is asked only when the shopper taps "Use my location". Design tokens, building blocks and the real-data rules for urgency are in `docs/ux-ui.md`.
 - Geolocation: on first visit the app requests geolocation consent. With consent the app auto-selects the nearest outlet; on denial the app falls back to manual location picker.
 - Authentication: OAuth2 entrypoints are minimal and focused on customers. Staff/rider roles are detected after login and redirected to the owning service (`NEXT_PUBLIC_CAFE_WEBSITE_URL` for staff/admin, `NEXT_PUBLIC_LOGISTICS_UI_URL` for riders).
 - Branding & Multi-tenant: the frontend supports per-tenant theming via backend-provided `look_and_feel` settings (logo, colors, copy overrides). Tenant and outlet context is required for all ordering API calls.

@@ -16,28 +16,38 @@ Design and interaction patterns for `ordering.codevertexafrica.com`. Mobile-firs
 - **Icons**: Lucide React
 - **Animations**: Tailwind `transition-*` utilities, Framer Motion for page transitions
 
-### Typography
+### Typography (2026-10-27)
 
-- Primary: System font stack (`-apple-system, BlinkMacSystemFont, 'Segoe UI', ...`)
-- Headings: `font-semibold` or `font-bold`, sizes from `text-lg` to `text-3xl`
-- Body: `text-sm` (14px) on mobile, `text-base` (16px) on desktop
-- Minimum touch-target text: `text-sm` (never smaller for interactive elements)
+- Body: Figtree (`--font-body`, Tailwind `font-sans`). Headings, prices and big numbers: Bricolage Grotesque (`--font-display`, `font-display` class). Both through `next/font` in `app/layout.tsx`.
+- Sentence case, no all-caps eyebrows. Prices use `tabular` (tabular figures).
+- Body `text-sm` on mobile, `text-base` on desktop; interactive text never below `text-sm`.
 
-### Color Tokens
+### Color tokens (2026-10-27, the Codevertex palette of the website storefront scene)
 
-Defined in `tailwind.config.ts`, sourced from tenant brand config API when available:
+Defined in `src/styles/globals.css` (`:root` and `.dark`) and mapped in `tailwind.config.ts`:
 
-| Token | Default | Usage |
-|-------|---------|-------|
-| `primary` | `#8B4513` (Saddle Brown) | CTAs, active states, brand accent |
-| `primary-foreground` | `#FFFFFF` | Text on primary backgrounds |
-| `background` | `#FFFFFF` | Page background |
-| `foreground` | `#1A1A1A` | Primary text |
-| `muted` | `#F5F5F5` | Card backgrounds, subtle fills |
-| `destructive` | `#DC2626` | Errors, remove actions |
-| `success` | `#16A34A` | Success states, order confirmed |
+| Token | Light | Dark | Usage |
+|-------|-------|------|-------|
+| `primary` | plum `#9B2C6B` | `#D46AA4` | CTAs, links, focus ring (white text 7:1) |
+| `background` | mist `#F8F0F4` | night `#1E0F1B` | Page |
+| `card` | white | `#28161F` | Cards |
+| `secondary` | `#FDE7F1` | | Pills, chips, quiet fills |
+| `night`, `gold`, `mist`, `sale` | fixed | fixed | Dark hero panels, gold accents and CTAs on dark, page tone, discount badges |
 
-The `use-brand.ts` hook fetches tenant config and overrides defaults when the backend is available. Fallback to static `config/brand.ts`.
+- A tenant's colours replace `--brand-primary`/`--brand-emphasis`, and `--primary`/`--ring` too when white text on the colour reaches WCAG AA (`lib/brand-theme.ts`, applied by `BrandThemeSync` on `<html>`). A light tenant colour keeps plum for buttons. Before 2026-10-27 an inline style on `<body>` shadowed these, so tenant colours never showed.
+- No gradients, glows, blurred backdrops, sparkle icons or decorative emoji (platform UI policy); photo overlays use a solid scrim (`bg-black/25` to `/45`).
+
+### Storefront building blocks (`src/components/storefront/`)
+
+`SectionHeader` + `Pill`, `StoreCard` (logo shown whole on white), `DealCard` (store badge, struck regular price, saving %, "Only N left" from real stock at 5 or fewer), `CountdownBoxes` / `CountdownText` (only from a promotion's real `end_at`). Images go through `ImageWithFallback` (edge-resized via `mediaLoaderProps`, use-case illustration when missing).
+
+### Root marketplace (`/`, `components/marketplace/marketplace-landing.tsx`)
+
+Header (Codevertex logo, store search, theme), hero, two tiles, "Shop by store" with chips for the store types present, deals, a three-point strip, footer with website links. Real data only: the hero counts down only to a live flash sale's end and otherwise invites browsing with store logos; tiles are live store banners, or plain facts (M-Pesa, tracking) when none exist; the deals section and its nav link appear only when a store runs a promotion. Location is asked only when the shopper taps "Use my location".
+
+### Tenant home (`/[orgSlug]`)
+
+`useOrderingConfig` picks the view from the tenant or outlet use case (`resolving` shows a neutral skeleton until the config loads, so no layout flashes): retail, pharmacy and wholesale get `RetailHomeView`; hospitality and quick service get `FoodHomeView` (filter bar now applies, rails hide while filtering); the rest get `ServicesHomeView`. Copy follows the same mapping (`getUseCaseCopy`). Deals match rules the way pos-api applies them: item rules by SKU, category rules by category name.
 
 ---
 
