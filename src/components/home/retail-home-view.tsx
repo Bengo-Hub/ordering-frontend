@@ -246,9 +246,11 @@ export function RetailHomeView() {
             to sit beside the entire page reads as broken once content below it runs on for
             several unrelated sections. */}
         <div className="md:grid md:grid-cols-[240px_1fr] md:gap-8">
-          {/* Shop by Category — left rail on desktop, drill-in accordion on mobile */}
+          {/* Shop by Category: the left rail from tablet width up. Phones already get the same
+              categories in the header's scrollable category bar, so the rail stays hidden there
+              and the hero and products come first. */}
           {categories.length > 0 && (
-            <aside className="mb-5 md:mb-0">
+            <aside className="hidden md:block">
               <CategorySidebar
                 categories={categories}
                 activeCategory={activeCategory}
