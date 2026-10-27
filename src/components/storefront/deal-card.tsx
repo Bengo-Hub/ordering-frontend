@@ -44,7 +44,8 @@ export function DealCard({
   className,
 }: DealCardProps) {
   const pct = price > 0 ? Math.round(((price - dealPrice) / price) * 100) : 0;
-  const lowStock = availableQuantity != null && availableQuantity > 0 && availableQuantity <= LOW_STOCK;
+  const lowStock =
+    availableQuantity != null && availableQuantity > 0 && availableQuantity <= LOW_STOCK;
 
   return (
     <Link
@@ -70,19 +71,33 @@ export function DealCard({
         )}
         {storeLogo && (
           <span className="absolute bottom-2 right-2 size-10 overflow-hidden rounded-lg bg-white p-0.5 shadow-soft">
-            <ImageWithFallback src={storeLogo} alt="" width={40} height={40} className="size-full object-contain" />
+            <ImageWithFallback
+              src={storeLogo}
+              alt=""
+              width={40}
+              height={40}
+              className="size-full object-contain"
+            />
           </span>
         )}
       </div>
-      <h3 className="mt-2.5 line-clamp-2 text-sm font-semibold leading-snug text-foreground">{name}</h3>
+      <h3 className="mt-2.5 line-clamp-2 text-sm font-semibold leading-snug text-foreground">
+        {name}
+      </h3>
       <p className="line-clamp-1 text-xs text-muted-foreground">{storeName}</p>
       <div className="mt-1.5 flex items-baseline gap-2">
-        <span className="font-display tabular text-base font-bold text-primary sm:text-lg">{money(currency, dealPrice)}</span>
+        <span className="tabular font-display text-base font-bold text-primary sm:text-lg">
+          {money(currency, dealPrice)}
+        </span>
         {dealPrice < price && (
-          <s className="tabular text-xs text-muted-foreground">{Math.round(price).toLocaleString()}</s>
+          <s className="tabular text-xs text-muted-foreground">
+            {Math.round(price).toLocaleString()}
+          </s>
         )}
       </div>
-      {lowStock && <p className="mt-1 text-xs font-semibold text-sale">Only {availableQuantity} left</p>}
+      {lowStock && (
+        <p className="mt-1 text-xs font-semibold text-sale">Only {availableQuantity} left</p>
+      )}
     </Link>
   );
 }

@@ -73,11 +73,7 @@ export function useCatalogItems(
 /**
  * Hook to fetch menu items with infinite scroll
  */
-export function useInfiniteCatalogItems(
-  tenantSlug: string,
-  filters?: MenuFilters,
-  limit = 20,
-) {
+export function useInfiniteCatalogItems(tenantSlug: string, filters?: MenuFilters, limit = 20) {
   return useInfiniteQuery({
     queryKey: [tenantSlug, ...catalogKeys.itemList(filters), "infinite"],
     queryFn: ({ pageParam = 1 }) => fetchMenuItems(tenantSlug, filters, pageParam, limit),
@@ -108,11 +104,7 @@ export function useCatalogItem(tenantSlug: string, id: string) {
 /**
  * Hook to fetch featured menu items
  */
-export function useFeaturedItems(
-  tenantSlug: string,
-  outletId?: string,
-  limit = 10,
-) {
+export function useFeaturedItems(tenantSlug: string, outletId?: string, limit = 10) {
   return useQuery({
     queryKey: [tenantSlug, ...catalogKeys.featured(outletId)],
     queryFn: () => fetchFeaturedItems(tenantSlug, outletId, limit),
@@ -184,11 +176,7 @@ export function useOutlets(
 /**
  * Hook to fetch outlets with infinite scroll
  */
-export function useInfiniteOutlets(
-  tenantSlug: string,
-  filters?: OutletFilters,
-  limit = 20,
-) {
+export function useInfiniteOutlets(tenantSlug: string, filters?: OutletFilters, limit = 20) {
   return useInfiniteQuery({
     queryKey: [tenantSlug, ...outletKeys.list(filters), "infinite"],
     queryFn: ({ pageParam = 1 }) => fetchOutlets(tenantSlug, filters, pageParam, limit),

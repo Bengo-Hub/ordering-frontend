@@ -49,7 +49,10 @@ export function toHslTriplet([r, g, b]: [number, number, number]): string {
   return `${Math.round(h)} ${Math.round(s * 100)}% ${Math.round(l * 100)}%`;
 }
 
-export function brandThemeVariables(primary?: string | null, secondary?: string | null): Record<string, string> {
+export function brandThemeVariables(
+  primary?: string | null,
+  secondary?: string | null,
+): Record<string, string> {
   const vars: Record<string, string> = {};
   const p = parseHex(primary);
   if (p) {

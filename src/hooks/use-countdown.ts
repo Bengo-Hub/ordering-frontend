@@ -73,7 +73,11 @@ export function useCountdownParts(endAt: string | null | undefined): CountdownPa
         setParts(null);
         return;
       }
-      setParts({ hours: Math.floor(left / 3600), minutes: Math.floor((left % 3600) / 60), seconds: left % 60 });
+      setParts({
+        hours: Math.floor(left / 3600),
+        minutes: Math.floor((left % 3600) / 60),
+        seconds: left % 60,
+      });
     };
     tick();
     const id = setInterval(tick, 1000);

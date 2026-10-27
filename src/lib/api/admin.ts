@@ -210,7 +210,11 @@ export async function cancelAdminOrder(
 }
 
 /** Confirm a manual M-Pesa payment (the code matched on the business's M-Pesa statement). */
-export async function verifyOrderPayment(slug: string, orderId: string, reference?: string): Promise<void> {
+export async function verifyOrderPayment(
+  slug: string,
+  orderId: string,
+  reference?: string,
+): Promise<void> {
   await api.post(`${slug}/admin/orders/${orderId}/payment/verify`, { reference });
 }
 
@@ -300,7 +304,9 @@ function normalizeMenuItem(raw: Record<string, unknown>): MenuItem {
     imageUrl: (raw.imageUrl ?? raw.imageUrlOverride ?? raw.image_url ?? "") as string,
     isAvailable: (raw.isAvailable ?? raw.is_available ?? true) as boolean,
     isFeatured: (raw.isFeatured ?? raw.is_featured ?? false) as boolean,
-    preparationTime: (raw.leadTimeMinutes ?? raw.preparationTime ?? undefined) as number | undefined,
+    preparationTime: (raw.leadTimeMinutes ?? raw.preparationTime ?? undefined) as
+      | number
+      | undefined,
     displayOrder: (raw.displayOrder ?? 0) as number,
     createdAt: (raw.createdAt ?? raw.created_at ?? "") as string,
     updatedAt: (raw.updatedAt ?? raw.updated_at ?? "") as string,

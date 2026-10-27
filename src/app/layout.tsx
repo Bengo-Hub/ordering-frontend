@@ -82,7 +82,7 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
           body.variable,
           display.variable,
           geistMono.variable,
-          "font-sans antialiased min-h-[100dvh] overflow-x-hidden",
+          "min-h-[100dvh] overflow-x-hidden font-sans antialiased",
         )}
       >
         <AppProviders>

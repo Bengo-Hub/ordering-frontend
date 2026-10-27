@@ -56,12 +56,18 @@ function toMarketplaceTenant(t: BackendMarketplaceTenant): MarketplaceTenant {
 }
 
 /** One page of storefront tenants, optionally narrowed to a vertical. */
-export async function fetchMarketplaceTenants(useCase?: string, page = 1, limit = 24): Promise<MarketplaceTenantPage> {
+export async function fetchMarketplaceTenants(
+  useCase?: string,
+  page = 1,
+  limit = 24,
+): Promise<MarketplaceTenantPage> {
   const qs = new URLSearchParams({ page: String(page), limit: String(limit) });
   if (useCase) qs.set("use_case", useCase);
-  const res = await api.get<{ data?: BackendMarketplaceTenant[]; total?: number; hasMore?: boolean }>(
-    `marketplace/tenants?${qs.toString()}`,
-  );
+  const res = await api.get<{
+    data?: BackendMarketplaceTenant[];
+    total?: number;
+    hasMore?: boolean;
+  }>(`marketplace/tenants?${qs.toString()}`);
   const body = res.data ?? {};
   return {
     tenants: (body.data ?? []).map(toMarketplaceTenant),
@@ -80,8 +86,21 @@ export interface MarketplaceStore {
 
 export interface MarketplaceDeal {
   store: MarketplaceStore;
-  promotion: { id: string; name: string; endAt: string | null; isFlashSale: boolean; rule: DealRule };
-  item: { sku: string; name: string; imageUrl?: string; price: number; currency: string; availableQuantity?: number };
+  promotion: {
+    id: string;
+    name: string;
+    endAt: string | null;
+    isFlashSale: boolean;
+    rule: DealRule;
+  };
+  item: {
+    sku: string;
+    name: string;
+    imageUrl?: string;
+    price: number;
+    currency: string;
+    availableQuantity?: number;
+  };
 }
 
 export interface MarketplaceBanner {
@@ -115,9 +134,22 @@ interface BackendDeals {
       name: string;
       end_at: string | null;
       is_flash_sale?: boolean;
-      rule: { scope_type: DealRule["scopeType"]; scope_ids: string[] | null; discount_type: DealRule["discountType"]; discount_value: number; max_discount: number };
+      rule: {
+        scope_type: DealRule["scopeType"];
+        scope_ids: string[] | null;
+        discount_type: DealRule["discountType"];
+        discount_value: number;
+        max_discount: number;
+      };
     };
-    item: { sku: string; name: string; image_url?: string; price: number; currency?: string; available_quantity?: number };
+    item: {
+      sku: string;
+      name: string;
+      image_url?: string;
+      price: number;
+      currency?: string;
+      available_quantity?: number;
+    };
   }[];
   banners?: {
     store: BackendStore;
@@ -162,7 +194,9 @@ export async function fetchMarketplaceDeals(): Promise<MarketplaceDeals> {
         ...(d.item.image_url ? { imageUrl: d.item.image_url } : {}),
         price: d.item.price,
         currency: d.item.currency || "KES",
-        ...(d.item.available_quantity != null ? { availableQuantity: d.item.available_quantity } : {}),
+        ...(d.item.available_quantity != null
+          ? { availableQuantity: d.item.available_quantity }
+          : {}),
       },
     })),
     banners: (body.banners ?? []).map((b) => ({

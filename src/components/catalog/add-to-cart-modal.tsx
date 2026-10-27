@@ -40,7 +40,9 @@ export interface AddToCartModalItem {
 
 /** Whether an item needs the modal at all — items with neither variants nor modifiers should
  *  keep instant-adding (unchanged existing behavior), matching Uber Eats' own UX. */
-export function needsAddToCartModal(item: Pick<AddToCartModalItem, "hasVariants" | "modifierGroups">): boolean {
+export function needsAddToCartModal(
+  item: Pick<AddToCartModalItem, "hasVariants" | "modifierGroups">,
+): boolean {
   return !!item.hasVariants || (item.modifierGroups?.length ?? 0) > 0;
 }
 
@@ -76,7 +78,9 @@ export function AddToCartModal({ item, onClose, onAdded }: AddToCartModalProps) 
       if (defaultOptions.length > 0) defaults[group.id] = defaultOptions;
     }
     setModifierSelections(defaults);
-    setSelectedVariantId(item.hasVariants && (item.variants?.length ?? 0) > 0 ? item.variants![0]!.id : null);
+    setSelectedVariantId(
+      item.hasVariants && (item.variants?.length ?? 0) > 0 ? item.variants![0]!.id : null,
+    );
   }, [item]);
 
   const modifierAdjustment = useMemo(() => {
@@ -99,7 +103,9 @@ export function AddToCartModal({ item, onClose, onAdded }: AddToCartModalProps) 
 
   const handleConfirm = () => {
     if (!item || !canConfirm) {
-      toast.error(!variantValid ? "Please choose an option" : "Please complete all required selections");
+      toast.error(
+        !variantValid ? "Please choose an option" : "Please complete all required selections",
+      );
       return;
     }
 

@@ -13,16 +13,17 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useCallback, useMemo, useState } from "react";
 
-import { AddToCartModal, needsAddToCartModal, type AddToCartModalItem } from "@/components/catalog/add-to-cart-modal";
+import {
+  AddToCartModal,
+  needsAddToCartModal,
+  type AddToCartModalItem,
+} from "@/components/catalog/add-to-cart-modal";
 import {
   FeaturedItemCard,
   FeaturedItemsCarousel,
   type FeaturedItemProps,
 } from "@/components/catalog/featured-item-card";
-import {
-  CategoryCarousel,
-  type Category,
-} from "@/components/category/category-carousel";
+import { CategoryCarousel, type Category } from "@/components/category/category-carousel";
 import { toCardProps, toOutletFilters } from "@/components/home/home-helpers";
 import { PickupLayout } from "@/components/pickup/pickup-layout";
 import { FilterBar, defaultFilters, type ActiveFilters } from "@/components/layout/filter-bar";
@@ -31,7 +32,12 @@ import { OutletCard, type OutletCardProps } from "@/components/outlet/outlet-car
 import { OutletSection } from "@/components/outlet/outlet-section";
 import { PromoBannerCarousel } from "@/components/promo/promo-banner-carousel";
 import { Button } from "@/components/ui/button";
-import { useCatalogItems, useCategories, useFeaturedItems, useInfiniteOutlets } from "@/hooks/use-catalog";
+import {
+  useCatalogItems,
+  useCategories,
+  useFeaturedItems,
+  useInfiniteOutlets,
+} from "@/hooks/use-catalog";
 import { useOrderingConfig } from "@/hooks/use-ordering-config";
 import { useOutletSections } from "@/hooks/use-outlet-sections";
 import { usePromoBanners } from "@/hooks/use-promo-banners";
@@ -58,24 +64,30 @@ export function FoodHomeView() {
   // Location for distance-based queries
   const location = useMemo(
     () =>
-      deliveryLocation
-        ? { lat: deliveryLocation.latitude, lng: deliveryLocation.longitude }
-        : null,
+      deliveryLocation ? { lat: deliveryLocation.latitude, lng: deliveryLocation.longitude } : null,
     [deliveryLocation],
   );
 
   // ------- Section queries (parallel) -------
-  const { featured, mostReviewed, nearYou, popular, todaysOffers } =
-    useOutletSections(location, { withAllStores: false });
+  const { featured, mostReviewed, nearYou, popular, todaysOffers } = useOutletSections(location, {
+    withAllStores: false,
+  });
 
   // ------- All stores: one paged list, narrowed by the filter bar -------
   // Any active filter turns the page into a results view: the rails hide and the list below
   // shows only matching stores.
   const filtersActive = JSON.stringify(filters) !== JSON.stringify(defaultFilters);
-  const outletFilters = useMemo(() => toOutletFilters(filters, deliveryLocation), [filters, deliveryLocation]);
+  const outletFilters = useMemo(
+    () => toOutletFilters(filters, deliveryLocation),
+    [filters, deliveryLocation],
+  );
   const allStoresInfinite = useInfiniteOutlets(
     orgSlug,
-    { sort: "relevance", ...(location ? { lat: location.lat, lng: location.lng } : {}), ...outletFilters },
+    {
+      sort: "relevance",
+      ...(location ? { lat: location.lat, lng: location.lng } : {}),
+      ...outletFilters,
+    },
     20,
   );
 
@@ -84,7 +96,11 @@ export function FoodHomeView() {
   const firstOutletId = firstOutlet?.id ?? "";
   const firstOutletName = firstOutlet?.name ?? "";
   const { profile, useCase: effectiveUseCase } = useOrderingConfig();
-  const { data: categoriesData } = useCategories(orgSlug, firstOutletId || undefined, effectiveUseCase);
+  const { data: categoriesData } = useCategories(
+    orgSlug,
+    firstOutletId || undefined,
+    effectiveUseCase,
+  );
   const { data: featuredData } = useFeaturedItems(orgSlug, firstOutletId || undefined, 10);
   const { data: promoBanners } = usePromoBanners(effectiveUseCase);
   // Item-level deals grid ("Today's offers on menu items", Uber-Eats-style deal cards) —
@@ -108,10 +124,16 @@ export function FoodHomeView() {
   );
 
   const featuredOutlets = useMemo(() => mapOutlets(featured.data), [featured.data, mapOutlets]);
-  const mostReviewedOutlets = useMemo(() => mapOutlets(mostReviewed.data), [mostReviewed.data, mapOutlets]);
+  const mostReviewedOutlets = useMemo(
+    () => mapOutlets(mostReviewed.data),
+    [mostReviewed.data, mapOutlets],
+  );
   const nearYouOutlets = useMemo(() => mapOutlets(nearYou.data), [nearYou.data, mapOutlets]);
   const popularOutlets = useMemo(() => mapOutlets(popular.data), [popular.data, mapOutlets]);
-  const todaysOffersOutlets = useMemo(() => mapOutlets(todaysOffers.data), [todaysOffers.data, mapOutlets]);
+  const todaysOffersOutlets = useMemo(
+    () => mapOutlets(todaysOffers.data),
+    [todaysOffers.data, mapOutlets],
+  );
 
   const allStoresOutlets = useMemo(
     () =>
@@ -127,23 +149,23 @@ export function FoodHomeView() {
         ? featuredData
             .filter((item) => !!item.id)
             .map((item) => ({
-            id: item.id,
-            name: item.name,
-            description: item.description,
-            price: item.price,
-            currency: item.currency ?? "KES",
-            ...(item.image != null && item.image !== "" && { image: item.image }),
-            outletId: item.outletId || firstOutletId,
-            outletName: item.outletName || firstOutletName,
-            category: item.category,
-            useCase: profile,
-            href: orgRoute(orgSlug, `/catalog/${item.id}`),
-            ...(item.discountPercent != null && { discountPercent: item.discountPercent }),
-            ...(item.originalPrice != null && { originalPrice: item.originalPrice }),
-            hasVariants: item.hasVariants,
-            variants: item.variants,
-            modifierGroups: item.modifierGroups,
-          }))
+              id: item.id,
+              name: item.name,
+              description: item.description,
+              price: item.price,
+              currency: item.currency ?? "KES",
+              ...(item.image != null && item.image !== "" && { image: item.image }),
+              outletId: item.outletId || firstOutletId,
+              outletName: item.outletName || firstOutletName,
+              category: item.category,
+              useCase: profile,
+              href: orgRoute(orgSlug, `/catalog/${item.id}`),
+              ...(item.discountPercent != null && { discountPercent: item.discountPercent }),
+              ...(item.originalPrice != null && { originalPrice: item.originalPrice }),
+              hasVariants: item.hasVariants,
+              variants: item.variants,
+              modifierGroups: item.modifierGroups,
+            }))
         : [],
     [featuredData, firstOutletId, firstOutletName, orgSlug, profile],
   );
@@ -196,7 +218,8 @@ export function FoodHomeView() {
 
   const handleAddToCart = useCallback(
     (itemId: string) => {
-      const item = featuredItems.find((i) => i.id === itemId) ?? topDeals.find((i) => i.id === itemId);
+      const item =
+        featuredItems.find((i) => i.id === itemId) ?? topDeals.find((i) => i.id === itemId);
       if (!item) return;
       if (needsAddToCartModal(item)) {
         setModalItem({
@@ -270,144 +293,145 @@ export function FoodHomeView() {
 
       {/* Rails show while browsing; any active filter hides them so the results are what's seen. */}
       {!filtersActive && (
-      <>
-      {/* Promo Banners — active pos-api-sourced promotions flagged for the storefront */}
-      {promoBanners != null && promoBanners.length > 0 && (
-        <section className="bg-background py-4 sm:py-6">
-          <div className="mx-auto w-full max-w-6xl px-3 sm:px-4 lg:px-8">
-            <PromoBannerCarousel banners={promoBanners} />
-          </div>
-        </section>
-      )}
+        <>
+          {/* Promo Banners — active pos-api-sourced promotions flagged for the storefront */}
+          {promoBanners != null && promoBanners.length > 0 && (
+            <section className="bg-background py-4 sm:py-6">
+              <div className="mx-auto w-full max-w-6xl px-3 sm:px-4 lg:px-8">
+                <PromoBannerCarousel banners={promoBanners} />
+              </div>
+            </section>
+          )}
 
-      {/* Top deals — item-level "% off" / discounted-price cards, matching Uber Eats' deal
+          {/* Top deals — item-level "% off" / discounted-price cards, matching Uber Eats' deal
           cards (distinct from the outlet-level "Today's offers" rail further down). */}
-      {topDeals.length > 0 && (
-        <section className="py-4 sm:py-6">
-          <div className="mx-auto w-full max-w-6xl px-3 sm:px-4 lg:px-8">
-            <div className="mb-3 flex items-center justify-between sm:mb-4">
-              <div>
-                <h2 className="text-base font-bold text-foreground sm:text-xl">Top deals</h2>
-                <p className="text-xs text-muted-foreground sm:text-sm">Menu items on sale right now</p>
+          {topDeals.length > 0 && (
+            <section className="py-4 sm:py-6">
+              <div className="mx-auto w-full max-w-6xl px-3 sm:px-4 lg:px-8">
+                <div className="mb-3 flex items-center justify-between sm:mb-4">
+                  <div>
+                    <h2 className="text-base font-bold text-foreground sm:text-xl">Top deals</h2>
+                    <p className="text-xs text-muted-foreground sm:text-sm">
+                      Menu items on sale right now
+                    </p>
+                  </div>
+                  <Button variant="ghost" size="sm" className="h-9 text-primary" asChild>
+                    <Link href={orgRoute(orgSlug, "/catalog?filter=flash_sale")}>See all</Link>
+                  </Button>
+                </div>
+                <FeaturedItemsCarousel>
+                  {topDeals.map((item) => (
+                    <FeaturedItemCard key={item.id} {...item} onAddToCart={handleAddToCart} />
+                  ))}
+                </FeaturedItemsCarousel>
               </div>
-              <Button variant="ghost" size="sm" className="h-9 text-primary" asChild>
-                <Link href={orgRoute(orgSlug, "/catalog?filter=flash_sale")}>See all</Link>
-              </Button>
-            </div>
-            <FeaturedItemsCarousel>
-              {topDeals.map((item) => (
-                <FeaturedItemCard key={item.id} {...item} onAddToCart={handleAddToCart} />
-              ))}
-            </FeaturedItemsCarousel>
-          </div>
-        </section>
-      )}
+            </section>
+          )}
 
-      {/* Featured Items (menu items carousel) */}
-      {featuredItems.length > 0 && (
-        <section className="py-4 sm:py-6">
-          <div className="mx-auto w-full max-w-6xl px-3 sm:px-4 lg:px-8">
-            <div className="mb-3 flex items-center justify-between sm:mb-4">
-              <div>
-                <h2 className="text-base font-bold text-foreground sm:text-xl">
-                  Featured Items
-                </h2>
-                <p className="text-xs text-muted-foreground sm:text-sm">
-                  Popular picks from our menu
-                </p>
+          {/* Featured Items (menu items carousel) */}
+          {featuredItems.length > 0 && (
+            <section className="py-4 sm:py-6">
+              <div className="mx-auto w-full max-w-6xl px-3 sm:px-4 lg:px-8">
+                <div className="mb-3 flex items-center justify-between sm:mb-4">
+                  <div>
+                    <h2 className="text-base font-bold text-foreground sm:text-xl">
+                      Featured Items
+                    </h2>
+                    <p className="text-xs text-muted-foreground sm:text-sm">
+                      Popular picks from our menu
+                    </p>
+                  </div>
+                  <Button variant="ghost" size="sm" className="h-9 text-primary" asChild>
+                    <Link href={orgRoute(orgSlug, "/catalog")}>See all</Link>
+                  </Button>
+                </div>
+                <FeaturedItemsCarousel>
+                  {featuredItems.map((item) => (
+                    <FeaturedItemCard key={item.id} {...item} onAddToCart={handleAddToCart} />
+                  ))}
+                </FeaturedItemsCarousel>
               </div>
-              <Button variant="ghost" size="sm" className="h-9 text-primary" asChild>
-                <Link href={orgRoute(orgSlug, "/catalog")}>See all</Link>
-              </Button>
-            </div>
-            <FeaturedItemsCarousel>
-              {featuredItems.map((item) => (
-                <FeaturedItemCard key={item.id} {...item} onAddToCart={handleAddToCart} />
-              ))}
-            </FeaturedItemsCarousel>
-          </div>
-        </section>
-      )}
+            </section>
+          )}
 
-      {/* Featured on [Brand] */}
-      <OutletSection
-        title="Featured"
-        subtitle="Promoted stores and top picks"
-        icon={<Zap className="size-5" />}
-        outlets={featuredOutlets}
-        isLoading={featured.isLoading}
-        variant="scroll"
-        favorites={favorites}
-        onFavoriteToggle={handleFavoriteToggle}
-      />
+          {/* Featured on [Brand] */}
+          <OutletSection
+            title="Featured"
+            subtitle="Promoted stores and top picks"
+            icon={<Zap className="size-5" />}
+            outlets={featuredOutlets}
+            isLoading={featured.isLoading}
+            variant="scroll"
+            favorites={favorites}
+            onFavoriteToggle={handleFavoriteToggle}
+          />
 
-      {/* Most reviewed */}
-      <OutletSection
-        title="Most reviewed"
-        subtitle="Loved by the community"
-        icon={<Star className="size-5" />}
-        outlets={mostReviewedOutlets}
-        isLoading={mostReviewed.isLoading}
-        variant="scroll"
-        favorites={favorites}
-        onFavoriteToggle={handleFavoriteToggle}
-        className="bg-muted/30"
-      />
+          {/* Most reviewed */}
+          <OutletSection
+            title="Most reviewed"
+            subtitle="Loved by the community"
+            icon={<Star className="size-5" />}
+            outlets={mostReviewedOutlets}
+            isLoading={mostReviewed.isLoading}
+            variant="scroll"
+            favorites={favorites}
+            onFavoriteToggle={handleFavoriteToggle}
+            className="bg-muted/30"
+          />
 
-      {/* Stores near you */}
-      <OutletSection
-        title="Stores near you"
-        subtitle={
-          deliveryLocation?.address
-            ? `Near ${deliveryLocation.address}`
-            : "Based on your location"
-        }
-        icon={<MapPin className="size-5" />}
-        outlets={nearYouOutlets}
-        isLoading={nearYou.isLoading}
-        variant="logos"
-        favorites={favorites}
-        onFavoriteToggle={handleFavoriteToggle}
-      />
+          {/* Stores near you */}
+          <OutletSection
+            title="Stores near you"
+            subtitle={
+              deliveryLocation?.address
+                ? `Near ${deliveryLocation.address}`
+                : "Based on your location"
+            }
+            icon={<MapPin className="size-5" />}
+            outlets={nearYouOutlets}
+            isLoading={nearYou.isLoading}
+            variant="logos"
+            favorites={favorites}
+            onFavoriteToggle={handleFavoriteToggle}
+          />
 
-      {/* Popular in your area */}
-      <OutletSection
-        title="Popular in your area"
-        subtitle="Highest-rated stores nearby"
-        icon={<TrendingUp className="size-5" />}
-        outlets={popularOutlets}
-        isLoading={popular.isLoading}
-        variant="scroll"
-        favorites={favorites}
-        onFavoriteToggle={handleFavoriteToggle}
-        className="bg-muted/30"
-      />
+          {/* Popular in your area */}
+          <OutletSection
+            title="Popular in your area"
+            subtitle="Highest-rated stores nearby"
+            icon={<TrendingUp className="size-5" />}
+            outlets={popularOutlets}
+            isLoading={popular.isLoading}
+            variant="scroll"
+            favorites={favorites}
+            onFavoriteToggle={handleFavoriteToggle}
+            className="bg-muted/30"
+          />
 
-      {/* Today's offers */}
-      <OutletSection
-        title="Today's offers"
-        subtitle="Special deals just for today"
-        icon={<Tag className="size-5" />}
-        outlets={todaysOffersOutlets}
-        isLoading={todaysOffers.isLoading}
-        variant="scroll"
-        favorites={favorites}
-        onFavoriteToggle={handleFavoriteToggle}
-      />
+          {/* Today's offers */}
+          <OutletSection
+            title="Today's offers"
+            subtitle="Special deals just for today"
+            icon={<Tag className="size-5" />}
+            outlets={todaysOffersOutlets}
+            isLoading={todaysOffers.isLoading}
+            variant="scroll"
+            favorites={favorites}
+            onFavoriteToggle={handleFavoriteToggle}
+          />
 
-      {/* Top 10 local spots */}
-      <OutletSection
-        title="Top 10 local spots"
-        subtitle="Neighbourhood favourites"
-        outlets={mostReviewedOutlets.slice(0, 10)}
-        isLoading={mostReviewed.isLoading}
-        variant="numbered"
-        favorites={favorites}
-        onFavoriteToggle={handleFavoriteToggle}
-        className="bg-muted/30"
-      />
-
-      </>
+          {/* Top 10 local spots */}
+          <OutletSection
+            title="Top 10 local spots"
+            subtitle="Neighbourhood favourites"
+            outlets={mostReviewedOutlets.slice(0, 10)}
+            isLoading={mostReviewed.isLoading}
+            variant="numbered"
+            favorites={favorites}
+            onFavoriteToggle={handleFavoriteToggle}
+            className="bg-muted/30"
+          />
+        </>
       )}
 
       {/* All stores (or the filtered results) */}
@@ -423,7 +447,12 @@ export function FoodHomeView() {
               </p>
             </div>
             {filtersActive && (
-              <Button variant="ghost" size="sm" className="h-9 text-primary" onClick={() => setFilters(defaultFilters)}>
+              <Button
+                variant="ghost"
+                size="sm"
+                className="h-9 text-primary"
+                onClick={() => setFilters(defaultFilters)}
+              >
                 Clear filters
               </Button>
             )}
@@ -512,11 +541,5 @@ function AllStoresCard({
   isFavorite: boolean;
   onFavoriteToggle: (id: string, isFav: boolean) => void;
 }) {
-  return (
-    <OutletCard
-      {...outlet}
-      isFavorite={isFavorite}
-      onFavoriteToggle={onFavoriteToggle}
-    />
-  );
+  return <OutletCard {...outlet} isFavorite={isFavorite} onFavoriteToggle={onFavoriteToggle} />;
 }

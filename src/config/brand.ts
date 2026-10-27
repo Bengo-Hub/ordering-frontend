@@ -90,7 +90,8 @@ export const brand = {
   },
   metadata: {
     defaultTitle: `${brandShortName} ${process.env.NEXT_PUBLIC_BRAND_SUFFIX ?? "Marketplace"}`,
-    template: "%s | " + `${brandShortName} ${process.env.NEXT_PUBLIC_BRAND_SUFFIX ?? "Marketplace"}`,
+    template:
+      "%s | " + `${brandShortName} ${process.env.NEXT_PUBLIC_BRAND_SUFFIX ?? "Marketplace"}`,
     applicationName: `${brandShortName} Platform`,
   },
   assets: {

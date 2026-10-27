@@ -21,7 +21,10 @@ import { useCartStore } from "@/store/cart";
 import type { MenuItem } from "@/types/catalog";
 
 const OutletLocationMapCard = dynamic(
-  () => import("@/components/outlet/outlet-location-map-card").then((m) => ({ default: m.OutletLocationMapCard })),
+  () =>
+    import("@/components/outlet/outlet-location-map-card").then((m) => ({
+      default: m.OutletLocationMapCard,
+    })),
   { ssr: false, loading: () => <Skeleton className="h-48 w-full rounded-2xl" /> },
 );
 
@@ -35,8 +38,18 @@ interface FoodOutletViewProps {
  *  continuously-scrollable, category-anchored menu on the right. */
 export function FoodOutletView({ orgSlug, outletId }: FoodOutletViewProps) {
   const router = useRouter();
-  const { data: outlet, isLoading: outletLoading, error: outletError } = useOutlet(orgSlug, outletId);
-  const { data: menuData, isLoading: menuLoading } = useOutletMenu(orgSlug, outletId, undefined, 1, 100);
+  const {
+    data: outlet,
+    isLoading: outletLoading,
+    error: outletError,
+  } = useOutlet(orgSlug, outletId);
+  const { data: menuData, isLoading: menuLoading } = useOutletMenu(
+    orgSlug,
+    outletId,
+    undefined,
+    1,
+    100,
+  );
   const menuItems = useMemo(() => menuData?.data ?? [], [menuData]);
   const { config: cfg } = useOrderingConfig(outlet?.businessType);
 
@@ -53,7 +66,9 @@ export function FoodOutletView({ orgSlug, outletId }: FoodOutletViewProps) {
   }, [menuItems]);
 
   useEffect(() => {
-    setActiveCategory((prev) => (prev && categories.includes(prev) ? prev : (categories[0] ?? null)));
+    setActiveCategory((prev) =>
+      prev && categories.includes(prev) ? prev : (categories[0] ?? null),
+    );
   }, [categories]);
 
   // Scroll-spy: highlight whichever category section is nearest the top of the viewport as
@@ -98,14 +113,22 @@ export function FoodOutletView({ orgSlug, outletId }: FoodOutletViewProps) {
       });
       return;
     }
-    addItem({ id: item.id, name: item.name, price: item.price, outletId: item.outletId, outletName: item.outletName });
+    addItem({
+      id: item.id,
+      name: item.name,
+      price: item.price,
+      outletId: item.outletId,
+      outletName: item.outletName,
+    });
     toast.success(`Added ${item.name} to cart`);
   };
 
   if (outletLoading) {
     return (
       <SiteShell>
-        <div className="flex min-h-[40vh] items-center justify-center text-muted-foreground">Loading outlet...</div>
+        <div className="flex min-h-[40vh] items-center justify-center text-muted-foreground">
+          Loading outlet...
+        </div>
       </SiteShell>
     );
   }

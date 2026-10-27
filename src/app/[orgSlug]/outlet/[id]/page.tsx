@@ -1,12 +1,26 @@
 "use client";
 
-import { ArrowLeft, Clock, Heart, MapPin, Phone, Search, ShoppingCart, Star, Zap } from "lucide-react";
+import {
+  ArrowLeft,
+  Clock,
+  Heart,
+  MapPin,
+  Phone,
+  Search,
+  ShoppingCart,
+  Star,
+  Zap,
+} from "lucide-react";
 import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
 import { useMemo, useState } from "react";
 import { toast } from "sonner";
 
-import { AddToCartModal, needsAddToCartModal, type AddToCartModalItem } from "@/components/catalog/add-to-cart-modal";
+import {
+  AddToCartModal,
+  needsAddToCartModal,
+  type AddToCartModalItem,
+} from "@/components/catalog/add-to-cart-modal";
 import { SiteShell } from "@/components/layout/site-shell";
 import { FoodOutletView } from "@/components/outlet/food-outlet-view";
 import { Button } from "@/components/ui/button";
@@ -122,7 +136,8 @@ function MenuItemCard({
           sizes="112px"
           iconClassName="size-7"
         />
-        {((item.discountPercent && item.discountPercent > 0) || (item.isFlashSale && countdown)) && (
+        {((item.discountPercent && item.discountPercent > 0) ||
+          (item.isFlashSale && countdown)) && (
           <div className="absolute left-1 top-1 flex flex-col items-start gap-0.5">
             {item.discountPercent && item.discountPercent > 0 && (
               <span className="rounded-full bg-red-500 px-1.5 py-0.5 text-[10px] font-semibold text-white">
@@ -144,8 +159,18 @@ function MenuItemCard({
 function GenericOutletView({ orgSlug, outletId }: { orgSlug: string; outletId: string }) {
   const router = useRouter();
 
-  const { data: outlet, isLoading: outletLoading, error: outletError } = useOutlet(orgSlug, outletId);
-  const { data: menuData, isLoading: menuLoading } = useOutletMenu(orgSlug, outletId, undefined, 1, 100);
+  const {
+    data: outlet,
+    isLoading: outletLoading,
+    error: outletError,
+  } = useOutlet(orgSlug, outletId);
+  const { data: menuData, isLoading: menuLoading } = useOutletMenu(
+    orgSlug,
+    outletId,
+    undefined,
+    1,
+    100,
+  );
   const { data: deals } = usePromoDeals();
   // Apply active deals to this outlet's own menu — previously this page never called
   // resolveDealItems/applyDeal at all (only the home-page Top Deals grids did), so a matching
@@ -154,13 +179,16 @@ function GenericOutletView({ orgSlug, outletId }: { orgSlug: string; outletId: s
   const menuItems = useMemo(() => {
     const base = menuData?.data ?? [];
     if (!deals?.length) return base;
-    const dealByItemId = new Map(resolveDealItems(base, deals).map(({ item, deal }) => [item.id, deal]));
+    const dealByItemId = new Map(
+      resolveDealItems(base, deals).map(({ item, deal }) => [item.id, deal]),
+    );
     return base.map((item) => {
       const deal = dealByItemId.get(item.id);
       if (!deal) return item;
       const discounted = applyDeal(item.price, deal.rule);
       if (discounted >= item.price) return item;
-      const percentOff = deal.rule?.discountType === "percentage" ? deal.rule.discountValue : undefined;
+      const percentOff =
+        deal.rule?.discountType === "percentage" ? deal.rule.discountValue : undefined;
       return {
         ...item,
         price: discounted,
@@ -422,10 +450,7 @@ function GenericOutletView({ orgSlug, outletId }: { orgSlug: string; outletId: s
           {menuLoading && menuItems.length === 0 ? (
             <div className="space-y-4">
               {Array.from({ length: 4 }).map((_, i) => (
-                <div
-                  key={i}
-                  className="flex gap-4 rounded-xl border border-border bg-card p-4"
-                >
+                <div key={i} className="flex gap-4 rounded-xl border border-border bg-card p-4">
                   <div className="flex flex-1 flex-col gap-2">
                     <div className="h-5 w-1/2 animate-pulse rounded bg-muted" />
                     <div className="h-4 w-3/4 animate-pulse rounded bg-muted" />
@@ -436,33 +461,33 @@ function GenericOutletView({ orgSlug, outletId }: { orgSlug: string; outletId: s
               ))}
             </div>
           ) : (
-          <>
-          {Object.entries(itemsByCategory).map(([category, items]) => (
-            <div key={category}>
-              <h2 className="mb-4 text-lg font-semibold text-foreground">{category}</h2>
-              <div className="space-y-4">
-                {items.map((item) => (
-                  <MenuItemCard
-                    key={item.id}
-                    item={item}
-                    onAddToCart={() => handleAddToCart(item)}
-                    useCase={cfg.profile}
-                  />
-                ))}
-              </div>
-            </div>
-          ))}
+            <>
+              {Object.entries(itemsByCategory).map(([category, items]) => (
+                <div key={category}>
+                  <h2 className="mb-4 text-lg font-semibold text-foreground">{category}</h2>
+                  <div className="space-y-4">
+                    {items.map((item) => (
+                      <MenuItemCard
+                        key={item.id}
+                        item={item}
+                        onAddToCart={() => handleAddToCart(item)}
+                        useCase={cfg.profile}
+                      />
+                    ))}
+                  </div>
+                </div>
+              ))}
 
-          {filteredItems.length === 0 && (
-            <div className="rounded-xl border border-dashed border-border p-8 text-center">
-              <p className="text-muted-foreground">
-                {menuItems.length === 0
-                  ? "This outlet has no items available right now."
-                  : "No items match your search."}
-              </p>
-            </div>
-          )}
-          </>
+              {filteredItems.length === 0 && (
+                <div className="rounded-xl border border-dashed border-border p-8 text-center">
+                  <p className="text-muted-foreground">
+                    {menuItems.length === 0
+                      ? "This outlet has no items available right now."
+                      : "No items match your search."}
+                  </p>
+                </div>
+              )}
+            </>
           )}
         </div>
       </div>

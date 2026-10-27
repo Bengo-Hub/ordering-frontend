@@ -24,7 +24,8 @@ export function SlideToConfirm({
   total,
 }: SlideToConfirmProps) {
   const displayLabel =
-    label || (total != null && total > 0 ? `Place Order - KES ${total.toLocaleString()}` : "Place Order");
+    label ||
+    (total != null && total > 0 ? `Place Order - KES ${total.toLocaleString()}` : "Place Order");
 
   return (
     <>
@@ -35,18 +36,14 @@ export function SlideToConfirm({
             Select delivery address or pickup to continue
           </div>
         ) : (
-          <SlideTrack
-            onConfirm={onConfirm}
-            loading={loading}
-            label={displayLabel}
-          />
+          <SlideTrack onConfirm={onConfirm} loading={loading} label={displayLabel} />
         )}
       </div>
 
       {/* Desktop: regular button */}
       <div className="hidden md:block">
         <Button
-          className="w-full min-h-[48px]"
+          className="min-h-[48px] w-full"
           size="lg"
           onClick={onConfirm}
           disabled={loading || disabled}

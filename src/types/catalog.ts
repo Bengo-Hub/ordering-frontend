@@ -163,7 +163,19 @@ export interface Outlet {
    */
   bookingDepositPercent?: number;
   /** Absent when the outlet's use_case hasn't synced yet — callers should fall back to the tenant's own resolved use_case, never assume a vertical. */
-  businessType?: "food" | "grocery" | "pharmacy" | "retail" | "services" | "hospitality" | "quick_service" | "manufacturing" | "e_commerce" | "warehousing" | string | undefined;
+  businessType?:
+    | "food"
+    | "grocery"
+    | "pharmacy"
+    | "retail"
+    | "services"
+    | "hospitality"
+    | "quick_service"
+    | "manufacturing"
+    | "e_commerce"
+    | "warehousing"
+    | string
+    | undefined;
 }
 
 export interface OutletHours {

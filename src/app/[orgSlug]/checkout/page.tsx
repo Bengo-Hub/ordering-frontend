@@ -1,6 +1,17 @@
 "use client";
 
-import { AlertTriangle, ArrowLeft, CalendarClock, CreditCard, Loader2, MapPin, ShoppingBag, Store, Ticket, Wallet } from "lucide-react";
+import {
+  AlertTriangle,
+  ArrowLeft,
+  CalendarClock,
+  CreditCard,
+  Loader2,
+  MapPin,
+  ShoppingBag,
+  Store,
+  Ticket,
+  Wallet,
+} from "lucide-react";
 import Link from "next/link";
 import { useEffect } from "react";
 
@@ -17,9 +28,7 @@ import { PromoCodeSection } from "@/components/checkout/promo-code-section";
 import { SchedulePicker } from "@/components/checkout/schedule-picker";
 import { SlideToConfirm } from "@/components/checkout/slide-to-confirm";
 import { SmallOrderWarning } from "@/components/checkout/small-order-warning";
-import {
-  TreasuryPaymentModal,
-} from "@/components/checkout/treasury-payment-modal";
+import { TreasuryPaymentModal } from "@/components/checkout/treasury-payment-modal";
 import { SiteShell } from "@/components/layout/site-shell";
 import { Button } from "@/components/ui/button";
 import {
@@ -117,7 +126,8 @@ export default function CheckoutPage() {
               <div>
                 <p className="font-medium">Event tickets</p>
                 <p className="mt-1 text-muted-foreground">
-                  Your tickets (with QR codes) are emailed to you right after payment — no delivery or pickup needed.
+                  Your tickets (with QR codes) are emailed to you right after payment — no delivery
+                  or pickup needed.
                 </p>
               </div>
             </div>
@@ -183,7 +193,11 @@ export default function CheckoutPage() {
               <FulfillmentToggle
                 mode={state.fulfillmentMode}
                 onModeChange={state.handleFulfillmentChange}
-                deliveryTotal={state.deliveryQuote?.serviceable ? state.deliveryQuote.fee : state.feeBreakdown?.delivery_fee ?? 0}
+                deliveryTotal={
+                  state.deliveryQuote?.serviceable
+                    ? state.deliveryQuote.fee
+                    : (state.feeBreakdown?.delivery_fee ?? 0)
+                }
                 pickupTotal={0}
                 estimatedTime={state.estimatedTime}
                 allowSchedule={showScheduledDelivery}
@@ -196,7 +210,10 @@ export default function CheckoutPage() {
 
               {/* Delivery notes (delivery/schedule only) */}
               {state.fulfillmentMode !== "pickup" && (
-                <DeliveryNotesSection value={state.deliveryNotes} onChange={state.setDeliveryNotes} />
+                <DeliveryNotesSection
+                  value={state.deliveryNotes}
+                  onChange={state.setDeliveryNotes}
+                />
               )}
             </>
           )}
@@ -257,7 +274,11 @@ export default function CheckoutPage() {
           <SlideToConfirm
             onConfirm={state.handlePlaceOrder}
             loading={state.isPlacingOrder}
-            disabled={!state.noFulfillment && state.fulfillmentMode !== "pickup" && !state.hasDeliveryAddress}
+            disabled={
+              !state.noFulfillment &&
+              state.fulfillmentMode !== "pickup" &&
+              !state.hasDeliveryAddress
+            }
             total={state.grandTotal}
             {...(state.hasBookingDeposit
               ? { label: `Pay deposit - KES ${state.depositAmount.toLocaleString()}` }
@@ -274,30 +295,41 @@ export default function CheckoutPage() {
 
       {/* Wallet payment option — shown inline when payment step is active and user has balance.
           Plan-gated: hidden when the tenant's plan lacks the wallet feature. */}
-      {showWalletPay && state.showPaymentModal && !state.isGuestMode && state.walletBalance !== null && state.walletBalance > 0 && (
-        <div className="fixed inset-x-0 bottom-0 z-40 border-t border-border bg-background p-4 shadow-lg sm:relative sm:bottom-auto sm:border sm:rounded-xl sm:mt-0 sm:mx-auto sm:max-w-md sm:z-auto">
-          <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground mb-2">Pay with Wallet</p>
-          <div className="flex items-center justify-between mb-3">
-            <div className="flex items-center gap-2 text-sm">
-              <Wallet className="size-4 text-primary" />
-              <span>Balance: <span className="font-semibold">{state.walletCurrency} {state.walletBalance.toLocaleString()}</span></span>
+      {showWalletPay &&
+        state.showPaymentModal &&
+        !state.isGuestMode &&
+        state.walletBalance !== null &&
+        state.walletBalance > 0 && (
+          <div className="fixed inset-x-0 bottom-0 z-40 border-t border-border bg-background p-4 shadow-lg sm:relative sm:bottom-auto sm:z-auto sm:mx-auto sm:mt-0 sm:max-w-md sm:rounded-xl sm:border">
+            <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+              Pay with Wallet
+            </p>
+            <div className="mb-3 flex items-center justify-between">
+              <div className="flex items-center gap-2 text-sm">
+                <Wallet className="size-4 text-primary" />
+                <span>
+                  Balance:{" "}
+                  <span className="font-semibold">
+                    {state.walletCurrency} {state.walletBalance.toLocaleString()}
+                  </span>
+                </span>
+              </div>
+              {state.walletBalance >= state.paymentAmount ? (
+                <Button
+                  size="sm"
+                  onClick={() => state.handleWalletPayment()}
+                  disabled={state.walletPaymentPending}
+                >
+                  {state.walletPaymentPending && <Loader2 className="mr-1 size-3 animate-spin" />}
+                  Pay {state.paymentCurrency} {state.paymentAmount.toLocaleString()}
+                </Button>
+              ) : (
+                <span className="text-xs text-destructive">Insufficient balance</span>
+              )}
             </div>
-            {state.walletBalance >= state.paymentAmount ? (
-              <Button
-                size="sm"
-                onClick={() => state.handleWalletPayment()}
-                disabled={state.walletPaymentPending}
-              >
-                {state.walletPaymentPending && <Loader2 className="mr-1 size-3 animate-spin" />}
-                Pay {state.paymentCurrency} {state.paymentAmount.toLocaleString()}
-              </Button>
-            ) : (
-              <span className="text-xs text-destructive">Insufficient balance</span>
-            )}
+            <p className="text-xs text-muted-foreground">or choose another payment method below</p>
           </div>
-          <p className="text-xs text-muted-foreground">or choose another payment method below</p>
-        </div>
-      )}
+        )}
 
       {/* Treasury payment modal — always rendered to keep hook count stable.
           The modal internally returns null when open=false. */}
@@ -315,7 +347,9 @@ export default function CheckoutPage() {
         referenceType="order"
         // The customer already chose the gateway here (Paystack, PayHero or M-Pesa), so the pay
         // page opens it directly instead of listing every gateway again.
-        {...(state.selectedOption?.payNow && state.selectedMethod ? { allowedMethods: state.selectedMethod } : {})}
+        {...(state.selectedOption?.payNow && state.selectedMethod
+          ? { allowedMethods: state.selectedMethod }
+          : {})}
         onPaymentConfirmed={state.handlePaymentConfirmed}
         onPaymentFailed={state.handlePaymentFailed}
       />
@@ -338,7 +372,12 @@ interface PaymentMethodSelectorProps {
  * ManualMpesaPanel tells the customer exactly where and how much to pay by M-Pesa, then takes the
  * confirmation code from the M-Pesa message. The outlet checks the code before handing the order over.
  */
-function ManualMpesaPanel({ instructions, amountDue, code, onCodeChange }: {
+function ManualMpesaPanel({
+  instructions,
+  amountDue,
+  code,
+  onCodeChange,
+}: {
   instructions?: Record<string, string> | undefined;
   amountDue: number;
   code: string;
@@ -358,10 +397,15 @@ function ManualMpesaPanel({ instructions, amountDue, code, onCodeChange }: {
         Pay <span className="font-bold">KES {amountDue.toLocaleString()}</span> from your phone:
       </p>
       <ul className="list-disc space-y-1 pl-5 text-sm">
-        {steps.map((s) => <li key={s}>{s}</li>)}
+        {steps.map((s) => (
+          <li key={s}>{s}</li>
+        ))}
       </ul>
       <div>
-        <label htmlFor="mpesa-code" className="text-xs font-semibold uppercase text-muted-foreground">
+        <label
+          htmlFor="mpesa-code"
+          className="text-xs font-semibold uppercase text-muted-foreground"
+        >
           M-Pesa code from the confirmation message
         </label>
         <input
@@ -380,7 +424,14 @@ function ManualMpesaPanel({ instructions, amountDue, code, onCodeChange }: {
   );
 }
 
-function PaymentMethodSelector({ options, selected, onSelect, amountDue, mpesaCode, onMpesaCodeChange }: PaymentMethodSelectorProps) {
+function PaymentMethodSelector({
+  options,
+  selected,
+  onSelect,
+  amountDue,
+  mpesaCode,
+  onMpesaCodeChange,
+}: PaymentMethodSelectorProps) {
   const selectedOpt = options.find((o) => o.id === selected);
   return (
     <section className="rounded-xl border border-border p-4">
@@ -413,7 +464,9 @@ function PaymentMethodSelector({ options, selected, onSelect, amountDue, mpesaCo
               </div>
               <span className="min-w-0 flex-1">
                 <span className="block text-sm font-medium">{opt.label}</span>
-                {opt.description && <span className="block text-xs text-muted-foreground">{opt.description}</span>}
+                {opt.description && (
+                  <span className="block text-xs text-muted-foreground">{opt.description}</span>
+                )}
               </span>
               {opt.method === "wallet" && <Wallet className="size-4 shrink-0 text-primary" />}
             </button>
@@ -446,7 +499,12 @@ function formatApptDate(value: unknown): string | null {
   if (typeof value !== "string" || !value.trim()) return null;
   const d = new Date(value);
   if (Number.isNaN(d.getTime())) return value; // already human-readable — show as-is
-  return d.toLocaleDateString("en-KE", { weekday: "short", day: "numeric", month: "short", year: "numeric" });
+  return d.toLocaleDateString("en-KE", {
+    weekday: "short",
+    day: "numeric",
+    month: "short",
+    year: "numeric",
+  });
 }
 
 function AppointmentSummary({ items }: { items: AppointmentSummaryItem[] }) {
@@ -509,15 +567,15 @@ function PickupOutletSelector({ outlets, selectedId, onSelect }: PickupOutletSel
               onClick={() => onSelect(outlet.id)}
               className={cn(
                 "flex w-full items-center gap-3 rounded-xl border p-3 text-left transition-colors",
-                selected
-                  ? "border-primary bg-primary/5"
-                  : "border-border hover:bg-muted/50",
+                selected ? "border-primary bg-primary/5" : "border-border hover:bg-muted/50",
               )}
             >
-              <div className={cn(
-                "flex size-5 items-center justify-center rounded-full border-2",
-                selected ? "border-primary" : "border-muted-foreground/40",
-              )}>
+              <div
+                className={cn(
+                  "flex size-5 items-center justify-center rounded-full border-2",
+                  selected ? "border-primary" : "border-muted-foreground/40",
+                )}
+              >
                 {selected && <div className="size-2.5 rounded-full bg-primary" />}
               </div>
               <div className="min-w-0 flex-1">
@@ -526,7 +584,12 @@ function PickupOutletSelector({ outlets, selectedId, onSelect }: PickupOutletSel
                   <p className="truncate text-xs text-muted-foreground">{outlet.address}</p>
                 )}
               </div>
-              <MapPin className={cn("size-4 shrink-0", selected ? "text-primary" : "text-muted-foreground/40")} />
+              <MapPin
+                className={cn(
+                  "size-4 shrink-0",
+                  selected ? "text-primary" : "text-muted-foreground/40",
+                )}
+              />
             </button>
           );
         })}

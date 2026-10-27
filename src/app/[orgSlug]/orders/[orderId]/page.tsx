@@ -2,16 +2,16 @@
 
 import { LOGISTICS_UI_URL } from "@/lib/app-urls";
 import {
-    ArrowLeft,
-    Bike,
-    CreditCard,
-    Loader2,
-    MapPin,
-    Package,
-    Phone,
-    RefreshCw,
-    Star,
-    XCircle,
+  ArrowLeft,
+  Bike,
+  CreditCard,
+  Loader2,
+  MapPin,
+  Package,
+  Phone,
+  RefreshCw,
+  Star,
+  XCircle,
 } from "lucide-react";
 import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
@@ -48,7 +48,10 @@ export default function OrderDetailPage() {
   const orderId = params.orderId;
 
   const { data: order, isLoading, isError, refetch } = useOrder(orderId);
-  const { data: tracking } = useOrderTracking(orderId, !!order && !["delivered", "completed", "cancelled"].includes(order.status));
+  const { data: tracking } = useOrderTracking(
+    orderId,
+    !!order && !["delivered", "completed", "cancelled"].includes(order.status),
+  );
   const cancelOrder = useCancelOrder();
   const addItem = useCartStore((s) => s.addItem);
 
@@ -56,7 +59,8 @@ export default function OrderDetailPage() {
   const [cancelReason, setCancelReason] = useState("");
   const [showRating, setShowRating] = useState(false);
 
-  const isActive = order && !["delivered", "completed", "cancelled", "failed"].includes(order.status);
+  const isActive =
+    order && !["delivered", "completed", "cancelled", "failed"].includes(order.status);
   const canCancel = order && ["pending", "confirmed"].includes(order.status);
   const canRate = order && ["delivered", "completed"].includes(order.status) && !order.rating;
   // Pickup orders end at "Picked up", delivery orders at "Delivered" (the page used to show the
@@ -93,7 +97,9 @@ export default function OrderDetailPage() {
   }
 
   return (
-    <RequireAuth roles={["customer", "member", "staff", "admin", "superuser", "manager", "cashier"]}>
+    <RequireAuth
+      roles={["customer", "member", "staff", "admin", "superuser", "manager", "cashier"]}
+    >
       <SiteShell>
         <div className="mx-auto my-8 flex w-full max-w-2xl flex-col gap-6 px-4">
           {/* Back button */}
@@ -114,7 +120,8 @@ export default function OrderDetailPage() {
               <Package className="size-12 text-muted-foreground/40" />
               <p className="font-medium text-foreground">Order not found</p>
               <p className="max-w-xs text-sm text-muted-foreground">
-                We couldn&apos;t load this order. It may have been removed or you may not have access.
+                We couldn&apos;t load this order. It may have been removed or you may not have
+                access.
               </p>
               <Button asChild variant="outline">
                 <Link href={orgRoute(orgSlug, "/orders")}>Back to orders</Link>
@@ -146,11 +153,7 @@ export default function OrderDetailPage() {
               </header>
 
               {order.paymentRetry && (
-                <PaymentRetryPanel
-                  order={order}
-                  orgSlug={orgSlug}
-                  onPaid={() => void refetch()}
-                />
+                <PaymentRetryPanel order={order} orgSlug={orgSlug} onPaid={() => void refetch()} />
               )}
 
               <OrderStatusPanel order={order} />
@@ -168,7 +171,10 @@ export default function OrderDetailPage() {
                         const reached = i <= currentStep;
                         const isCurrent = i === currentStep;
                         return (
-                          <div key={step.label} className="flex flex-1 flex-col items-center gap-1.5">
+                          <div
+                            key={step.label}
+                            className="flex flex-1 flex-col items-center gap-1.5"
+                          >
                             <div className="flex w-full items-center">
                               {i > 0 && (
                                 <div
@@ -222,7 +228,9 @@ export default function OrderDetailPage() {
                   <CardContent className="flex items-center justify-between gap-4 py-4">
                     <div>
                       <p className="text-sm font-medium text-foreground">How was your order?</p>
-                      <p className="text-xs text-muted-foreground">Your feedback helps us improve.</p>
+                      <p className="text-xs text-muted-foreground">
+                        Your feedback helps us improve.
+                      </p>
                     </div>
                     <Button size="sm" className="gap-1.5" onClick={() => setShowRating(true)}>
                       <Star className="size-4" />
@@ -240,7 +248,9 @@ export default function OrderDetailPage() {
                           key={star}
                           className={cn(
                             "size-4",
-                            star <= order.rating! ? "fill-yellow-400 text-yellow-400" : "text-muted-foreground/30",
+                            star <= order.rating!
+                              ? "fill-yellow-400 text-yellow-400"
+                              : "text-muted-foreground/30",
                           )}
                         />
                       ))}
@@ -285,10 +295,7 @@ export default function OrderDetailPage() {
                 </CardHeader>
                 <CardContent className="space-y-3">
                   {(order.items ?? []).map((item, i) => (
-                    <div
-                      key={i}
-                      className="flex items-start justify-between gap-2 text-sm"
-                    >
+                    <div key={i} className="flex items-start justify-between gap-2 text-sm">
                       <div className="min-w-0 flex-1">
                         <p className="break-words font-medium text-foreground">{item.name}</p>
                         <p className="text-xs text-muted-foreground">
@@ -434,11 +441,7 @@ export default function OrderDetailPage() {
                         ) : null}
                         Confirm Cancel
                       </Button>
-                      <Button
-                        size="sm"
-                        variant="ghost"
-                        onClick={() => setShowCancelReason(false)}
-                      >
+                      <Button size="sm" variant="ghost" onClick={() => setShowCancelReason(false)}>
                         Keep Order
                       </Button>
                     </div>

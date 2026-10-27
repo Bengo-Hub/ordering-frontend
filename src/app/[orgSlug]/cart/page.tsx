@@ -36,10 +36,14 @@ export default function CartPage() {
   const cartSubtotal = subtotal();
 
   // Event tickets are bought on their own — no delivery/pickup, fees, or utensils.
-  const ticketOnly = items.length > 0 && items.every((i) => (i.metadata as { is_ticket?: boolean } | undefined)?.is_ticket === true);
+  const ticketOnly =
+    items.length > 0 &&
+    items.every((i) => (i.metadata as { is_ticket?: boolean } | undefined)?.is_ticket === true);
   // Appointment/service bookings likewise have no delivery/pickup/utensils — the customer
   // visits the provider at the booked time (metadata.is_service, set on the service page).
-  const appointmentOnly = items.length > 0 && items.every((i) => (i.metadata as { is_service?: boolean } | undefined)?.is_service === true);
+  const appointmentOnly =
+    items.length > 0 &&
+    items.every((i) => (i.metadata as { is_service?: boolean } | undefined)?.is_service === true);
   // Booking carts skip the whole fulfillment/fees flow.
   const noFulfillment = ticketOnly || appointmentOnly;
 
@@ -48,7 +52,9 @@ export default function CartPage() {
   const { data: feeData } = useFeeBreakdown(outletId, diningMode);
   const deliveryFee = feeData?.delivery_fee ?? 0;
   const serviceFee = noFulfillment ? 0 : (feeData?.service_fee ?? 0);
-  const total = noFulfillment ? cartSubtotal : (feeData?.grand_total ?? cartSubtotal + deliveryFee + serviceFee);
+  const total = noFulfillment
+    ? cartSubtotal
+    : (feeData?.grand_total ?? cartSubtotal + deliveryFee + serviceFee);
 
   // Outlet details for the address line. Called before the empty-cart return so the hook order
   // never changes when the last item is removed (a hook after an early return crashes React).
@@ -60,7 +66,9 @@ export default function CartPage() {
         <div className="container mx-auto flex max-w-2xl flex-col items-center gap-6 px-4 py-20 text-center">
           <UseCaseIllustration useCase={cfg.profile} className="size-16" />
           <h1 className="text-2xl font-bold">Your cart is empty</h1>
-          <p className="text-muted-foreground">Add {copy.itemLabelPlural.toLowerCase()} to get started.</p>
+          <p className="text-muted-foreground">
+            Add {copy.itemLabelPlural.toLowerCase()} to get started.
+          </p>
           <Button asChild>
             <Link href={orgRoute(orgSlug, "/catalog")}>Browse Catalog</Link>
           </Button>
@@ -130,7 +138,9 @@ export default function CartPage() {
                   {/* Item info */}
                   <div className="min-w-0 flex-1">
                     <p className="line-clamp-2 break-words font-medium">{item.name}</p>
-                    <p className="text-sm text-muted-foreground">{formatCurrency(item.price)} each</p>
+                    <p className="text-sm text-muted-foreground">
+                      {formatCurrency(item.price)} each
+                    </p>
                   </div>
 
                   {/* Remove - top right on mobile; 40px tap target on phones */}
@@ -171,26 +181,26 @@ export default function CartPage() {
                   </div>
 
                   {/* Item total */}
-                  <p className="text-sm font-semibold">
-                    {formatCurrency(item.total)}
-                  </p>
+                  <p className="text-sm font-semibold">{formatCurrency(item.total)}</p>
                 </div>
 
                 {/* Modifier details */}
                 {item.modifiers && item.modifiers.length > 0 && (
-                  <div className="mt-1.5 ml-0 space-y-0.5">
+                  <div className="ml-0 mt-1.5 space-y-0.5">
                     {item.modifiers.map((mod) => (
                       <p key={mod.groupId} className="text-xs text-muted-foreground">
-                        {mod.options.map((opt) => (
-                          <span key={opt.id}>
-                            {opt.name}
-                            {opt.price > 0 && ` +${formatCurrency(opt.price)}`}
-                          </span>
-                        )).reduce<React.ReactNode[]>((acc, el, idx) => {
-                          if (idx > 0) acc.push(", ");
-                          acc.push(el);
-                          return acc;
-                        }, [])}
+                        {mod.options
+                          .map((opt) => (
+                            <span key={opt.id}>
+                              {opt.name}
+                              {opt.price > 0 && ` +${formatCurrency(opt.price)}`}
+                            </span>
+                          ))
+                          .reduce<React.ReactNode[]>((acc, el, idx) => {
+                            if (idx > 0) acc.push(", ");
+                            acc.push(el);
+                            return acc;
+                          }, [])}
                       </p>
                     ))}
                   </div>
@@ -198,9 +208,7 @@ export default function CartPage() {
 
                 {/* Per-item notes */}
                 {item.notes && (
-                  <p className="mt-1 text-xs italic text-muted-foreground">
-                    Note: {item.notes}
-                  </p>
+                  <p className="mt-1 text-xs italic text-muted-foreground">Note: {item.notes}</p>
                 )}
               </div>
             ))}
@@ -209,43 +217,43 @@ export default function CartPage() {
 
         {/* Order preferences — not applicable to event tickets */}
         {!ticketOnly && (
-        <Card className="mb-4">
-          <CardHeader>
-            <CardTitle className="text-base">Order Preferences</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            {/* Request utensils — food verticals only (a pharmacy/retail/salon order
+          <Card className="mb-4">
+            <CardHeader>
+              <CardTitle className="text-base">Order Preferences</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              {/* Request utensils — food verticals only (a pharmacy/retail/salon order
                 has no cutlery). */}
-            {cfg.showDietaryFilters && (
-              <label className="flex cursor-pointer items-center gap-3">
-                <input
-                  type="checkbox"
-                  checked={requestUtensils}
-                  onChange={(e) => setRequestUtensils(e.target.checked)}
-                  className="h-4 w-4 rounded border-input accent-primary"
-                />
-                <div className="flex items-center gap-2">
-                  <Utensils className="h-4 w-4 text-muted-foreground" />
-                  <span className="text-sm">Request utensils, napkins, etc.</span>
-                </div>
-              </label>
-            )}
+              {cfg.showDietaryFilters && (
+                <label className="flex cursor-pointer items-center gap-3">
+                  <input
+                    type="checkbox"
+                    checked={requestUtensils}
+                    onChange={(e) => setRequestUtensils(e.target.checked)}
+                    className="h-4 w-4 rounded border-input accent-primary"
+                  />
+                  <div className="flex items-center gap-2">
+                    <Utensils className="h-4 w-4 text-muted-foreground" />
+                    <span className="text-sm">Request utensils, napkins, etc.</span>
+                  </div>
+                </label>
+              )}
 
-            {/* Order notes */}
-            <div>
-              <label className="mb-1.5 block text-sm font-medium">
-                Order notes <span className="font-normal text-muted-foreground">(optional)</span>
-              </label>
-              <Textarea
-                value={orderNotes}
-                onChange={(e) => setOrderNotes(e.target.value)}
-                placeholder="Any special instructions for your order..."
-                rows={3}
-                className="resize-none text-sm"
-              />
-            </div>
-          </CardContent>
-        </Card>
+              {/* Order notes */}
+              <div>
+                <label className="mb-1.5 block text-sm font-medium">
+                  Order notes <span className="font-normal text-muted-foreground">(optional)</span>
+                </label>
+                <Textarea
+                  value={orderNotes}
+                  onChange={(e) => setOrderNotes(e.target.value)}
+                  placeholder="Any special instructions for your order..."
+                  rows={3}
+                  className="resize-none text-sm"
+                />
+              </div>
+            </CardContent>
+          </Card>
         )}
 
         {/* Order summary / fee breakdown */}
@@ -260,10 +268,14 @@ export default function CartPage() {
             </div>
             {!noFulfillment && diningMode === "delivery" && (
               <div className="flex justify-between">
-                <span className="text-muted-foreground">
-                  Delivery fee
+                <span className="text-muted-foreground">Delivery fee</span>
+                <span>
+                  {deliveryFee === 0 ? (
+                    <span className="text-green-600">Free</span>
+                  ) : (
+                    formatCurrency(deliveryFee)
+                  )}
                 </span>
-                <span>{deliveryFee === 0 ? <span className="text-green-600">Free</span> : formatCurrency(deliveryFee)}</span>
               </div>
             )}
             {!noFulfillment && (
@@ -287,7 +299,9 @@ export default function CartPage() {
               Proceed to Checkout
             </Button>
             <Button variant="outline" className="w-full" asChild>
-              <Link href={orgRoute(orgSlug, "/catalog")}>Add more {copy.itemLabelPlural.toLowerCase()}</Link>
+              <Link href={orgRoute(orgSlug, "/catalog")}>
+                Add more {copy.itemLabelPlural.toLowerCase()}
+              </Link>
             </Button>
           </CardFooter>
         </Card>
@@ -295,7 +309,7 @@ export default function CartPage() {
 
       {/* Phones: the total and "Proceed to Checkout" stay pinned to the bottom of the screen, so
           the customer never has to scroll past every card (or open the cart drawer) to find it. */}
-      <div className="fixed inset-x-0 bottom-0 z-30 border-t border-border bg-background/95 px-4 pt-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] backdrop-blur-sm md:hidden">
+      <div className="fixed inset-x-0 bottom-0 z-30 border-t border-border bg-background/95 px-4 pb-[max(0.75rem,env(safe-area-inset-bottom))] pt-3 backdrop-blur-sm md:hidden">
         <div className="mx-auto flex max-w-2xl items-center gap-3">
           <div className="min-w-0 shrink-0">
             <p className="text-xs text-muted-foreground">Total</p>

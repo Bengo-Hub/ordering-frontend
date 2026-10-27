@@ -17,13 +17,19 @@ export function CountdownBoxes({ endAt }: { endAt: string | null | undefined }) 
     [parts.seconds, "sec"],
   ];
   return (
-    <div className="flex gap-2" role="timer" aria-label={`Ends in ${parts.hours} hours ${parts.minutes} minutes`}>
+    <div
+      className="flex gap-2"
+      role="timer"
+      aria-label={`Ends in ${parts.hours} hours ${parts.minutes} minutes`}
+    >
       {cells.map(([value, label]) => (
         <span
           key={label}
           className="min-w-[3.5rem] rounded-xl border border-white/20 bg-white/10 px-2.5 py-1.5 text-center"
         >
-          <span className="font-display tabular block text-xl font-extrabold leading-tight">{pad(value)}</span>
+          <span className="tabular block font-display text-xl font-extrabold leading-tight">
+            {pad(value)}
+          </span>
           <span className="block text-[10px] font-semibold text-white/75">{label}</span>
         </span>
       ))}

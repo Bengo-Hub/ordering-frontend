@@ -21,7 +21,9 @@ export function SiteFooter() {
       <div className="mx-auto flex max-w-7xl flex-col items-center gap-4 px-4 py-6 sm:px-6 md:flex-row md:justify-between lg:px-8">
         <div className="flex flex-col items-center gap-2 md:items-start">
           <p className="text-sm text-muted-foreground">
-            &copy; {new Date().getFullYear()} <span className="font-semibold text-foreground">{tenantName}</span>. All rights reserved.
+            &copy; {new Date().getFullYear()}{" "}
+            <span className="font-semibold text-foreground">{tenantName}</span>. All rights
+            reserved.
           </p>
           <LegalLinks layout="row" showEntity={false} className="text-xs" />
         </div>

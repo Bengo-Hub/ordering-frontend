@@ -83,7 +83,11 @@ export function ImageWithFallback({
     alt,
     onLoad: () => setIsLoaded(true),
     onError: () => setLoadError(true),
-    className: cn(className, "transition-opacity duration-300", isLoaded ? "opacity-100" : "opacity-0"),
+    className: cn(
+      className,
+      "transition-opacity duration-300",
+      isLoaded ? "opacity-100" : "opacity-0",
+    ),
     ...(sizes ? { sizes } : {}),
     ...(priority ? { priority } : {}),
     ...(loading ? { loading } : {}),

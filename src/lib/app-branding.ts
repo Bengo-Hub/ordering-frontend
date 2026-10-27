@@ -10,7 +10,11 @@
  * Without an entry the app is "<Business> Ordering" with the business logo.
  */
 
-import { resolveAppIdentity, type AppIdentity, type PublicTenantBranding } from "@bengo-hub/shared-ui-lib/branding";
+import {
+  resolveAppIdentity,
+  type AppIdentity,
+  type PublicTenantBranding,
+} from "@bengo-hub/shared-ui-lib/branding";
 
 export { appIconPath } from "@bengo-hub/shared-ui-lib/app-icon";
 

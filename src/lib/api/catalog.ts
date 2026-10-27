@@ -11,7 +11,7 @@ import type {
   MenuItem,
   Outlet,
   OutletFilters,
-  PaginatedResponse
+  PaginatedResponse,
 } from "@/types/catalog";
 import { api } from "./base";
 
@@ -81,11 +81,7 @@ interface BackendMenuItem {
   }[];
 }
 
-function backendItemToMenuItem(
-  b: BackendMenuItem,
-  outletId = "",
-  outletName = "",
-): MenuItem {
+function backendItemToMenuItem(b: BackendMenuItem, outletId = "", outletName = ""): MenuItem {
   const images = (b.imageUrls ?? [])
     .map((url) => getMediaUrl(url))
     .filter((url): url is string => !!url);
@@ -126,19 +122,23 @@ function backendItemToMenuItem(
     ...(b.availableQuantity != null ? { availableQuantity: b.availableQuantity } : {}),
     hasVariants,
     ...(variants.length > 0 ? { variants } : {}),
-    ...(b.modifierGroups ? { modifierGroups: b.modifierGroups.map((g) => ({
-      id: g.id,
-      name: g.name,
-      isRequired: g.is_required ?? false,
-      minSelections: g.min_selections ?? 0,
-      maxSelections: g.max_selections ?? 1,
-      options: (g.options ?? []).map((o) => ({
-        id: o.id,
-        name: o.name,
-        priceAdjustment: o.price_adjustment ?? 0,
-        isDefault: o.is_default ?? false,
-      })),
-    })) } : {}),
+    ...(b.modifierGroups
+      ? {
+          modifierGroups: b.modifierGroups.map((g) => ({
+            id: g.id,
+            name: g.name,
+            isRequired: g.is_required ?? false,
+            minSelections: g.min_selections ?? 0,
+            maxSelections: g.max_selections ?? 1,
+            options: (g.options ?? []).map((o) => ({
+              id: o.id,
+              name: o.name,
+              priceAdjustment: o.price_adjustment ?? 0,
+              isDefault: o.is_default ?? false,
+            })),
+          })),
+        }
+      : {}),
   };
 }
 
@@ -235,7 +235,9 @@ export async function fetchCategories(
   if (outletId) qs.set("outlet_id", outletId);
   if (useCase) qs.set("use_case", useCase);
   const params = qs.toString() ? `?${qs.toString()}` : "";
-  const response = await api.get<BackendMenuCategory[]>(`${tenantSlug}/catalog/categories${params}`);
+  const response = await api.get<BackendMenuCategory[]>(
+    `${tenantSlug}/catalog/categories${params}`,
+  );
   return response.data.map((cat) => {
     const { emoji, image } = resolveCategoryIcon(cat.icon, cat.imageUrl, cat.name);
     return {
@@ -349,8 +351,10 @@ export async function fetchOutlets(
   // Pass all supported filter params to the backend
   if (filters?.search) params.set("q", filters.search);
   if (filters?.minRating != null) params.set("min_rating", String(filters.minRating));
-  if (filters?.maxDeliveryFee != null) params.set("max_delivery_fee", String(filters.maxDeliveryFee));
-  if (filters?.maxDeliveryTime != null) params.set("max_delivery_time", String(filters.maxDeliveryTime));
+  if (filters?.maxDeliveryFee != null)
+    params.set("max_delivery_fee", String(filters.maxDeliveryFee));
+  if (filters?.maxDeliveryTime != null)
+    params.set("max_delivery_time", String(filters.maxDeliveryTime));
   if (filters?.sort) params.set("sort", filters.sort);
   if (filters?.offers) params.set("offers", "true");
   if (filters?.pickup) params.set("pickup", "true");

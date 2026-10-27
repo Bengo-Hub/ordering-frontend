@@ -16,10 +16,7 @@ import { useMemo, useState } from "react";
 import { MediaImage } from "@bengo-hub/shared-ui-lib/media";
 
 import { CategorySidebar } from "@/components/category/category-sidebar";
-import {
-  FeaturedItemCard,
-  type FeaturedItemProps,
-} from "@/components/catalog/featured-item-card";
+import { FeaturedItemCard, type FeaturedItemProps } from "@/components/catalog/featured-item-card";
 import { toCardProps } from "@/components/home/home-helpers";
 import { SiteShell } from "@/components/layout/site-shell";
 import { OutletSection } from "@/components/outlet/outlet-section";
@@ -50,11 +47,7 @@ const TRUST_BADGES = [
  *  homepage doesn't grow unbounded on tenants with many categories. */
 const MAX_CATEGORY_ROWS = 4;
 
-function itemToCardProps(
-  item: MenuItem,
-  orgSlug: string,
-  useCase: string,
-): FeaturedItemProps {
+function itemToCardProps(item: MenuItem, orgSlug: string, useCase: string): FeaturedItemProps {
   return {
     id: item.id,
     name: item.name,
@@ -99,7 +92,11 @@ function CategoryProductsRow({
       </div>
       <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 sm:gap-4 md:grid-cols-4">
         {items.map((item) => (
-          <FeaturedItemCard key={item.id} {...itemToCardProps(item, orgSlug, useCase)} variant="grid" />
+          <FeaturedItemCard
+            key={item.id}
+            {...itemToCardProps(item, orgSlug, useCase)}
+            variant="grid"
+          />
         ))}
       </div>
     </div>
@@ -351,14 +348,23 @@ export function RetailHomeView() {
                   >
                     <span className="flex size-14 items-center justify-center overflow-hidden rounded-full bg-muted sm:size-16">
                       {brand.logoUrl ? (
-                        <MediaImage src={brand.logoUrl} alt={brand.name} displayWidth={64} fit="cover" aspect={1} className="size-full object-cover" />
+                        <MediaImage
+                          src={brand.logoUrl}
+                          alt={brand.name}
+                          displayWidth={64}
+                          fit="cover"
+                          aspect={1}
+                          className="size-full object-cover"
+                        />
                       ) : (
                         <span className="text-lg font-bold text-muted-foreground">
                           {brand.name.charAt(0).toUpperCase()}
                         </span>
                       )}
                     </span>
-                    <span className="line-clamp-1 text-xs font-medium text-foreground">{brand.name}</span>
+                    <span className="line-clamp-1 text-xs font-medium text-foreground">
+                      {brand.name}
+                    </span>
                   </Link>
                 ))}
               </div>

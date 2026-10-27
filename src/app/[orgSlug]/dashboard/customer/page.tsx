@@ -46,7 +46,10 @@ const TIER_THRESHOLDS: Record<string, number> = {
   platinum: 5000,
 };
 
-function tierProgressToNext(tier: string, lifetimePoints: number): { nextTier: string; needed: number; pct: number } | null {
+function tierProgressToNext(
+  tier: string,
+  lifetimePoints: number,
+): { nextTier: string; needed: number; pct: number } | null {
   const tiers = ["bronze", "silver", "gold", "platinum"];
   const idx = tiers.indexOf(tier.toLowerCase());
   if (idx === -1 || idx === tiers.length - 1) return null;
@@ -66,14 +69,20 @@ export default function CustomerDashboardPage() {
   const hasWallet = isPlatformOwner || hasFeature("wallet");
 
   const { data: ordersData, isLoading: ordersLoading } = useOrders({ limit: 5 });
-  const { data: loyaltyAccount, isLoading: loyaltyLoading, error: loyaltyError } = useLoyaltyAccount();
+  const {
+    data: loyaltyAccount,
+    isLoading: loyaltyLoading,
+    error: loyaltyError,
+  } = useLoyaltyAccount();
   const { data: txData, isLoading: txLoading } = useLoyaltyTransactions({ limit: 5 });
   const { data: walletData, isLoading: walletLoading } = useWalletBalance();
   const registerLoyalty = useRegisterLoyalty();
 
   const orders = ordersData?.orders ?? [];
   const activeOrders = orders.filter((o) =>
-    ["pending", "confirmed", "preparing", "ready", "out_for_delivery", "enroute"].includes(o.status),
+    ["pending", "confirmed", "preparing", "ready", "out_for_delivery", "enroute"].includes(
+      o.status,
+    ),
   );
 
   const loyaltyNotRegistered = !!loyaltyError || (!loyaltyLoading && !loyaltyAccount);
@@ -86,7 +95,9 @@ export default function CustomerDashboardPage() {
       await registerLoyalty.mutateAsync();
       toast.success("Welcome to the loyalty program! You're now earning points.");
     } catch (e) {
-      toast.error(await apiErrorMessage(e, "Could not register for the loyalty program. Please try again."));
+      toast.error(
+        await apiErrorMessage(e, "Could not register for the loyalty program. Please try again."),
+      );
     }
   };
 
@@ -128,7 +139,11 @@ export default function CustomerDashboardPage() {
             {hasWallet && (
               <MetricCard
                 title="Wallet Balance"
-                value={walletLoading ? "…" : `${walletData?.currency ?? "KES"} ${(walletData?.balance ?? 0).toLocaleString()}`}
+                value={
+                  walletLoading
+                    ? "…"
+                    : `${walletData?.currency ?? "KES"} ${(walletData?.balance ?? 0).toLocaleString()}`
+                }
                 deltaLabel="Available"
                 deltaValue=""
                 icon={<WalletIcon className="size-4 text-brand-emphasis" />}
@@ -161,11 +176,16 @@ export default function CustomerDashboardPage() {
                     <div>
                       <p className="font-semibold text-foreground">Loyalty Program</p>
                       <p className="mt-1 text-sm text-muted-foreground">
-                        Upgrade your subscription to unlock loyalty rewards, tier benefits, and more.
+                        Upgrade your subscription to unlock loyalty rewards, tier benefits, and
+                        more.
                       </p>
                     </div>
                     <Button variant="outline" size="sm" asChild>
-                      <a href={`${process.env.NEXT_PUBLIC_SUBSCRIPTIONS_UI_URL ?? "https://pricing.codevertexafrica.com"}/plans`} target="_blank" rel="noopener noreferrer">
+                      <a
+                        href={`${process.env.NEXT_PUBLIC_SUBSCRIPTIONS_UI_URL ?? "https://pricing.codevertexafrica.com"}/plans`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                      >
                         View Plans
                       </a>
                     </Button>
@@ -173,147 +193,175 @@ export default function CustomerDashboardPage() {
                 </CardContent>
               </Card>
             ) : (
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2 text-lg">
-                  <StarIcon className="size-5 text-brand-emphasis" />
-                  Loyalty Program
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                {loyaltyLoading ? (
-                  <div className="flex items-center justify-center py-8">
-                    <Loader2 className="size-6 animate-spin text-muted-foreground" />
-                  </div>
-                ) : loyaltyNotRegistered ? (
-                  /* Not registered — join CTA */
-                  <div className="flex flex-col items-center gap-4 py-6 text-center">
-                    <div className="flex size-16 items-center justify-center rounded-full bg-brand-emphasis/10">
-                      <GiftIcon className="size-8 text-brand-emphasis" />
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2 text-lg">
+                    <StarIcon className="size-5 text-brand-emphasis" />
+                    Loyalty Program
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  {loyaltyLoading ? (
+                    <div className="flex items-center justify-center py-8">
+                      <Loader2 className="size-6 animate-spin text-muted-foreground" />
                     </div>
-                    <div>
-                      <p className="font-semibold text-foreground">Join the Loyalty Program</p>
-                      <p className="mt-1 text-sm text-muted-foreground">
-                        Earn points on every order and unlock exclusive rewards, free delivery,
-                        and priority support as you level up.
-                      </p>
-                    </div>
-                    <div className="w-full rounded-xl border border-border bg-muted/30 p-4 text-left space-y-2">
-                      <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">How it works</p>
-                      {[
-                        "Earn 1 point per KES 10 spent",
-                        "Redeem 100 points for KES 10 off",
-                        "Unlock Silver at 500pts, Gold at 2,000pts",
-                      ].map((line) => (
-                        <div key={line} className="flex items-center gap-2 text-sm">
-                          <BadgeCheckIcon className="size-4 shrink-0 text-brand-emphasis" />
-                          {line}
-                        </div>
-                      ))}
-                    </div>
-                    <Button
-                      className="w-full"
-                      onClick={() => void handleRegisterLoyalty()}
-                      disabled={registerLoyalty.isPending}
-                    >
-                      {registerLoyalty.isPending ? (
-                        <><Loader2 className="mr-2 size-4 animate-spin" />Joining…</>
-                      ) : (
-                        <><GiftIcon className="mr-2 size-4" />Join free</>
-                      )}
-                    </Button>
-                  </div>
-                ) : (
-                  /* Registered — show tier + progress */
-                  <div className="space-y-4">
-                    <div className="flex items-center justify-between">
+                  ) : loyaltyNotRegistered ? (
+                    /* Not registered — join CTA */
+                    <div className="flex flex-col items-center gap-4 py-6 text-center">
+                      <div className="flex size-16 items-center justify-center rounded-full bg-brand-emphasis/10">
+                        <GiftIcon className="size-8 text-brand-emphasis" />
+                      </div>
                       <div>
-                        <p className="text-xs text-muted-foreground uppercase tracking-wider">Current Tier</p>
-                        <div className="mt-1 flex items-center gap-2">
-                          <CrownIcon className="size-5 text-brand-emphasis" />
-                          <span className="text-2xl font-bold capitalize text-foreground">{loyaltyAccount!.tier}</span>
-                          <span className={`rounded-full px-2 py-0.5 text-xs font-medium capitalize ${tierColorClass}`}>
-                            {loyaltyAccount!.tier}
-                          </span>
-                        </div>
-                      </div>
-                      <div className="text-right">
-                        <p className="text-xs text-muted-foreground">Balance</p>
-                        <p className="text-2xl font-bold text-foreground">{loyaltyAccount!.balancePoints.toLocaleString()}</p>
-                        <p className="text-xs text-muted-foreground">pts</p>
-                      </div>
-                    </div>
-
-                    {progress && (
-                      <div className="space-y-1">
-                        <div className="flex items-center justify-between text-xs text-muted-foreground">
-                          <span>Progress to <span className="capitalize font-medium">{progress.nextTier}</span></span>
-                          <span>{progress.needed.toLocaleString()} pts needed</span>
-                        </div>
-                        <div className="h-2 w-full rounded-full bg-muted">
-                          <div
-                            className="h-full rounded-full bg-brand-emphasis transition-all"
-                            style={{ width: `${progress.pct}%` }}
-                          />
-                        </div>
-                        <p className="text-xs text-muted-foreground">{progress.pct}% of the way there</p>
-                      </div>
-                    )}
-
-                    {progress === null && (
-                      <div className="rounded-xl border border-border bg-muted/20 p-3 flex items-center gap-2">
-                        <BadgeCheckIcon className="size-5 text-brand-emphasis shrink-0" />
-                        <p className="text-sm font-medium">You have reached Platinum, the highest tier.</p>
-                      </div>
-                    )}
-
-                    <div className="grid grid-cols-2 gap-3 border-t border-border pt-4">
-                      <div className="rounded-xl border border-border bg-muted/20 p-3 text-center">
-                        <p className="text-xs text-muted-foreground">Lifetime Points</p>
-                        <p className="text-lg font-bold">{loyaltyAccount!.lifetimePoints.toLocaleString()}</p>
-                      </div>
-                      <div className="rounded-xl border border-border bg-muted/20 p-3 text-center">
-                        <p className="text-xs text-muted-foreground">Point Value</p>
-                        <p className="text-lg font-bold">
-                          {loyaltyAccount!.currency} {loyaltyAccount!.balanceValue.toLocaleString()}
+                        <p className="font-semibold text-foreground">Join the Loyalty Program</p>
+                        <p className="mt-1 text-sm text-muted-foreground">
+                          Earn points on every order and unlock exclusive rewards, free delivery,
+                          and priority support as you level up.
                         </p>
                       </div>
+                      <div className="w-full space-y-2 rounded-xl border border-border bg-muted/30 p-4 text-left">
+                        <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                          How it works
+                        </p>
+                        {[
+                          "Earn 1 point per KES 10 spent",
+                          "Redeem 100 points for KES 10 off",
+                          "Unlock Silver at 500pts, Gold at 2,000pts",
+                        ].map((line) => (
+                          <div key={line} className="flex items-center gap-2 text-sm">
+                            <BadgeCheckIcon className="size-4 shrink-0 text-brand-emphasis" />
+                            {line}
+                          </div>
+                        ))}
+                      </div>
+                      <Button
+                        className="w-full"
+                        onClick={() => void handleRegisterLoyalty()}
+                        disabled={registerLoyalty.isPending}
+                      >
+                        {registerLoyalty.isPending ? (
+                          <>
+                            <Loader2 className="mr-2 size-4 animate-spin" />
+                            Joining…
+                          </>
+                        ) : (
+                          <>
+                            <GiftIcon className="mr-2 size-4" />
+                            Join free
+                          </>
+                        )}
+                      </Button>
                     </div>
-
-                    {/* Benefits */}
-                    {loyaltyAccount!.tierBenefits && (
-                      <div className="rounded-xl border border-border bg-muted/20 p-3 space-y-1.5">
-                        <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Your benefits</p>
-                        {loyaltyAccount!.tierBenefits.freeDelivery && (
-                          <div className="flex items-center gap-2 text-sm">
-                            <BadgeCheckIcon className="size-4 text-brand-emphasis shrink-0" />
-                            Free delivery on all orders
+                  ) : (
+                    /* Registered — show tier + progress */
+                    <div className="space-y-4">
+                      <div className="flex items-center justify-between">
+                        <div>
+                          <p className="text-xs uppercase tracking-wider text-muted-foreground">
+                            Current Tier
+                          </p>
+                          <div className="mt-1 flex items-center gap-2">
+                            <CrownIcon className="size-5 text-brand-emphasis" />
+                            <span className="text-2xl font-bold capitalize text-foreground">
+                              {loyaltyAccount!.tier}
+                            </span>
+                            <span
+                              className={`rounded-full px-2 py-0.5 text-xs font-medium capitalize ${tierColorClass}`}
+                            >
+                              {loyaltyAccount!.tier}
+                            </span>
                           </div>
-                        )}
-                        {loyaltyAccount!.tierBenefits.prioritySupport && (
-                          <div className="flex items-center gap-2 text-sm">
-                            <BadgeCheckIcon className="size-4 text-brand-emphasis shrink-0" />
-                            Priority customer support
-                          </div>
-                        )}
-                        {loyaltyAccount!.tierBenefits.exclusiveOffers && (
-                          <div className="flex items-center gap-2 text-sm">
-                            <BadgeCheckIcon className="size-4 text-brand-emphasis shrink-0" />
-                            Exclusive member offers
-                          </div>
-                        )}
-                        <div className="flex items-center gap-2 text-sm">
-                          <TrendingUpIcon className="size-4 text-brand-emphasis shrink-0" />
-                          {loyaltyAccount!.tierBenefits.pointsMultiplier}× points multiplier
+                        </div>
+                        <div className="text-right">
+                          <p className="text-xs text-muted-foreground">Balance</p>
+                          <p className="text-2xl font-bold text-foreground">
+                            {loyaltyAccount!.balancePoints.toLocaleString()}
+                          </p>
+                          <p className="text-xs text-muted-foreground">pts</p>
                         </div>
                       </div>
-                    )}
-                  </div>
-                )}
-              </CardContent>
-            </Card>
-            )} {/* end hasLoyalty conditional */}
 
+                      {progress && (
+                        <div className="space-y-1">
+                          <div className="flex items-center justify-between text-xs text-muted-foreground">
+                            <span>
+                              Progress to{" "}
+                              <span className="font-medium capitalize">{progress.nextTier}</span>
+                            </span>
+                            <span>{progress.needed.toLocaleString()} pts needed</span>
+                          </div>
+                          <div className="h-2 w-full rounded-full bg-muted">
+                            <div
+                              className="h-full rounded-full bg-brand-emphasis transition-all"
+                              style={{ width: `${progress.pct}%` }}
+                            />
+                          </div>
+                          <p className="text-xs text-muted-foreground">
+                            {progress.pct}% of the way there
+                          </p>
+                        </div>
+                      )}
+
+                      {progress === null && (
+                        <div className="flex items-center gap-2 rounded-xl border border-border bg-muted/20 p-3">
+                          <BadgeCheckIcon className="size-5 shrink-0 text-brand-emphasis" />
+                          <p className="text-sm font-medium">
+                            You have reached Platinum, the highest tier.
+                          </p>
+                        </div>
+                      )}
+
+                      <div className="grid grid-cols-2 gap-3 border-t border-border pt-4">
+                        <div className="rounded-xl border border-border bg-muted/20 p-3 text-center">
+                          <p className="text-xs text-muted-foreground">Lifetime Points</p>
+                          <p className="text-lg font-bold">
+                            {loyaltyAccount!.lifetimePoints.toLocaleString()}
+                          </p>
+                        </div>
+                        <div className="rounded-xl border border-border bg-muted/20 p-3 text-center">
+                          <p className="text-xs text-muted-foreground">Point Value</p>
+                          <p className="text-lg font-bold">
+                            {loyaltyAccount!.currency}{" "}
+                            {loyaltyAccount!.balanceValue.toLocaleString()}
+                          </p>
+                        </div>
+                      </div>
+
+                      {/* Benefits */}
+                      {loyaltyAccount!.tierBenefits && (
+                        <div className="space-y-1.5 rounded-xl border border-border bg-muted/20 p-3">
+                          <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                            Your benefits
+                          </p>
+                          {loyaltyAccount!.tierBenefits.freeDelivery && (
+                            <div className="flex items-center gap-2 text-sm">
+                              <BadgeCheckIcon className="size-4 shrink-0 text-brand-emphasis" />
+                              Free delivery on all orders
+                            </div>
+                          )}
+                          {loyaltyAccount!.tierBenefits.prioritySupport && (
+                            <div className="flex items-center gap-2 text-sm">
+                              <BadgeCheckIcon className="size-4 shrink-0 text-brand-emphasis" />
+                              Priority customer support
+                            </div>
+                          )}
+                          {loyaltyAccount!.tierBenefits.exclusiveOffers && (
+                            <div className="flex items-center gap-2 text-sm">
+                              <BadgeCheckIcon className="size-4 shrink-0 text-brand-emphasis" />
+                              Exclusive member offers
+                            </div>
+                          )}
+                          <div className="flex items-center gap-2 text-sm">
+                            <TrendingUpIcon className="size-4 shrink-0 text-brand-emphasis" />
+                            {loyaltyAccount!.tierBenefits.pointsMultiplier}× points multiplier
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
+            )}{" "}
+            {/* end hasLoyalty conditional */}
             {/* Wallet */}
             {!hasWallet ? (
               <Card>
@@ -335,7 +383,11 @@ export default function CustomerDashboardPage() {
                       </p>
                     </div>
                     <Button variant="outline" size="sm" asChild>
-                      <a href={`${process.env.NEXT_PUBLIC_SUBSCRIPTIONS_UI_URL ?? "https://pricing.codevertexafrica.com"}/plans`} target="_blank" rel="noopener noreferrer">
+                      <a
+                        href={`${process.env.NEXT_PUBLIC_SUBSCRIPTIONS_UI_URL ?? "https://pricing.codevertexafrica.com"}/plans`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                      >
                         View Plans
                       </a>
                     </Button>
@@ -343,54 +395,55 @@ export default function CustomerDashboardPage() {
                 </CardContent>
               </Card>
             ) : (
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2 text-lg">
-                  <WalletIcon className="size-5 text-brand-emphasis" />
-                  Wallet
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                {walletLoading ? (
-                  <div className="flex items-center justify-center py-8">
-                    <Loader2 className="size-6 animate-spin text-muted-foreground" />
-                  </div>
-                ) : (
-                  <>
-                    <div className="rounded-2xl bg-brand-emphasis/10 p-6 text-center">
-                      <p className="text-sm text-muted-foreground">Available Balance</p>
-                      <p className="mt-1 text-4xl font-bold text-foreground">
-                        {walletData?.currency ?? "KES"}{" "}
-                        {(walletData?.balance ?? 0).toLocaleString()}
-                      </p>
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2 text-lg">
+                    <WalletIcon className="size-5 text-brand-emphasis" />
+                    Wallet
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  {walletLoading ? (
+                    <div className="flex items-center justify-center py-8">
+                      <Loader2 className="size-6 animate-spin text-muted-foreground" />
                     </div>
-                    <div className="grid grid-cols-2 gap-3">
-                      <Button variant="outline" className="w-full" asChild>
-                        <Link href={orgRoute(orgSlug, "/profile/wallet")}>
-                          View history
-                        </Link>
-                      </Button>
-                      <Button className="w-full" asChild>
-                        <Link href={orgRoute(orgSlug, "/profile/wallet?action=topup")}>
-                          Top up
-                        </Link>
-                      </Button>
-                    </div>
-                    <div className="rounded-xl border border-border bg-muted/20 p-3 space-y-1.5">
-                      <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Payment methods</p>
-                      <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                        <BadgeCheckIcon className="size-4 text-brand-emphasis shrink-0" />
-                        M-Pesa, Paystack, wallet credits
+                  ) : (
+                    <>
+                      <div className="rounded-2xl bg-brand-emphasis/10 p-6 text-center">
+                        <p className="text-sm text-muted-foreground">Available Balance</p>
+                        <p className="mt-1 text-4xl font-bold text-foreground">
+                          {walletData?.currency ?? "KES"}{" "}
+                          {(walletData?.balance ?? 0).toLocaleString()}
+                        </p>
                       </div>
-                      <p className="text-xs text-muted-foreground">
-                        Use your wallet balance at checkout for instant payment.
-                      </p>
-                    </div>
-                  </>
-                )}
-              </CardContent>
-            </Card>
-            )} {/* end hasWallet conditional */}
+                      <div className="grid grid-cols-2 gap-3">
+                        <Button variant="outline" className="w-full" asChild>
+                          <Link href={orgRoute(orgSlug, "/profile/wallet")}>View history</Link>
+                        </Button>
+                        <Button className="w-full" asChild>
+                          <Link href={orgRoute(orgSlug, "/profile/wallet?action=topup")}>
+                            Top up
+                          </Link>
+                        </Button>
+                      </div>
+                      <div className="space-y-1.5 rounded-xl border border-border bg-muted/20 p-3">
+                        <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                          Payment methods
+                        </p>
+                        <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                          <BadgeCheckIcon className="size-4 shrink-0 text-brand-emphasis" />
+                          M-Pesa, Paystack, wallet credits
+                        </div>
+                        <p className="text-xs text-muted-foreground">
+                          Use your wallet balance at checkout for instant payment.
+                        </p>
+                      </div>
+                    </>
+                  )}
+                </CardContent>
+              </Card>
+            )}{" "}
+            {/* end hasWallet conditional */}
           </div>
 
           {/* Recent Loyalty Transactions */}
@@ -426,11 +479,20 @@ export default function CustomerDashboardPage() {
                         <div>
                           <p className="text-sm font-medium text-foreground">{tx.description}</p>
                           <p className="text-xs text-muted-foreground">
-                            {formatDateTime(tx.occurredAt, { month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" })}
+                            {formatDateTime(tx.occurredAt, {
+                              month: "short",
+                              day: "numeric",
+                              hour: "2-digit",
+                              minute: "2-digit",
+                            })}
                           </p>
                         </div>
-                        <span className={`text-sm font-bold ${tx.transactionType === "earn" || tx.transactionType === "bonus" ? "text-green-600 dark:text-green-400" : "text-red-500"}`}>
-                          {tx.transactionType === "earn" || tx.transactionType === "bonus" ? "+" : "−"}
+                        <span
+                          className={`text-sm font-bold ${tx.transactionType === "earn" || tx.transactionType === "bonus" ? "text-green-600 dark:text-green-400" : "text-red-500"}`}
+                        >
+                          {tx.transactionType === "earn" || tx.transactionType === "bonus"
+                            ? "+"
+                            : "−"}
                           {Math.abs(tx.points).toLocaleString()} pts
                         </span>
                       </div>
@@ -474,18 +536,28 @@ export default function CustomerDashboardPage() {
                     href={`${
                       LOGISTICS_UI_URL
                     }/${orgSlug}/tracking?orderId=${encodeURIComponent(order.id)}`}
-                    className="flex flex-wrap items-center justify-between gap-2 rounded-2xl border border-border bg-muted/30 px-4 py-3 mb-2 text-sm transition-colors hover:bg-muted/60"
+                    className="mb-2 flex flex-wrap items-center justify-between gap-2 rounded-2xl border border-border bg-muted/30 px-4 py-3 text-sm transition-colors hover:bg-muted/60"
                   >
                     <div>
                       <p className="font-semibold text-foreground">#{order.orderNumber}</p>
                       <p className="text-xs text-muted-foreground">
-                        {order.items?.length ?? 0} items &middot; KES {order.grandTotal.toLocaleString()}
+                        {order.items?.length ?? 0} items &middot; KES{" "}
+                        {order.grandTotal.toLocaleString()}
                       </p>
                       <p className="text-xs text-muted-foreground">
-                        {formatDateTime(order.createdAt, { day: "2-digit", month: "short", hour: "2-digit", minute: "2-digit" })}
+                        {formatDateTime(order.createdAt, {
+                          day: "2-digit",
+                          month: "short",
+                          hour: "2-digit",
+                          minute: "2-digit",
+                        })}
                       </p>
                     </div>
-                    <Badge variant={["delivered", "completed"].includes(order.status) ? "default" : "soft"}>
+                    <Badge
+                      variant={
+                        ["delivered", "completed"].includes(order.status) ? "default" : "soft"
+                      }
+                    >
                       {order.status.replace(/_/g, " ")}
                     </Badge>
                   </a>
@@ -499,9 +571,7 @@ export default function CustomerDashboardPage() {
             {[
               { label: "Order Now", href: "/catalog", icon: UtensilsIcon },
               { label: "My Orders", href: "/orders", icon: ShoppingBagIcon },
-              ...(hasLoyalty
-                ? [{ label: "Loyalty", href: "/loyalty", icon: StarIcon }]
-                : []),
+              ...(hasLoyalty ? [{ label: "Loyalty", href: "/loyalty", icon: StarIcon }] : []),
               ...(hasWallet
                 ? [{ label: "Wallet", href: "/profile/wallet", icon: WalletIcon }]
                 : []),

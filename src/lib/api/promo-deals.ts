@@ -98,7 +98,10 @@ export function dealBadge(rule: DealRule | null | undefined): string | null {
  *  and a category rule's are category names, both compared without case. Ids are still accepted
  *  for older rules. "all"-scope deals are skipped (banner material, not a per-item grid).
  *  Shared by every home view that renders a deals grid. */
-export function resolveDealItems(items: MenuItem[], deals: Deal[]): { item: MenuItem; deal: Deal }[] {
+export function resolveDealItems(
+  items: MenuItem[],
+  deals: Deal[],
+): { item: MenuItem; deal: Deal }[] {
   const out: { item: MenuItem; deal: Deal }[] = [];
   const seen = new Set<string>();
   const norm = (v: string | undefined | null) => (v ?? "").trim().toLowerCase();

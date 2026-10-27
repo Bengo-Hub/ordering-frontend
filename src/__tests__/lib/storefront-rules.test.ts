@@ -34,7 +34,9 @@ describe("brandThemeVariables", () => {
 
 describe("use case copy and layout", () => {
   it("gives restaurant words to restaurant-like values", () => {
-    expect(getUseCaseCopy("restaurant").outletLabel).toBe(getUseCaseCopy("hospitality").outletLabel);
+    expect(getUseCaseCopy("restaurant").outletLabel).toBe(
+      getUseCaseCopy("hospitality").outletLabel,
+    );
     expect(getUseCaseCopy("cafe").itemLabel).toBe(getUseCaseCopy("hospitality").itemLabel);
   });
 
@@ -54,7 +56,11 @@ describe("use case copy and layout", () => {
 describe("resolveDealItems", () => {
   const item = (id: string, category: string, extra: Partial<MenuItem> = {}) =>
     ({ id, name: id, category, categoryId: `cat-${category}`, price: 100, ...extra }) as MenuItem;
-  const deal = (scopeType: "item" | "category", scopeIds: string[], discountType: DealRule["discountType"] = "percentage"): Deal => ({
+  const deal = (
+    scopeType: "item" | "category",
+    scopeIds: string[],
+    discountType: DealRule["discountType"] = "percentage",
+  ): Deal => ({
     id: `${scopeType}-${scopeIds.join()}`,
     name: "deal",
     startAt: "",
@@ -65,13 +71,19 @@ describe("resolveDealItems", () => {
 
   it("matches item rules by SKU and category rules by category name, without case", () => {
     const items = [item("WIN-ASC-R", "Wines"), item("BRG-01", "Burgers"), item("SODA", "Drinks")];
-    const pairs = resolveDealItems(items, [deal("item", ["win-asc-r"]), deal("category", ["burgers"])]);
+    const pairs = resolveDealItems(items, [
+      deal("item", ["win-asc-r"]),
+      deal("category", ["burgers"]),
+    ]);
     expect(pairs.map((p) => p.item.id)).toEqual(["WIN-ASC-R", "BRG-01"]);
   });
 
   it("still accepts inventory and category ids from older rules", () => {
     const items = [item("SKU-1", "Bags", { inventoryId: "uuid-1" }), item("SKU-2", "Shoes")];
-    const pairs = resolveDealItems(items, [deal("item", ["uuid-1"]), deal("category", ["cat-Shoes"])]);
+    const pairs = resolveDealItems(items, [
+      deal("item", ["uuid-1"]),
+      deal("category", ["cat-Shoes"]),
+    ]);
     expect(pairs.map((p) => p.item.id)).toEqual(["SKU-1", "SKU-2"]);
   });
 
@@ -80,8 +92,32 @@ describe("resolveDealItems", () => {
   });
 
   it("prices with the same rules the cards show", () => {
-    expect(applyDeal(1000, { scopeType: "item", scopeIds: [], discountType: "percentage", discountValue: 25, maxDiscount: 0 })).toBe(750);
-    expect(applyDeal(1000, { scopeType: "item", scopeIds: [], discountType: "percentage", discountValue: 50, maxDiscount: 200 })).toBe(800);
-    expect(applyDeal(1000, { scopeType: "item", scopeIds: [], discountType: "fixed_price", discountValue: 699, maxDiscount: 0 })).toBe(699);
+    expect(
+      applyDeal(1000, {
+        scopeType: "item",
+        scopeIds: [],
+        discountType: "percentage",
+        discountValue: 25,
+        maxDiscount: 0,
+      }),
+    ).toBe(750);
+    expect(
+      applyDeal(1000, {
+        scopeType: "item",
+        scopeIds: [],
+        discountType: "percentage",
+        discountValue: 50,
+        maxDiscount: 200,
+      }),
+    ).toBe(800);
+    expect(
+      applyDeal(1000, {
+        scopeType: "item",
+        scopeIds: [],
+        discountType: "fixed_price",
+        discountValue: 699,
+        maxDiscount: 0,
+      }),
+    ).toBe(699);
   });
 });

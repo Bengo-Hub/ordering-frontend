@@ -26,14 +26,20 @@ export function SectionHeader({
   return (
     <div className={cn("mb-4 flex items-end justify-between gap-3", className)}>
       <div className="min-w-0">
-        <h2 id={id} className="font-display flex flex-wrap items-center gap-2.5 text-xl font-bold text-foreground sm:text-2xl">
+        <h2
+          id={id}
+          className="flex flex-wrap items-center gap-2.5 font-display text-xl font-bold text-foreground sm:text-2xl"
+        >
           {title}
           {pill}
         </h2>
         {subtitle && <p className="mt-0.5 text-sm text-muted-foreground">{subtitle}</p>}
       </div>
       {seeAllHref && (
-        <Link href={seeAllHref} className="shrink-0 rounded-full px-3 py-1.5 text-sm font-semibold text-primary hover:bg-secondary">
+        <Link
+          href={seeAllHref}
+          className="shrink-0 rounded-full px-3 py-1.5 text-sm font-semibold text-primary hover:bg-secondary"
+        >
           See all
         </Link>
       )}

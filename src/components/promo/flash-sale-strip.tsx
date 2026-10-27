@@ -11,7 +11,11 @@
 import { Zap } from "lucide-react";
 import Link from "next/link";
 
-import { FeaturedItemCard, FeaturedItemsCarousel, type FeaturedItemProps } from "@/components/catalog/featured-item-card";
+import {
+  FeaturedItemCard,
+  FeaturedItemsCarousel,
+  type FeaturedItemProps,
+} from "@/components/catalog/featured-item-card";
 import { Button } from "@/components/ui/button";
 import { useCountdown } from "@/hooks/use-countdown";
 import { cn } from "@/lib/utils";
@@ -35,12 +39,20 @@ export function FlashSaleStrip({ items, endsAt, seeAllHref, className }: FlashSa
       <div className="mb-3 flex items-center justify-between gap-2 sm:mb-4">
         <div className="flex min-w-0 flex-wrap items-center gap-2">
           <Zap className="size-5 fill-gold text-gold sm:size-6" />
-          <h2 className="font-display text-base font-bold sm:text-xl">{endsAt ? "Flash sales" : "Deals"}</h2>
+          <h2 className="font-display text-base font-bold sm:text-xl">
+            {endsAt ? "Flash sales" : "Deals"}
+          </h2>
           {countdown && (
-            <span className="rounded-full bg-gold px-2.5 py-0.5 text-xs font-bold text-night">{countdown}</span>
+            <span className="rounded-full bg-gold px-2.5 py-0.5 text-xs font-bold text-night">
+              {countdown}
+            </span>
           )}
         </div>
-        <Button size="sm" className="h-9 shrink-0 rounded-full bg-gold font-semibold text-night hover:bg-gold/90" asChild>
+        <Button
+          size="sm"
+          className="h-9 shrink-0 rounded-full bg-gold font-semibold text-night hover:bg-gold/90"
+          asChild
+        >
           <Link href={seeAllHref}>See all</Link>
         </Button>
       </div>

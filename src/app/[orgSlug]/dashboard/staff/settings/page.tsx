@@ -85,12 +85,7 @@ interface Branding {
   logo_url: string;
 }
 
-type ActiveTab =
-  | "payments"
-  | "notifications"
-  | "subscription"
-  | "integrations"
-  | "configuration";
+type ActiveTab = "payments" | "notifications" | "subscription" | "integrations" | "configuration";
 
 // ── App brand summary (from GET /api/v1/{tenant}/config) ──────────────────────
 
@@ -100,14 +95,13 @@ function AppBrandSummary() {
   return (
     <Card className="mb-6 border-primary/20 bg-primary/5">
       <CardContent className="flex flex-wrap items-center gap-4 py-4">
-        {data.logoUrl ? (
-          <TenantLogo src={data.logoUrl} alt="" className="h-10" />
-        ) : null}
+        {data.logoUrl ? <TenantLogo src={data.logoUrl} alt="" className="h-10" /> : null}
         <div>
           <p className="text-sm font-medium text-muted-foreground">App brand (read-only)</p>
           <p className="text-lg font-bold">{data.name}</p>
           <p className="text-xs text-muted-foreground">
-            Display name and theme colors come from tenant config. Notification branding (logo, from name) is editable in the Notifications tab.
+            Display name and theme colors come from tenant config. Notification branding (logo, from
+            name) is editable in the Notifications tab.
           </p>
         </div>
         {data.primaryColor ? (
@@ -129,7 +123,11 @@ export default function TenantSettingsPage() {
   const tenantSlug = params.orgSlug as string;
   const [activeTab, setActiveTab] = useState<ActiveTab>("payments");
 
-  const tabs: { key: ActiveTab; label: string; icon: React.ComponentType<{ className?: string }> }[] = [
+  const tabs: {
+    key: ActiveTab;
+    label: string;
+    icon: React.ComponentType<{ className?: string }>;
+  }[] = [
     { key: "payments", label: "Payments", icon: CreditCard },
     { key: "notifications", label: "Notifications", icon: Bell },
     { key: "subscription", label: "Add-ons", icon: Package },
@@ -203,8 +201,12 @@ function OrderAcceptanceCard() {
     updateConfig.mutate(
       { key: "orders.auto_accept", value: auto ? "true" : "false" },
       {
-        onSuccess: () => toast.success(auto ? "Orders will be accepted automatically" : "Staff will accept each order"),
-        onError: async (err) => toast.error(await apiErrorMessage(err, "Failed to save order acceptance")),
+        onSuccess: () =>
+          toast.success(
+            auto ? "Orders will be accepted automatically" : "Staff will accept each order",
+          ),
+        onError: async (err) =>
+          toast.error(await apiErrorMessage(err, "Failed to save order acceptance")),
       },
     );
   };
@@ -240,7 +242,9 @@ function OrderAcceptanceCard() {
                 disabled={updateConfig.isPending}
                 onClick={() => opt.auto !== autoAccept && setMode(opt.auto)}
                 className={`rounded-lg border p-4 text-left transition-colors ${
-                  opt.auto === autoAccept ? "border-primary bg-primary/5" : "border-border hover:border-muted-foreground/30"
+                  opt.auto === autoAccept
+                    ? "border-primary bg-primary/5"
+                    : "border-border hover:border-muted-foreground/30"
                 }`}
               >
                 <p className="font-medium">{opt.title}</p>
@@ -320,15 +324,17 @@ function PaymentSettingsTab({ tenantSlug: _tenantSlug }: { tenantSlug: string })
           )}
 
           {available.length === 0 ? (
-            <div className="text-center py-8">
-              <Settings className="size-8 text-muted-foreground mx-auto mb-2" />
+            <div className="py-8 text-center">
+              <Settings className="mx-auto mb-2 size-8 text-muted-foreground" />
               <p className="text-sm text-muted-foreground">
                 No payment gateways available. Ask the platform admin to configure gateways.
               </p>
             </div>
           ) : (
             <div className="space-y-3">
-              <p className="text-sm text-muted-foreground mb-3">Enable payment gateways for your organization:</p>
+              <p className="mb-3 text-sm text-muted-foreground">
+                Enable payment gateways for your organization:
+              </p>
               {available.map((gw) => {
                 const sel = selectedByType.get(gw.gateway_type);
                 const isEnabled = !!sel?.is_active;
@@ -338,21 +344,24 @@ function PaymentSettingsTab({ tenantSlug: _tenantSlug }: { tenantSlug: string })
                   <div
                     key={gw.gateway_type}
                     className={`flex items-center justify-between rounded-lg border p-4 transition-colors ${
-                      isEnabled ? "border-primary bg-primary/5" : "border-border hover:border-muted-foreground/30"
+                      isEnabled
+                        ? "border-primary bg-primary/5"
+                        : "border-border hover:border-muted-foreground/30"
                     }`}
                   >
                     <div>
-                      <p className="font-medium flex items-center gap-2">
+                      <p className="flex items-center gap-2 font-medium">
                         {gw.name}
                         {isPrimary && (
                           <Badge variant="default" className="text-[10px]">
-                            <Check className="size-3 mr-1" /> Primary
+                            <Check className="mr-1 size-3" /> Primary
                           </Badge>
                         )}
                       </p>
                       <p className="text-xs text-muted-foreground">
                         {gw.gateway_type.replace(/_/g, " ")}
-                        {gw.transaction_fee_type && ` · ${gw.transaction_fee_type.replace(/_/g, " ")} fee`}
+                        {gw.transaction_fee_type &&
+                          ` · ${gw.transaction_fee_type.replace(/_/g, " ")} fee`}
                         {gw.supports_stk_push && " · STK push"}
                       </p>
                     </div>
@@ -365,9 +374,9 @@ function PaymentSettingsTab({ tenantSlug: _tenantSlug }: { tenantSlug: string })
                         onClick={() => handleDisable(gw.gateway_type)}
                       >
                         {isPending ? (
-                          <Loader2 className="size-3 animate-spin mr-1" />
+                          <Loader2 className="mr-1 size-3 animate-spin" />
                         ) : (
-                          <X className="size-3 mr-1" />
+                          <X className="mr-1 size-3" />
                         )}
                         Disable
                       </Button>
@@ -378,9 +387,7 @@ function PaymentSettingsTab({ tenantSlug: _tenantSlug }: { tenantSlug: string })
                         disabled={isPending}
                         onClick={() => handleEnable(gw.gateway_type)}
                       >
-                        {isPending ? (
-                          <Loader2 className="size-3 animate-spin mr-1" />
-                        ) : null}
+                        {isPending ? <Loader2 className="mr-1 size-3 animate-spin" /> : null}
                         Enable
                       </Button>
                     )}
@@ -400,7 +407,11 @@ function PaymentSettingsTab({ tenantSlug: _tenantSlug }: { tenantSlug: string })
 function NotificationSettingsTab({ tenantSlug }: { tenantSlug: string }) {
   const [availableProviders, setAvailableProviders] = useState<AvailableProvider[]>([]);
   const [selectedProviders, setSelectedProviders] = useState<SelectedProviders>({});
-  const [branding, setBranding] = useState<Branding>({ from_email: "", from_name: "", logo_url: "" });
+  const [branding, setBranding] = useState<Branding>({
+    from_email: "",
+    from_name: "",
+    logo_url: "",
+  });
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
   const [loadError, setLoadError] = useState(false);
@@ -416,13 +427,19 @@ function NotificationSettingsTab({ tenantSlug }: { tenantSlug: string }) {
     if (selRes.status === "fulfilled") setSelectedProviders(selRes.value.data || {});
     if (brandRes.status === "fulfilled") setBranding(brandRes.value.data || branding);
     // Surface a clear error state instead of silently degrading to empty.
-    if (avRes.status === "rejected" && selRes.status === "rejected" && brandRes.status === "rejected") {
+    if (
+      avRes.status === "rejected" &&
+      selRes.status === "rejected" &&
+      brandRes.status === "rejected"
+    ) {
       setLoadError(true);
     }
     setIsLoading(false);
   }, [tenantSlug]);
 
-  useEffect(() => { fetchData(); }, [fetchData]);
+  useEffect(() => {
+    fetchData();
+  }, [fetchData]);
 
   const handleSaveBranding = async () => {
     setIsSaving(true);
@@ -487,8 +504,8 @@ function NotificationSettingsTab({ tenantSlug }: { tenantSlug: string }) {
         </CardHeader>
         <CardContent>
           {Object.keys(byChannel).length === 0 ? (
-            <div className="text-center py-8">
-              <Bell className="size-8 text-muted-foreground mx-auto mb-2" />
+            <div className="py-8 text-center">
+              <Bell className="mx-auto mb-2 size-8 text-muted-foreground" />
               <p className="text-sm text-muted-foreground">
                 No notification providers available. Ask the platform admin to configure providers.
               </p>
@@ -500,7 +517,7 @@ function NotificationSettingsTab({ tenantSlug }: { tenantSlug: string }) {
                 const currentlySelected = selectedProviders[channel as keyof SelectedProviders];
                 return (
                   <div key={channel}>
-                    <div className="flex items-center gap-2 mb-3">
+                    <div className="mb-3 flex items-center gap-2">
                       <Icon className="size-4 text-muted-foreground" />
                       <h3 className="text-sm font-bold uppercase tracking-wide text-muted-foreground">
                         {channel}
@@ -520,7 +537,7 @@ function NotificationSettingsTab({ tenantSlug }: { tenantSlug: string }) {
                                 : "border-border text-muted-foreground hover:border-muted-foreground/30"
                             }`}
                           >
-                            {isActive && <Check className="size-3 inline mr-1" />}
+                            {isActive && <Check className="mr-1 inline size-3" />}
                             {p.provider_name}
                           </button>
                         );
@@ -572,12 +589,8 @@ function NotificationSettingsTab({ tenantSlug }: { tenantSlug: string }) {
               />
             </div>
           </div>
-          <Button
-            className="mt-4"
-            onClick={handleSaveBranding}
-            disabled={isSaving}
-          >
-            {isSaving ? <Loader2 className="size-4 animate-spin mr-2" /> : null}
+          <Button className="mt-4" onClick={handleSaveBranding} disabled={isSaving}>
+            {isSaving ? <Loader2 className="mr-2 size-4 animate-spin" /> : null}
             Save Branding
           </Button>
         </CardContent>
@@ -599,7 +612,8 @@ interface CustomAddon {
   status?: string;
 }
 
-const SUBSCRIPTIONS_UI_URL = process.env.NEXT_PUBLIC_SUBSCRIPTIONS_UI_URL || "https://pricing.codevertexafrica.com";
+const SUBSCRIPTIONS_UI_URL =
+  process.env.NEXT_PUBLIC_SUBSCRIPTIONS_UI_URL || "https://pricing.codevertexafrica.com";
 
 /**
  * The tenant's add-ons, read only. subscriptions-api has no tenant subscribe/remove routes
@@ -663,10 +677,15 @@ function SubscriptionAddonsTab({ tenantSlug: _tenantSlug }: { tenantSlug: string
         ) : (
           <ul className="space-y-3">
             {addons.map((a) => (
-              <li key={a.id} className="flex items-center justify-between gap-3 rounded-lg border border-border p-4">
+              <li
+                key={a.id}
+                className="flex items-center justify-between gap-3 rounded-lg border border-border p-4"
+              >
                 <div>
                   <p className="font-medium">{a.name}</p>
-                  {a.description && <p className="text-xs text-muted-foreground">{a.description}</p>}
+                  {a.description && (
+                    <p className="text-xs text-muted-foreground">{a.description}</p>
+                  )}
                 </div>
                 <div className="text-right text-sm">
                   {a.unit_price_kes != null && (
@@ -675,7 +694,9 @@ function SubscriptionAddonsTab({ tenantSlug: _tenantSlug }: { tenantSlug: string
                       {a.billing_cycle ? ` / ${a.billing_cycle}` : ""}
                     </p>
                   )}
-                  {a.status && <p className="text-xs capitalize text-muted-foreground">{a.status}</p>}
+                  {a.status && (
+                    <p className="text-xs capitalize text-muted-foreground">{a.status}</p>
+                  )}
                 </div>
               </li>
             ))}
@@ -688,20 +709,22 @@ function SubscriptionAddonsTab({ tenantSlug: _tenantSlug }: { tenantSlug: string
 
 // ── Integrations Settings ────────────────────────────────────────────────────
 
-const AUTH_API_URL_DEFAULT = process.env.NEXT_PUBLIC_AUTH_API_URL || 'https://sso.codevertexafrica.com';
-const ORDERING_API_URL = process.env.NEXT_PUBLIC_API_URL || 'https://orderingapi.codevertexafrica.com';
+const AUTH_API_URL_DEFAULT =
+  process.env.NEXT_PUBLIC_AUTH_API_URL || "https://sso.codevertexafrica.com";
+const ORDERING_API_URL =
+  process.env.NEXT_PUBLIC_API_URL || "https://orderingapi.codevertexafrica.com";
 
 function IntegrationsTab() {
   const [authApiUrl, setAuthApiUrl] = useState(AUTH_API_URL_DEFAULT);
-  const [testStatus, setTestStatus] = useState<'idle' | 'loading' | 'ok' | 'fail'>('idle');
+  const [testStatus, setTestStatus] = useState<"idle" | "loading" | "ok" | "fail">("idle");
 
   const testAuthConnection = async () => {
-    setTestStatus('loading');
+    setTestStatus("loading");
     try {
       const res = await fetch(`${authApiUrl}/healthz`);
-      setTestStatus(res.ok ? 'ok' : 'fail');
+      setTestStatus(res.ok ? "ok" : "fail");
     } catch {
-      setTestStatus('fail');
+      setTestStatus("fail");
     }
   };
 
@@ -733,17 +756,17 @@ function IntegrationsTab() {
                 type="button"
                 size="sm"
                 onClick={testAuthConnection}
-                disabled={testStatus === 'loading'}
+                disabled={testStatus === "loading"}
               >
-                {testStatus === 'loading' ? <Loader2 className="size-3.5 animate-spin" /> : 'Test'}
+                {testStatus === "loading" ? <Loader2 className="size-3.5 animate-spin" /> : "Test"}
               </Button>
             </div>
-            {testStatus === 'ok' && <p className="text-xs text-green-600">Connection successful</p>}
-            {testStatus === 'fail' && <p className="text-xs text-destructive">Connection failed</p>}
+            {testStatus === "ok" && <p className="text-xs text-green-600">Connection successful</p>}
+            {testStatus === "fail" && <p className="text-xs text-destructive">Connection failed</p>}
           </div>
           <div className="space-y-2">
             <Label>Ordering API URL (this service)</Label>
-            <Input value={ORDERING_API_URL} readOnly className="opacity-60 cursor-not-allowed" />
+            <Input value={ORDERING_API_URL} readOnly className="cursor-not-allowed opacity-60" />
           </div>
         </CardContent>
       </Card>
@@ -762,17 +785,19 @@ function IntegrationsTab() {
               placeholder="https://app.example.com, https://admin.example.com"
               disabled
               readOnly
-              className="opacity-60 cursor-not-allowed"
+              className="cursor-not-allowed opacity-60"
             />
-            <p className="text-xs text-muted-foreground">Comma-separated list of allowed CORS origins.</p>
+            <p className="text-xs text-muted-foreground">
+              Comma-separated list of allowed CORS origins.
+            </p>
           </div>
           <Button size="sm" disabled className="gap-2">
             <Save className="size-3.5" />
             Save
           </Button>
           <p className="text-xs text-muted-foreground">
-            Editing CORS origins from the dashboard is not yet available — allowed
-            origins are configured at deploy time on the server.
+            Editing CORS origins from the dashboard is not yet available — allowed origins are
+            configured at deploy time on the server.
           </p>
         </CardContent>
       </Card>
@@ -855,9 +880,7 @@ function EditConfigDialog({
             Cancel
           </Button>
           <Button onClick={handleSave} disabled={mutation.isPending}>
-            {mutation.isPending ? (
-              <Loader2 className="size-4 animate-spin mr-2" />
-            ) : null}
+            {mutation.isPending ? <Loader2 className="mr-2 size-4 animate-spin" /> : null}
             Save
           </Button>
         </DialogFooter>
@@ -891,9 +914,7 @@ function ConfigTable({
         >
           <div className="min-w-0">
             <p className="flex items-center gap-1.5 truncate text-sm font-medium">
-              {item.isSecret && (
-                <Lock className="size-3 shrink-0 text-muted-foreground" />
-              )}
+              {item.isSecret && <Lock className="size-3 shrink-0 text-muted-foreground" />}
               {item.configKey}
               {item.isOverride && (
                 <Badge variant="soft" className="ml-1 text-[10px]">
@@ -902,9 +923,7 @@ function ConfigTable({
               )}
             </p>
             {item.description ? (
-              <p className="truncate text-xs text-muted-foreground">
-                {item.description}
-              </p>
+              <p className="truncate text-xs text-muted-foreground">{item.description}</p>
             ) : null}
           </div>
           <Badge variant="outline" className="text-[10px]">
@@ -942,8 +961,7 @@ function ConfigurationTab() {
   );
 
   const { data: configs = [], isLoading } = useServiceConfig();
-  const { data: adminConfigs = [], isLoading: isAdminLoading } =
-    useAdminServiceConfig(isSuperuser);
+  const { data: adminConfigs = [], isLoading: isAdminLoading } = useAdminServiceConfig(isSuperuser);
 
   const [editItem, setEditItem] = useState<ServiceConfigItem | null>(null);
   const [editAdmin, setEditAdmin] = useState(false);
@@ -983,9 +1001,7 @@ function ConfigurationTab() {
           {otherConfigs.length === 0 ? (
             <div className="py-8 text-center">
               <Settings className="mx-auto mb-2 size-8 text-muted-foreground" />
-              <p className="text-sm text-muted-foreground">
-                No service configuration values yet.
-              </p>
+              <p className="text-sm text-muted-foreground">No service configuration values yet.</p>
             </div>
           ) : (
             <ConfigTable
@@ -1010,8 +1026,8 @@ function ConfigurationTab() {
           </CardHeader>
           <CardContent>
             <p className="mb-4 text-xs text-muted-foreground">
-              Platform-wide defaults with unmasked secrets. Changes here affect
-              every tenant that has not set an override.
+              Platform-wide defaults with unmasked secrets. Changes here affect every tenant that
+              has not set an override.
             </p>
             {isAdminLoading ? (
               <div className="flex items-center justify-center py-10">
@@ -1020,16 +1036,10 @@ function ConfigurationTab() {
             ) : adminConfigs.length === 0 ? (
               <div className="py-8 text-center">
                 <Settings className="mx-auto mb-2 size-8 text-muted-foreground" />
-                <p className="text-sm text-muted-foreground">
-                  No platform default values.
-                </p>
+                <p className="text-sm text-muted-foreground">No platform default values.</p>
               </div>
             ) : (
-              <ConfigTable
-                items={adminConfigs}
-                admin
-                onEdit={(item) => openEdit(item, true)}
-              />
+              <ConfigTable items={adminConfigs} admin onEdit={(item) => openEdit(item, true)} />
             )}
           </CardContent>
         </Card>

@@ -6,7 +6,10 @@ import { useState } from "react";
 import { useCreateAddress } from "@/hooks/use-addresses";
 import { toast } from "@/lib/toast";
 
-import { DeliveryLocationPicker, type DeliveryPoint } from "@/components/location/delivery-location-picker";
+import {
+  DeliveryLocationPicker,
+  type DeliveryPoint,
+} from "@/components/location/delivery-location-picker";
 import { Button } from "@/components/ui/button";
 import type { Address } from "@/lib/api/addresses";
 import type { DeliveryQuote } from "@/lib/api/delivery";
@@ -53,7 +56,9 @@ export function AddressSelector({
   // Signed-in customers can keep a picked location for next time.
   const createAddress = useCreateAddress();
   const [savedKey, setSavedKey] = useState<string | null>(null);
-  const pickedKey = pickedLocation ? `${pickedLocation.lat.toFixed(5)},${pickedLocation.lng.toFixed(5)}` : null;
+  const pickedKey = pickedLocation
+    ? `${pickedLocation.lat.toFixed(5)},${pickedLocation.lng.toFixed(5)}`
+    : null;
   const canSave = !isGuest && !selectedAddress && !!pickedLocation && savedKey !== pickedKey;
   const savePicked = async () => {
     if (!pickedLocation) return;
@@ -98,7 +103,12 @@ export function AddressSelector({
       ) : (
         <div className="py-3 text-center">
           <p className="mb-3 text-sm text-muted-foreground">Choose where we should deliver.</p>
-          <Button variant="outline" size="sm" onClick={() => setShowModal(true)} className="gap-1.5">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => setShowModal(true)}
+            className="gap-1.5"
+          >
             <Plus className="size-4" />
             Choose delivery location
           </Button>
@@ -112,8 +122,19 @@ export function AddressSelector({
               <Check className="size-3.5" /> Saved to your addresses
             </span>
           ) : (
-            <Button type="button" variant="ghost" size="sm" className="gap-1.5 text-xs" onClick={savePicked} disabled={createAddress.isPending}>
-              {createAddress.isPending ? <Loader2 className="size-3.5 animate-spin" /> : <BookmarkPlus className="size-3.5" />}
+            <Button
+              type="button"
+              variant="ghost"
+              size="sm"
+              className="gap-1.5 text-xs"
+              onClick={savePicked}
+              disabled={createAddress.isPending}
+            >
+              {createAddress.isPending ? (
+                <Loader2 className="size-3.5 animate-spin" />
+              ) : (
+                <BookmarkPlus className="size-3.5" />
+              )}
               Save to my addresses
             </Button>
           )}
@@ -151,7 +172,11 @@ export function AddressSelector({
                 <div>
                   <p className="mb-2 text-sm font-medium">Time preference</p>
                   <div className="flex gap-2">
-                    <Button variant={!scheduledTime ? "default" : "outline"} size="sm" className="flex-1 gap-1.5">
+                    <Button
+                      variant={!scheduledTime ? "default" : "outline"}
+                      size="sm"
+                      className="flex-1 gap-1.5"
+                    >
                       <Clock className="size-4" />
                       Deliver now
                     </Button>
@@ -187,14 +212,23 @@ export function AddressSelector({
                           }}
                           className={cn(
                             "flex w-full items-center gap-3 rounded-xl border p-3 text-left transition-colors disabled:opacity-50",
-                            selected ? "border-primary bg-primary/5" : "border-border hover:bg-muted/50",
+                            selected
+                              ? "border-primary bg-primary/5"
+                              : "border-border hover:bg-muted/50",
                           )}
                         >
-                          <MapPin className={cn("size-4 shrink-0", selected ? "text-primary" : "text-muted-foreground")} />
+                          <MapPin
+                            className={cn(
+                              "size-4 shrink-0",
+                              selected ? "text-primary" : "text-muted-foreground",
+                            )}
+                          />
                           <div className="min-w-0 flex-1">
                             <p className="text-sm font-medium">{addr.label}</p>
                             <p className="truncate text-xs text-muted-foreground">
-                              {pinned ? addr.address_line1 : "No map location, pick it on the map above"}
+                              {pinned
+                                ? addr.address_line1
+                                : "No map location, pick it on the map above"}
                             </p>
                           </div>
                           {addr.is_default && (

@@ -16,8 +16,9 @@ interface LocationParam {
 export function useOutletSections(location?: LocationParam | null, { withAllStores = true } = {}) {
   const orgSlug = useOrgSlug();
 
-  const loc: Pick<OutletFilters, "lat" | "lng"> =
-    location ? { lat: location.lat, lng: location.lng } : {};
+  const loc: Pick<OutletFilters, "lat" | "lng"> = location
+    ? { lat: location.lat, lng: location.lng }
+    : {};
 
   // Featured / promoted outlets
   const featured = useOutlets(orgSlug, { sort: "relevance", offers: true, ...loc }, 1, 6);
@@ -36,7 +37,9 @@ export function useOutletSections(location?: LocationParam | null, { withAllStor
 
   // All stores (initial page). Views that page through stores themselves (the food view's
   // infinite list) pass withAllStores: false, so the same listing is not fetched twice.
-  const allStores = useOutlets(orgSlug, { sort: "relevance", ...loc }, 1, 50, { enabled: withAllStores });
+  const allStores = useOutlets(orgSlug, { sort: "relevance", ...loc }, 1, 50, {
+    enabled: withAllStores,
+  });
 
   return { featured, mostReviewed, nearYou, popular, todaysOffers, allStores };
 }

@@ -31,8 +31,7 @@ import { orgRoute } from "@/lib/routes";
 import { cn } from "@/lib/utils";
 import { useOrgSlug } from "@/providers/org-slug-provider";
 
-const TREASURY_API_URL =
-  process.env.NEXT_PUBLIC_TREASURY_API_URL || "http://localhost:4201";
+const TREASURY_API_URL = process.env.NEXT_PUBLIC_TREASURY_API_URL || "http://localhost:4201";
 
 function statusVariant(status: string): "default" | "soft" | "outline" {
   if (["delivered", "completed"].includes(status)) return "default";
@@ -75,7 +74,7 @@ function StarSelector({
               <Star
                 className={cn(
                   "size-7",
-                  active ? "text-amber-400 fill-amber-400" : "text-muted-foreground",
+                  active ? "fill-amber-400 text-amber-400" : "text-muted-foreground",
                 )}
               />
             </button>
@@ -94,7 +93,7 @@ function StarRow({ rating }: { rating: number }) {
           key={n}
           className={cn(
             "size-6",
-            rating >= n ? "text-amber-400 fill-amber-400" : "text-muted-foreground",
+            rating >= n ? "fill-amber-400 text-amber-400" : "text-muted-foreground",
           )}
         />
       ))}
@@ -161,7 +160,12 @@ function RateOrderCard({
 
   const mutation = useMutation({
     mutationFn: () => {
-      const body: { rating: number; comment?: string; riderRating?: number; riderComment?: string } = {
+      const body: {
+        rating: number;
+        comment?: string;
+        riderRating?: number;
+        riderComment?: string;
+      } = {
         rating,
       };
       const trimmedComment = comment.trim();
@@ -214,7 +218,9 @@ function RateOrderCard({
   }
 
   const errMessage =
-    mutation.error instanceof Error ? mutation.error.message : "Something went wrong. Please try again.";
+    mutation.error instanceof Error
+      ? mutation.error.message
+      : "Something went wrong. Please try again.";
 
   return (
     <Card ref={cardRef} className={cn(autoOpen && "ring-2 ring-brand-emphasis/40")}>
@@ -281,7 +287,11 @@ function GuestOrderContent() {
   const autoOpenPay = searchParams.get("pay") === "1";
 
   const queryKey = ["guest-order", orderId, sessionId];
-  const { data: order, isLoading, isError } = useQuery({
+  const {
+    data: order,
+    isLoading,
+    isError,
+  } = useQuery({
     queryKey,
     queryFn: () => getGuestOrder(orgSlug, orderId, sessionId),
     enabled: !!orderId,
@@ -315,10 +325,9 @@ function GuestOrderContent() {
   // The treasury pay route accepts either the tenant UUID or slug; prefer the
   // order's tenantId (matches the backend exactly) and fall back to orgSlug.
   const payTenant = order?.tenantId || orgSlug;
-  const initiateUrl =
-    order?.paymentIntentId
-      ? `${TREASURY_API_URL}/api/v1/pay/${encodeURIComponent(payTenant)}/intents/${order.paymentIntentId}/initiate`
-      : "";
+  const initiateUrl = order?.paymentIntentId
+    ? `${TREASURY_API_URL}/api/v1/pay/${encodeURIComponent(payTenant)}/intents/${order.paymentIntentId}/initiate`
+    : "";
 
   const refetchOrder = () => {
     void queryClient.invalidateQueries({ queryKey });
@@ -357,7 +366,7 @@ function GuestOrderContent() {
 
   if (isError || !order) {
     return (
-      <div className="flex flex-col items-center justify-center py-20 gap-4 text-center">
+      <div className="flex flex-col items-center justify-center gap-4 py-20 text-center">
         <p className="text-muted-foreground">Order not found or access denied.</p>
         <Button asChild variant="outline">
           <Link href={orgRoute(orgSlug, "/")}>Browse Menu</Link>
@@ -375,19 +384,23 @@ function GuestOrderContent() {
             • COD / pay-on-delivery     ⇒ blue   "Cash on delivery" (until paid)
             • prepaid + pending/unpaid  ⇒ amber  "Awaiting payment" */}
       {paymentBanner === "paid" ? (
-        <div className="flex items-center gap-3 rounded-xl bg-green-50 border border-green-200 px-4 py-3">
-          <CheckCircle2 className="size-5 text-green-600 shrink-0" />
+        <div className="flex items-center gap-3 rounded-xl border border-green-200 bg-green-50 px-4 py-3">
+          <CheckCircle2 className="size-5 shrink-0 text-green-600" />
           <div>
             <p className="text-sm font-semibold text-green-800">Payment confirmed!</p>
-            <p className="text-xs text-green-700">Your order has been received and is being processed.</p>
+            <p className="text-xs text-green-700">
+              Your order has been received and is being processed.
+            </p>
           </div>
         </div>
       ) : paymentBanner === "cod" ? (
-        <div className="flex items-center gap-3 rounded-xl bg-blue-50 border border-blue-200 px-4 py-3">
-          <CreditCard className="size-5 text-blue-600 shrink-0" />
+        <div className="flex items-center gap-3 rounded-xl border border-blue-200 bg-blue-50 px-4 py-3">
+          <CreditCard className="size-5 shrink-0 text-blue-600" />
           <div>
             <p className="text-sm font-semibold text-blue-800">
-              {isDeliveryFulfillment(order.fulfillmentType) ? "Pay on delivery" : "Pay at the counter"}
+              {isDeliveryFulfillment(order.fulfillmentType)
+                ? "Pay on delivery"
+                : "Pay at the counter"}
             </p>
             <p className="text-xs text-blue-700">
               {isDeliveryFulfillment(order.fulfillmentType)
@@ -397,11 +410,13 @@ function GuestOrderContent() {
           </div>
         </div>
       ) : paymentBanner === "awaiting" ? (
-        <div className="flex items-center gap-3 rounded-xl bg-amber-50 border border-amber-200 px-4 py-3">
-          <Clock className="size-5 text-amber-600 shrink-0" />
+        <div className="flex items-center gap-3 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3">
+          <Clock className="size-5 shrink-0 text-amber-600" />
           <div>
             <p className="text-sm font-semibold text-amber-800">Awaiting payment</p>
-            <p className="text-xs text-amber-700">Your order will be confirmed once payment is completed.</p>
+            <p className="text-xs text-amber-700">
+              Your order will be confirmed once payment is completed.
+            </p>
           </div>
         </div>
       ) : null}
@@ -420,12 +435,7 @@ function GuestOrderContent() {
       {/* Pay Now — prepaid (Paystack / M-Pesa) orders that are still awaiting payment
           can be completed right here, no login required. */}
       {isPayable && (
-        <Button
-          type="button"
-          size="lg"
-          className="w-full gap-2"
-          onClick={() => setPayOpen(true)}
-        >
+        <Button type="button" size="lg" className="w-full gap-2" onClick={() => setPayOpen(true)}>
           <CreditCard className="size-5" />
           Pay Now — {order.currency ?? "KES"} {order.grandTotal.toLocaleString()}
         </Button>
@@ -434,9 +444,7 @@ function GuestOrderContent() {
       {/* Header */}
       <header className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <h1 className="text-2xl font-semibold text-foreground">
-            Order #{order.orderNumber}
-          </h1>
+          <h1 className="text-2xl font-semibold text-foreground">Order #{order.orderNumber}</h1>
           <p className="text-sm text-muted-foreground">
             Placed{" "}
             {formatDateTime(order.createdAt, {
@@ -472,7 +480,12 @@ function GuestOrderContent() {
                   <div key={step.label} className="flex flex-1 flex-col items-center gap-1.5">
                     <div className="flex w-full items-center">
                       {i > 0 && (
-                        <div className={cn("h-0.5 flex-1", reached ? "bg-brand-emphasis" : "bg-border")} />
+                        <div
+                          className={cn(
+                            "h-0.5 flex-1",
+                            reached ? "bg-brand-emphasis" : "bg-border",
+                          )}
+                        />
                       )}
                       <div
                         className={cn(
@@ -487,7 +500,12 @@ function GuestOrderContent() {
                         <StepIcon className="size-4" />
                       </div>
                       {i < timeline.length - 1 && (
-                        <div className={cn("h-0.5 flex-1", i < currentStep ? "bg-brand-emphasis" : "bg-border")} />
+                        <div
+                          className={cn(
+                            "h-0.5 flex-1",
+                            i < currentStep ? "bg-brand-emphasis" : "bg-border",
+                          )}
+                        />
                       )}
                     </div>
                     <span
@@ -546,7 +564,9 @@ function GuestOrderContent() {
             )}
             <div className="mt-2 flex justify-between border-t border-border pt-2 font-semibold text-foreground">
               <span>Total</span>
-              <span>{order.currency ?? "KES"} {order.grandTotal.toLocaleString()}</span>
+              <span>
+                {order.currency ?? "KES"} {order.grandTotal.toLocaleString()}
+              </span>
             </div>
           </div>
         </CardContent>
@@ -562,9 +582,7 @@ function GuestOrderContent() {
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <p className="text-sm text-muted-foreground">
-              {order.deliveryAddress || "Pickup"}
-            </p>
+            <p className="text-sm text-muted-foreground">{order.deliveryAddress || "Pickup"}</p>
             {order.estimatedDeliveryAt && (
               <p className="mt-1 text-xs text-muted-foreground">
                 ETA:{" "}
@@ -589,9 +607,7 @@ function GuestOrderContent() {
             </p>
             <p className="mt-1 text-xs text-muted-foreground">
               Status:{" "}
-              <span className="capitalize">
-                {order.paymentStatus?.replace(/_/g, " ") ?? "—"}
-              </span>
+              <span className="capitalize">{order.paymentStatus?.replace(/_/g, " ") ?? "—"}</span>
             </p>
           </CardContent>
         </Card>

@@ -4,7 +4,12 @@ import { useEffect, useMemo } from "react";
 
 import { useBrandConfig } from "@/hooks/use-brand";
 import { getUseCaseCopy, type UseCaseCopy } from "@/lib/use-case-copy";
-import { orderingConfigFor, normalizeOrderingUseCase, type OrderingConfig, type OrderingProfile } from "@/lib/use-case-config";
+import {
+  orderingConfigFor,
+  normalizeOrderingUseCase,
+  type OrderingConfig,
+  type OrderingProfile,
+} from "@/lib/use-case-config";
 import { useDiningModeStore } from "@/store/dining-mode";
 import { useOutletFilterStore } from "@/store/outlet-filter";
 

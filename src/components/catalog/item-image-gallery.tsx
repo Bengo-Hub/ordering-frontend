@@ -104,10 +104,7 @@ export function ItemImageGallery({ images, alt, useCase }: ItemImageGalleryProps
         </div>
 
         {/* Thumbnail strip */}
-        <div
-          ref={scrollRef}
-          className="flex gap-2 overflow-x-auto pb-1 scrollbar-none"
-        >
+        <div ref={scrollRef} className="scrollbar-none flex gap-2 overflow-x-auto pb-1">
           {images.map((src, i) => (
             <button
               key={i}
@@ -118,7 +115,14 @@ export function ItemImageGallery({ images, alt, useCase }: ItemImageGalleryProps
                 i === 0 ? "ring-primary" : "ring-transparent hover:ring-primary/50",
               )}
             >
-              <Image src={getMediaUrl(src)!} {...mediaLoaderProps(getMediaUrl(src))} alt={`${alt} ${i + 1}`} fill className="object-cover" sizes="64px" />
+              <Image
+                src={getMediaUrl(src)!}
+                {...mediaLoaderProps(getMediaUrl(src))}
+                alt={`${alt} ${i + 1}`}
+                fill
+                className="object-cover"
+                sizes="64px"
+              />
             </button>
           ))}
         </div>
@@ -182,10 +186,7 @@ function Lightbox({
       )}
 
       {/* Image */}
-      <div
-        className="relative h-[80vh] w-[90vw] max-w-4xl"
-        onClick={(e) => e.stopPropagation()}
-      >
+      <div className="relative h-[80vh] w-[90vw] max-w-4xl" onClick={(e) => e.stopPropagation()}>
         <Image
           src={getMediaUrl(images[index])!}
           {...mediaLoaderProps(getMediaUrl(images[index]))}

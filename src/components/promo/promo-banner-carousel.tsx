@@ -127,7 +127,10 @@ function PromoBannerCard({ banner }: PromoBannerCardProps) {
       style={custom ? { backgroundColor: banner.backgroundColor } : undefined}
     >
       {/* Text Content */}
-      <div className="relative z-10 flex flex-1 flex-col justify-center p-4 sm:p-6 md:p-8" style={textColor ? { color: textColor } : undefined}>
+      <div
+        className="relative z-10 flex flex-1 flex-col justify-center p-4 sm:p-6 md:p-8"
+        style={textColor ? { color: textColor } : undefined}
+      >
         {banner.isFlashSale && (
           <div className="mb-1.5 flex items-center gap-2">
             <span className="inline-flex items-center gap-1 rounded-full bg-destructive px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-destructive-foreground">
@@ -141,8 +144,12 @@ function PromoBannerCard({ banner }: PromoBannerCardProps) {
             )}
           </div>
         )}
-        <h3 className="font-display text-lg font-bold leading-tight sm:text-2xl md:text-3xl">{banner.title}</h3>
-        <p className="mt-1 max-w-md text-xs opacity-90 sm:mt-2 sm:text-sm md:text-base">{banner.subtitle}</p>
+        <h3 className="font-display text-lg font-bold leading-tight sm:text-2xl md:text-3xl">
+          {banner.title}
+        </h3>
+        <p className="mt-1 max-w-md text-xs opacity-90 sm:mt-2 sm:text-sm md:text-base">
+          {banner.subtitle}
+        </p>
         {banner.priceBadge && (
           <div className="mt-3">
             <span className="inline-block rounded-full bg-black/90 px-3 py-1.5 text-xs font-semibold text-white">
@@ -154,7 +161,12 @@ function PromoBannerCard({ banner }: PromoBannerCardProps) {
           <Button
             variant="secondary"
             size="sm"
-            className={cn("mt-4 w-fit rounded-full font-semibold", custom ? "bg-white text-black hover:bg-white/90" : "bg-gold text-night hover:bg-gold/90")}
+            className={cn(
+              "mt-4 w-fit rounded-full font-semibold",
+              custom
+                ? "bg-white text-black hover:bg-white/90"
+                : "bg-gold text-night hover:bg-gold/90",
+            )}
           >
             {banner.ctaText}
           </Button>

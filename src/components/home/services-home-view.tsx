@@ -33,9 +33,7 @@ export function ServicesHomeView() {
   const deliveryLocation = useDiningModeStore((state) => state.deliveryLocation);
   const location = useMemo(
     () =>
-      deliveryLocation
-        ? { lat: deliveryLocation.latitude, lng: deliveryLocation.longitude }
-        : null,
+      deliveryLocation ? { lat: deliveryLocation.latitude, lng: deliveryLocation.longitude } : null,
     [deliveryLocation],
   );
 
@@ -89,9 +87,7 @@ export function ServicesHomeView() {
       <OutletSection
         title={`${copy.outletLabelPlural} near you`}
         subtitle={
-          deliveryLocation?.address
-            ? `Near ${deliveryLocation.address}`
-            : "Based on your location"
+          deliveryLocation?.address ? `Near ${deliveryLocation.address}` : "Based on your location"
         }
         icon={<MapPin className="size-5" />}
         outlets={nearYouOutlets}
