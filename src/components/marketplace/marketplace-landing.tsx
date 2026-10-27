@@ -1,9 +1,24 @@
 "use client";
 
-import { Loader2, MapPin, Search, ShieldCheck, Smartphone, Truck } from "lucide-react";
+import {
+  Loader2,
+  MapPin,
+  Pill as PillIcon,
+  Scissors,
+  Search,
+  ShieldCheck,
+  ShoppingBag,
+  Smartphone,
+  Store,
+  Ticket,
+  Truck,
+  UtensilsCrossed,
+  Zap,
+  type LucideIcon,
+} from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 
 import { LegalLinks } from "@bengo-hub/shared-ui-lib/legal";
 
@@ -15,7 +30,7 @@ import { StoreCard, StoreCardSkeleton } from "@/components/storefront/store-card
 import { ImageWithFallback } from "@/components/ui/image-with-fallback";
 import { brand } from "@/config/brand";
 import { useMarketplaceDeals, useMarketplaceTenants } from "@/hooks/use-marketplace-tenants";
-import type { MarketplaceTenant } from "@/lib/api/marketplace";
+import type { MarketplaceBanner, MarketplaceTenant } from "@/lib/api/marketplace";
 import { PLATFORM_GEO_SLUG, shortPlaceName } from "@/lib/api/delivery";
 import { applyDeal } from "@/lib/api/promo-deals";
 import { orgRoute } from "@/lib/routes";
@@ -31,6 +46,17 @@ const GROUPS: { key: string; label: string; profiles: OrderingProfile[] }[] = [
   { key: "services", label: "Services", profiles: ["services"] },
   { key: "events", label: "Events", profiles: ["ticketing"] },
 ];
+
+const GROUP_ICON: Record<string, LucideIcon> = {
+  shops: ShoppingBag,
+  food: UtensilsCrossed,
+  pharmacy: PillIcon,
+  services: Scissors,
+  events: Ticket,
+};
+
+/** How long each hero slide stays before the next, when there is more than one. */
+const SLIDE_MS = 6000;
 
 const tenantProfile = (t: MarketplaceTenant) => normalizeOrderingUseCase(t.useCase ?? t.useCases?.[0]);
 
@@ -83,8 +109,48 @@ export function MarketplaceLanding() {
       <Header query={query} onQuery={setQuery} hasDeals={deals.length > 0} />
 
       <main className="mx-auto flex w-full max-w-7xl flex-1 flex-col gap-10 px-4 py-5 sm:px-6 sm:py-6 lg:px-8">
-        <section className="grid gap-4 lg:grid-cols-[1.6fr_1fr]" aria-label="Highlights">
-          <Hero deals={deals} tenants={tenants} flashEnd={flashEnd} bestSaving={bestSaving} />
+        {/* Jumia-style hero: store-type rail, rotating carousel, two tiles (desktop); the carousel
+            and a row of round shortcuts on phones. Every slide, tile and shortcut is real. */}
+        <section className="grid gap-4 lg:grid-cols-[13rem_minmax(0,1fr)_18rem] xl:grid-cols-[14rem_minmax(0,1fr)_20rem]" aria-label="Highlights">
+          <nav aria-label="Store types" className="hidden rounded-3xl border border-border bg-card p-3 lg:block">
+            <p className="px-3 pb-2 pt-1 text-xs font-semibold text-muted-foreground">Shop by type</p>
+            <ul className="space-y-0.5">
+              {groups.map((g) => {
+                const Icon = GROUP_ICON[g.key] ?? Store;
+                const count = tenants.filter((t) => g.profiles.includes(tenantProfile(t))).length;
+                return (
+                  <li key={g.key}>
+                    <button
+                      onClick={() => {
+                        setGroup(g.key);
+                        document.getElementById("stores")?.scrollIntoView({ behavior: "smooth" });
+                      }}
+                      className="flex min-h-11 w-full items-center gap-3 rounded-xl px-3 text-left text-sm font-medium text-foreground hover:bg-secondary"
+                    >
+                      <Icon className="size-4 text-primary" />
+                      <span className="flex-1">{g.label}</span>
+                      <span className="tabular text-xs text-muted-foreground">{count}</span>
+                    </button>
+                  </li>
+                );
+              })}
+              {deals.length > 0 && (
+                <li>
+                  <a href="#deals" className="flex min-h-11 items-center gap-3 rounded-xl px-3 text-sm font-medium text-foreground hover:bg-secondary">
+                    <Zap className="size-4 text-sale" />
+                    <span className="flex-1">Deals</span>
+                    <span className="tabular text-xs text-muted-foreground">{deals.length}</span>
+                  </a>
+                </li>
+              )}
+            </ul>
+          </nav>
+          <HeroCarousel
+            slides={[
+              <Hero key="hero" deals={deals} tenants={tenants} flashEnd={flashEnd} bestSaving={bestSaving} />,
+              ...banners.slice(2).map((b) => <BannerSlide key={b.promoId} banner={b} />),
+            ]}
+          />
           <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-1">
             {banners.length > 0 ? (
               banners.slice(0, 2).map((b, i) => (
@@ -116,6 +182,31 @@ export function MarketplaceLanding() {
             )}
           </div>
         </section>
+
+        {/* Round shortcuts (the icon row under Jumia's hero), only for store types that exist. */}
+        {groups.length > 0 && (
+          <nav aria-label="Shortcuts" className="-mx-1 -mt-4 flex gap-4 overflow-x-auto px-1 pb-1 scrollbar-hide sm:gap-6 lg:hidden">
+            {[
+              ...(deals.length > 0 ? [{ key: "deals", label: "Deals", href: "#deals" }] : []),
+              ...groups.map((g) => ({ key: g.key, label: g.label, href: "#stores" })),
+            ].map((s) => {
+              const Icon = s.key === "deals" ? Zap : GROUP_ICON[s.key] ?? Store;
+              return (
+                <a
+                  key={s.key}
+                  href={s.href}
+                  onClick={() => s.key !== "deals" && setGroup(s.key)}
+                  className="flex w-16 shrink-0 flex-col items-center gap-1.5 text-center text-xs font-medium text-foreground"
+                >
+                  <span className={cn("flex size-14 items-center justify-center rounded-full", s.key === "deals" ? "bg-sale/10 text-sale" : "bg-secondary text-primary")}>
+                    <Icon className="size-6" />
+                  </span>
+                  {s.label}
+                </a>
+              );
+            })}
+          </nav>
+        )}
 
         <section aria-labelledby="stores-heading" id="stores">
           <SectionHeader
@@ -356,6 +447,80 @@ function Hero({
         ))}
       </div>
     </div>
+  );
+}
+
+/**
+ * The hero's slides, one at a time. With more than one it moves on every SLIDE_MS, pauses while
+ * hovered or focused, never moves for people who ask for reduced motion, and has dots to pick a
+ * slide. With one slide it is just that slide.
+ */
+function HeroCarousel({ slides }: { slides: React.ReactNode[] }) {
+  const [index, setIndex] = useState(0);
+  const [paused, setPaused] = useState(false);
+  const count = slides.length;
+
+  useEffect(() => {
+    if (count < 2 || paused) return;
+    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+    const id = setInterval(() => setIndex((i) => (i + 1) % count), SLIDE_MS);
+    return () => clearInterval(id);
+  }, [count, paused]);
+
+  const active = Math.min(index, count - 1);
+  return (
+    <div
+      className="relative min-w-0"
+      aria-roledescription="carousel"
+      onMouseEnter={() => setPaused(true)}
+      onMouseLeave={() => setPaused(false)}
+      onFocus={() => setPaused(true)}
+      onBlur={() => setPaused(false)}
+    >
+      {slides.map((slide, i) => (
+        <div key={i} hidden={i !== active} aria-roledescription="slide" aria-label={`${i + 1} of ${count}`} className="h-full">
+          {slide}
+        </div>
+      ))}
+      {count > 1 && (
+        <div className="absolute bottom-4 left-1/2 z-20 flex -translate-x-1/2 gap-1.5">
+          {slides.map((_, i) => (
+            <button
+              key={i}
+              onClick={() => setIndex(i)}
+              aria-label={`Show slide ${i + 1}`}
+              aria-current={i === active}
+              className={cn("h-2 rounded-full transition-all", i === active ? "w-6 bg-gold" : "w-2 bg-white/50 hover:bg-white/80")}
+            />
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
+/** A store's storefront banner as a hero slide, linking to the store. */
+function BannerSlide({ banner }: { banner: MarketplaceBanner }) {
+  return (
+    <Link
+      href={`/${banner.store.slug}`}
+      className="relative flex h-full min-h-[15rem] items-center gap-6 overflow-hidden rounded-3xl bg-night p-6 text-white dark:bg-card dark:ring-1 dark:ring-white/10 sm:p-8"
+    >
+      <div className="relative z-10 min-w-0 flex-1">
+        <p className="text-sm font-semibold text-gold">{banner.store.name}</p>
+        <h2 className="font-display mt-1 text-3xl font-extrabold leading-tight sm:text-4xl">{banner.title || banner.name}</h2>
+        {banner.subtitle && <p className="mt-2 text-white/80">{banner.subtitle}</p>}
+        <div className="mt-5 flex flex-wrap items-center gap-3">
+          {banner.isFlashSale && banner.endAt ? <CountdownBoxes endAt={banner.endAt} /> : null}
+          <span className="inline-flex min-h-11 items-center rounded-full bg-gold px-5 text-sm font-bold text-night">Shop now</span>
+        </div>
+      </div>
+      {(banner.imageUrl || banner.store.logoUrl) && (
+        <span className="relative hidden aspect-square w-[36%] shrink-0 overflow-hidden rounded-2xl border-4 border-white bg-white sm:block">
+          <ImageWithFallback src={banner.imageUrl ?? banner.store.logoUrl} alt="" fill sizes="280px" className={banner.imageUrl ? "object-cover" : "object-contain p-4"} />
+        </span>
+      )}
+    </Link>
   );
 }
 
