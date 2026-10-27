@@ -3,6 +3,7 @@ import "@/styles/globals.css";
 import type { Metadata, Viewport } from "next";
 import { Bricolage_Grotesque, Figtree, Geist_Mono } from "next/font/google";
 
+import { CookieNoticeMount } from "@/components/legal/cookie-notice-mount";
 import { Toaster } from "@/components/ui/sonner";
 import { brand } from "@/config/brand";
 import { cn } from "@/lib/utils";
@@ -87,6 +88,7 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
         <AppProviders>
           {children}
           <Toaster />
+          <CookieNoticeMount />
         </AppProviders>
       </body>
     </html>

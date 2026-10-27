@@ -5,6 +5,8 @@ import Image from "next/image";
 import Link from "next/link";
 import { useMemo, useState } from "react";
 
+import { LegalLinks } from "@bengo-hub/shared-ui-lib/legal";
+
 import { ThemeToggle } from "@/components/layout/theme-toggle";
 import { CountdownBoxes, CountdownText } from "@/components/storefront/countdown-boxes";
 import { DealCard, DealCardSkeleton } from "@/components/storefront/deal-card";
@@ -390,9 +392,11 @@ function Footer() {
         <nav className="flex flex-wrap gap-x-5 gap-y-2 text-sm" aria-label="Footer">
           <a href={`${site}/pricing`} className="hover:text-white">Sell here</a>
           <a href={`${site}/contact`} className="hover:text-white">Contact</a>
-          <a href={`${site}/privacy-policy`} className="hover:text-white">Privacy</a>
-          <a href={`${site}/terms-of-service`} className="hover:text-white">Terms</a>
         </nav>
+      </div>
+      {/* The shared legal pages, cookie settings and registered company line every app mounts. */}
+      <div className="mx-auto w-full max-w-7xl border-t border-white/10 px-4 py-4 sm:px-6 lg:px-8">
+        <LegalLinks layout="row" showEntity className="text-xs text-white/70 [&_a:hover]:text-white [&_button:hover]:text-white" />
       </div>
     </footer>
   );

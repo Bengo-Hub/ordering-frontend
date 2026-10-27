@@ -1,49 +1,31 @@
+"use client";
 
-
-const footerLinks = [
-  { href: "/auth", label: "Sign in" },
-  { href: "/privacy", label: "Privacy" },
-  { href: "/terms", label: "Terms" },
-  { href: "/cookies", label: "Cookies" },
-  { href: "/status", label: "Status" },
-];
+import { PoweredByBadge } from "@bengo-hub/shared-ui-lib";
+import { LegalLinks } from "@bengo-hub/shared-ui-lib/legal";
 
 import { brand } from "@/config/brand";
 import { useBrandConfig } from "@/hooks/use-brand";
 
+/**
+ * Storefront footer on the shared platform parts every Codevertex app mounts: the shared legal
+ * pages and cookie settings (LegalLinks) and the "Powered by Codevertex Africa Limited" badge
+ * (PoweredByBadge). It replaced a hand-made badge that still read "Codevertex IT Solutions" and
+ * a list of links to pages this app never had.
+ */
 export function SiteFooter() {
   const { data: brandConfig } = useBrandConfig();
   const tenantName = brandConfig?.name || brand.name;
-  const currentYear = new Date().getFullYear();
 
   return (
-    <footer className="w-full mt-auto">
-      <div className="bg-slate-50 dark:bg-slate-900/50 border-t border-slate-200 dark:border-slate-800 py-6">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex flex-col md:flex-row justify-between items-center gap-4">
-            <div className="text-sm font-medium text-slate-500 dark:text-slate-400 text-center md:text-left">
-              All Rights Reserved. <span className="text-slate-900 dark:text-white font-bold">{tenantName}</span> &copy; {currentYear}.
-            </div>
-
-            <div className="flex items-center gap-2">
-              <a
-                href="https://codevertexafrica.com"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="group flex items-center gap-2 px-4 py-1.5 rounded-full bg-slate-900 dark:bg-white text-white dark:text-slate-900 transition-all hover:ring-4 hover:ring-primary/20"
-              >
-                <img
-                  src="/logo.png"
-                  alt="Codevertex"
-                  className="h-3.5 w-auto brightness-0 invert dark:brightness-100 dark:invert-0"
-                />
-                <span className="text-[10px] font-black tracking-tight uppercase">
-                  Powered by <span className="text-primary">Codevertex IT Solutions</span>
-                </span>
-              </a>
-            </div>
-          </div>
+    <footer className="mt-auto w-full border-t border-border bg-card">
+      <div className="mx-auto flex max-w-7xl flex-col items-center gap-4 px-4 py-6 sm:px-6 md:flex-row md:justify-between lg:px-8">
+        <div className="flex flex-col items-center gap-2 md:items-start">
+          <p className="text-sm text-muted-foreground">
+            &copy; {new Date().getFullYear()} <span className="font-semibold text-foreground">{tenantName}</span>. All rights reserved.
+          </p>
+          <LegalLinks layout="row" showEntity={false} className="text-xs" />
         </div>
+        <PoweredByBadge />
       </div>
     </footer>
   );
