@@ -38,6 +38,7 @@ import { useCountdown } from "@/hooks/use-countdown";
 import { useOrderingConfig } from "@/hooks/use-ordering-config";
 import { usePromoDeals } from "@/hooks/use-promo-deals";
 import { applyDeal, dealBadge, resolveDealItems } from "@/lib/api/promo-deals";
+import { formatMoney, formatPriceRange } from "@/lib/list-price";
 import { orgRoute } from "@/lib/routes";
 import { cn } from "@/lib/utils";
 import { useOrgSlug } from "@/providers/org-slug-provider";
@@ -151,11 +152,11 @@ export default function CatalogItemPage() {
     return adj;
   }, [item?.customizations, selectedOptions]);
 
-  // When a product has variants, the variant price replaces the base price. A variant-selected
-  // price is never deal-discounted here — resolveDealItems matches against the base item, not a
-  // specific variant, so the deal is only applied to the plain (non-variant) price.
+  // When a product has variants, the variant price replaces the base price. A deal on the product
+  // also covers its variants: checkout matches a deal on the parent SKU for a variant line
+  // (ordering-backend), so the page shows the same discounted price the customer will pay.
   const rawBasePrice = hasVariants ? (selectedVariant?.price ?? item?.price ?? 0) : (item?.price ?? 0);
-  const basePrice = !hasVariants && activeDeal ? applyDeal(rawBasePrice, activeDeal.rule) : rawBasePrice;
+  const basePrice = activeDeal ? applyDeal(rawBasePrice, activeDeal.rule) : rawBasePrice;
   const unitPrice = basePrice + customizationAdjustment + modifierAdjustment;
   const totalPrice = unitPrice * quantity;
 
@@ -443,11 +444,13 @@ export default function CatalogItemPage() {
 
             <div className="mt-2 flex flex-wrap items-baseline gap-2">
               <span className="text-2xl font-bold text-primary">
-                {item.currency} {basePrice.toLocaleString()}
+                {hasVariants && !selectedVariant && !activeDeal
+                  ? formatPriceRange(item, item.currency)
+                  : formatMoney(item.currency, basePrice)}
               </span>
-              {activeDeal && !hasVariants && rawBasePrice > basePrice && (
+              {activeDeal && rawBasePrice > basePrice && (
                 <span className="text-sm text-muted-foreground line-through">
-                  {item.currency} {rawBasePrice.toLocaleString()}
+                  {formatMoney(item.currency, rawBasePrice)}
                 </span>
               )}
               {activeDeal && (

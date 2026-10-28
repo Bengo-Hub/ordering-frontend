@@ -3,6 +3,7 @@
 import Link from "next/link";
 
 import { ImageWithFallback } from "@/components/ui/image-with-fallback";
+import { formatMoney } from "@/lib/list-price";
 import { cn } from "@/lib/utils";
 
 /** "Only N left" shows when real stock is at or below this. */
@@ -23,7 +24,6 @@ export interface DealCardProps {
   className?: string;
 }
 
-const money = (currency: string, v: number) => `${currency} ${Math.round(v).toLocaleString()}`;
 
 /**
  * A product on a live promotion: photo with the store's logo, the saving as a percentage, the
@@ -87,7 +87,7 @@ export function DealCard({
       <p className="line-clamp-1 text-xs text-muted-foreground">{storeName}</p>
       <div className="mt-1.5 flex items-baseline gap-2">
         <span className="tabular font-display text-base font-bold text-primary sm:text-lg">
-          {money(currency, dealPrice)}
+          {formatMoney(currency, dealPrice)}
         </span>
         {dealPrice < price && (
           <s className="tabular text-xs text-muted-foreground">

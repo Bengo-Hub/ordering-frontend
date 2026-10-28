@@ -5,6 +5,7 @@
 
 import { getMediaUrl, resolveCategoryIcon } from "@/lib/utils";
 import type {
+  CatalogFacets,
   CatalogVariant,
   MenuCategory,
   MenuFilters,
@@ -21,6 +22,7 @@ interface BackendListResponse<T> {
   total: number;
   limit: number;
   page: number;
+  facets?: CatalogFacets;
 }
 
 function toPaginated<T>(r: BackendListResponse<T>): PaginatedResponse<T> {
@@ -28,8 +30,12 @@ function toPaginated<T>(r: BackendListResponse<T>): PaginatedResponse<T> {
   return {
     data: r.data,
     meta: { page: r.page, limit: r.limit, total: r.total, totalPages },
+    ...(r.facets ? { facets: r.facets } : {}),
   };
 }
+
+/** Sort keys ordering-backend applies across the whole catalogue (catalog/listing.go). */
+const SERVER_SORTS = new Set(["newest", "price_asc", "price_desc", "name"]);
 
 /** Backend variant shape on a merged catalog item. */
 interface BackendVariant {
@@ -40,6 +46,8 @@ interface BackendVariant {
   attributes?: Record<string, string>;
   barcode?: string;
   isActive?: boolean;
+  onHand?: number;
+  imageUrl?: string;
 }
 
 /** Backend public catalog item shape (basePrice, imageUrl, categoryId, categoryName). */
@@ -64,6 +72,8 @@ interface BackendMenuItem {
   availableQuantity?: number;
   hasVariants?: boolean;
   variants?: BackendVariant[];
+  priceFrom?: number;
+  priceTo?: number;
   dietaryTags?: unknown[];
   isFavorite?: boolean;
   modifierGroups?: {
@@ -96,6 +106,8 @@ function backendItemToMenuItem(b: BackendMenuItem, outletId = "", outletName = "
       attributes: v.attributes ?? {},
       ...(v.barcode ? { barcode: v.barcode } : {}),
       isActive: v.isActive ?? true,
+      ...(v.onHand != null ? { onHand: v.onHand } : {}),
+      ...(v.imageUrl ? { imageUrl: getMediaUrl(v.imageUrl) ?? v.imageUrl } : {}),
     }));
   const hasVariants = b.hasVariants ?? variants.length > 0;
   return {
@@ -122,6 +134,8 @@ function backendItemToMenuItem(b: BackendMenuItem, outletId = "", outletName = "
     ...(b.availableQuantity != null ? { availableQuantity: b.availableQuantity } : {}),
     hasVariants,
     ...(variants.length > 0 ? { variants } : {}),
+    ...(b.priceFrom != null ? { priceFrom: b.priceFrom } : {}),
+    ...(b.priceTo != null ? { priceTo: b.priceTo } : {}),
     ...(b.modifierGroups
       ? {
           modifierGroups: b.modifierGroups.map((g) => ({
@@ -160,16 +174,16 @@ export async function fetchMenuItems(
   if (filters?.category) params.set("category_id", filters.category);
   if (filters?.search) params.set("search", filters.search ?? "");
   if (filters?.dietary?.length) params.set("dietary", filters.dietary.join(","));
-  if (filters?.minPrice !== undefined) params.set("minPrice", String(filters.minPrice));
-  if (filters?.maxPrice !== undefined) params.set("maxPrice", String(filters.maxPrice));
+  if (filters?.minPrice !== undefined) params.set("min_price", String(filters.minPrice));
+  if (filters?.maxPrice !== undefined) params.set("max_price", String(filters.maxPrice));
+  if (filters?.withFacets) params.set("facets", "1");
   if (filters?.featured !== undefined) params.set("featured", String(filters.featured));
   if (filters?.outletId) params.set("outlet_id", filters.outletId);
   if (filters?.favoriteOnly) params.set("favorite", "true");
   if (filters?.brandId) params.set("brand_id", filters.brandId);
-  // "newest" is the only sort key ordering-backend recognizes server-side; other opaque keys
-  // (best_selling, price_asc/desc) are resolved client-side (see catalog-discovery.tsx) and
-  // must never reach the backend as an unrecognized ?sort= value.
-  if (filters?.sort === "newest") params.set("sort", filters.sort);
+  // best_selling is ranked client-side from pos sales (see catalog-discovery.tsx) and never
+  // reaches the backend as an unrecognised ?sort= value.
+  if (filters?.sort && SERVER_SORTS.has(filters.sort)) params.set("sort", filters.sort);
 
   const res = await api.get<BackendListResponse<BackendMenuItem>>(
     `${tenantSlug}/catalog/items?${params.toString()}`,

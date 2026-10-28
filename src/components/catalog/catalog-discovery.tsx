@@ -30,6 +30,7 @@ import { resolveDealItems } from "@/lib/api/promo-deals";
 import { rankBestSellers } from "@/lib/api/top-sellers";
 import type { OrderingConfig } from "@/lib/use-case-config";
 import { buildCategoryTree, categoryNodeContains } from "@/lib/category-tree";
+import { formatListPrice, listPrice } from "@/lib/list-price";
 import { orgRoute } from "@/lib/routes";
 import { cn } from "@/lib/utils";
 import { useOrgSlug } from "@/providers/org-slug-provider";
@@ -432,7 +433,9 @@ export function MenuDiscovery({
   // discount matching, or a simple price sort applied across more than one server page) switches
   // this view into "special listing" mode: one bounded over-fetch + client-side
   // sort/filter/paginate, instead of the normal server-paginated flow.
-  const isSpecialListing = sort === "best_selling" || sort === "price_asc" || sort === "price_desc" || specialFilter === "flash_sale";
+  // Price sorts and the price range are applied by ordering-backend across the whole catalogue,
+  // so they stay on the normal server-paginated flow.
+  const isSpecialListing = sort === "best_selling" || specialFilter === "flash_sale";
 
   const filters = useMemo(
     () => ({
@@ -442,9 +445,12 @@ export function MenuDiscovery({
       ...(activeDietary.length > 0 && { dietary: activeDietary }),
       ...(favoriteOnly && { favoriteOnly: true }),
       ...(brandId && { brandId }),
-      ...(sort === "newest" && { sort: "newest" }),
+      ...((sort === "newest" || sort === "price_asc" || sort === "price_desc") && { sort }),
+      ...(appliedMinPrice != null && { minPrice: appliedMinPrice }),
+      ...(appliedMaxPrice != null && { maxPrice: appliedMaxPrice }),
+      withFacets: true,
     }),
-    [activeCategoryId, activeOutletId, search, activeDietary, favoriteOnly, brandId, sort],
+    [activeCategoryId, activeOutletId, search, activeDietary, favoriteOnly, brandId, sort, appliedMinPrice, appliedMaxPrice],
   );
 
   const { data: normalPage, isPending: normalPending, error: normalError } = useCatalogItems(
@@ -478,12 +484,6 @@ export function MenuDiscovery({
     if (sort === "best_selling") {
       return rankBestSellers(batch, topSellerSales ?? [], batch.length);
     }
-    if (sort === "price_asc") {
-      return batch.slice().sort((a, b) => a.price - b.price);
-    }
-    if (sort === "price_desc") {
-      return batch.slice().sort((a, b) => b.price - a.price);
-    }
     return batch;
   }, [isSpecialListing, specialPage, specialFilter, deals, sort, topSellerSales]);
 
@@ -499,18 +499,15 @@ export function MenuDiscovery({
     : normalPage?.meta?.totalPages ?? 1;
   const total = isSpecialListing ? specialRankedItems.length : normalPage?.meta?.total ?? 0;
 
-  // Price/stock filters apply to whichever page is currently displayed (same "filters the
-  // loaded page, not the whole server-side result set" tier as the existing dietary filters).
+  // The server applies the price range; the in-stock filter still runs on the loaded page.
   const visibleItems = useMemo(
     () =>
-      apiItems.filter((m) => {
-        if (appliedMinPrice != null && (m.price ?? 0) < appliedMinPrice) return false;
-        if (appliedMaxPrice != null && (m.price ?? 0) > appliedMaxPrice) return false;
-        if (appliedInStockOnly && m.availableQuantity != null && m.availableQuantity <= 0) return false;
-        return true;
-      }),
-    [apiItems, appliedMinPrice, appliedMaxPrice, appliedInStockOnly],
+      apiItems.filter(
+        (m) => !(appliedInStockOnly && m.availableQuantity != null && m.availableQuantity <= 0),
+      ),
+    [apiItems, appliedInStockOnly],
   );
+  const facets = (isSpecialListing ? specialPage : normalPage)?.facets;
 
   const menuItems: MenuItem[] = useMemo(
     () =>
@@ -518,8 +515,8 @@ export function MenuDiscovery({
         id: m.id,
         name: m.name,
         description: m.description ?? "",
-        price: `${m.currency ?? "KES"} ${(m.price ?? 0).toLocaleString()}`,
-        priceValue: m.price ?? 0,
+        price: formatListPrice(m, m.currency),
+        priceValue: listPrice(m),
         category: m.category || "Other",
         categoryId: m.categoryId ?? "",
         dietary: (m.dietary ?? []) as DietaryTag[],
@@ -723,7 +720,8 @@ export function MenuDiscovery({
             <Input
               type="number"
               inputMode="numeric"
-              placeholder="Min KES"
+              placeholder={facets?.priceMin ? `Min ${facets.priceMin.toLocaleString()}` : "Min KES"}
+              aria-label="Minimum price"
               value={minPriceDraft}
               onChange={(e) => setMinPriceDraft(e.target.value)}
               className="sm:w-28"
@@ -731,7 +729,8 @@ export function MenuDiscovery({
             <Input
               type="number"
               inputMode="numeric"
-              placeholder="Max KES"
+              placeholder={facets?.priceMax ? `Max ${facets.priceMax.toLocaleString()}` : "Max KES"}
+              aria-label="Maximum price"
               value={maxPriceDraft}
               onChange={(e) => setMaxPriceDraft(e.target.value)}
               className="sm:w-28"
@@ -779,6 +778,35 @@ export function MenuDiscovery({
               <option value="price_desc">Price: High to Low</option>
             </select>
           </div>
+        )}
+
+        {/* Brand facet: real counts for the current selection, from the listing's facets. */}
+        {cfg.productLayout === "compact" && ((facets?.brands.length ?? 0) > 1 || !!brandId) && (
+          <nav aria-label="Filter by brand" className="-mx-4 flex flex-nowrap gap-2 overflow-x-auto px-4 pb-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+            {brandId && (
+              <SectionChip small active={false} onClick={() => { setBrandId(""); setPage(1); updateUrl({ brand: undefined }); }}>
+                All brands
+              </SectionChip>
+            )}
+            {facets?.brands
+              .filter((b) => b.id)
+              .map((b) => (
+                <SectionChip
+                  small
+                  key={b.id}
+                  active={brandId === b.id}
+                  onClick={() => {
+                    const next = brandId === b.id ? "" : (b.id ?? "");
+                    setBrandId(next);
+                    setPage(1);
+                    updateUrl({ brand: next || undefined });
+                  }}
+                >
+                  {b.name}
+                  <span className="ml-1 text-muted-foreground">({b.count})</span>
+                </SectionChip>
+              ))}
+          </nav>
         )}
 
         {/* Outlet filter when multiple */}

@@ -60,6 +60,10 @@ export interface MenuItem {
   hasVariants?: boolean;
   /** Selectable variants. Present when the item is fetched with variants included. */
   variants?: CatalogVariant[];
+  /** Lowest and highest active variant price ("From KES x" on cards, a range on the product
+   *  page). Undefined for a product without variants. */
+  priceFrom?: number;
+  priceTo?: number;
 }
 
 /**
@@ -75,6 +79,9 @@ export interface CatalogVariant {
   attributes: Record<string, string>;
   barcode?: string;
   isActive?: boolean;
+  /** This variant's own stock ("Only N left"); undefined when inventory did not report it. */
+  onHand?: number;
+  imageUrl?: string;
 }
 
 export interface ModifierGroup {
@@ -194,6 +201,24 @@ export interface PaginatedResponse<T> {
     total: number;
     totalPages: number;
   };
+  /** Listing facets, present when requested (MenuFilters.withFacets). */
+  facets?: CatalogFacets;
+}
+
+export interface FacetCount {
+  id?: string;
+  name: string;
+  count: number;
+}
+
+/** Filter-panel data for the matching set, counted before the price range is applied. */
+export interface CatalogFacets {
+  priceMin: number;
+  priceMax: number;
+  brands: FacetCount[];
+  categories: FacetCount[];
+  /** Variant axis values, e.g. { size: [{ name: "M", count: 4 }] }. */
+  attributes?: Record<string, FacetCount[]>;
 }
 
 export interface MenuFilters {
@@ -205,9 +230,12 @@ export interface MenuFilters {
   featured?: boolean;
   outletId?: string;
   favoriteOnly?: boolean;
-  /** Opaque storefront sort key — "newest" is backend-recognized; "best_selling" and
-   *  "price_asc"/"price_desc" are resolved client-side (see catalog-discovery.tsx). */
+  /** Storefront sort key. "newest", "price_asc", "price_desc" and "name" are applied by
+   *  ordering-backend across the whole catalogue; "best_selling" is ranked client-side from
+   *  pos sales (see catalog-discovery.tsx). */
   sort?: string;
+  /** Ask the listing for its facets (price bounds, brands, categories, variant values). */
+  withFacets?: boolean;
   /** Item brand filter (client-side — inventory-api's BrandID isn't yet a list-filter param
    *  on ordering-backend's public items endpoint, matched against the mapped brandId field). */
   brandId?: string;
