@@ -155,6 +155,33 @@ Mobile is the primary design target — over 85% of Kenyan users access via mobi
 
 ---
 
+## Design references by use case (2026-10-28)
+
+- Retail-type tenants (retail, wholesale, supermarket, fashion, electronics) follow Jumia. Its pages
+  were captured with the REA CLI; the findings are in the platform plan
+  `.claude/plans/alpha-china-images-and-storefront-revamp-2026-10-27.md` ("REA research").
+- Hospitality (restaurants, quick service, bars) follows Uber Eats: menu sections, add-to-cart
+  modifier modal, outlet sidebar.
+- Shared logic lives in one place: `src/lib/list-price.ts` (money, "From KES x", product page
+  range), `needsAddToCartModal` (variants or modifiers), `lib/api/promo-deals` (deal matching).
+
+### Catalog listing (retail)
+- Sort (`newest`, `price_asc`, `price_desc`) and the price range (`min_price`, `max_price`) run on
+  ordering-backend across the whole catalogue. Best selling and flash sale still rank a bounded
+  batch in the browser.
+- `facets=1` returns price bounds plus brand, category and variant counts. Brand chips show real
+  counts; the price inputs show the bounds as hints.
+- Cards read "From KES x" when variant prices differ.
+
+### Variants (retail)
+- One radiogroup per axis (Colour, then Size), with 44px targets. A value with no variant for the
+  other choices is struck through but still clickable, and jumps to a variant that has it.
+- No raw SKU is shown. "Only N left" appears only from the variant's real on-hand stock (5 or fewer).
+- The product page shows "KES x - KES y" until a variant is chosen. A product deal also discounts
+  the chosen variant, matching checkout.
+
+---
+
 ## Mobile-First Interaction Patterns
 
 ### Touch Targets
