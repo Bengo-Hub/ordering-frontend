@@ -29,6 +29,7 @@ import { isDeliveryFulfillment, timelineFor, timelineIndex } from "@/lib/order-t
 import { formatDateTime } from "@/lib/datetime";
 import { orgRoute } from "@/lib/routes";
 import { cn } from "@/lib/utils";
+import { OrderLineDetails } from "@/components/orders/order-line-details";
 import { useOrgSlug } from "@/providers/org-slug-provider";
 
 const TREASURY_API_URL = process.env.NEXT_PUBLIC_TREASURY_API_URL || "http://localhost:4201";
@@ -535,6 +536,7 @@ function GuestOrderContent() {
             <div key={i} className="flex items-start justify-between gap-2 text-sm">
               <div className="min-w-0 flex-1">
                 <p className="break-words font-medium text-foreground">{item.name}</p>
+                <OrderLineDetails line={item} />
                 <p className="text-xs text-muted-foreground">
                   {item.quantity} x KES {item.unitPrice.toLocaleString()}
                 </p>

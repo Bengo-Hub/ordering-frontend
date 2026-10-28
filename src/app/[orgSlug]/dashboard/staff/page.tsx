@@ -1,5 +1,6 @@
 "use client";
 
+import { OrderLineDetails } from "@/components/orders/order-line-details";
 import {
   CheckCircle2,
   ChefHat,
@@ -424,10 +425,11 @@ function OrderCard({
         {/* Item list */}
         <div className="mb-3 space-y-1">
           {(order.items ?? []).map((item, idx) => (
-            <div key={idx} className="flex items-center justify-between text-sm">
-              <span>
+            <div key={idx} className="flex items-start justify-between gap-2 text-sm">
+              <span className="min-w-0">
                 <span className="text-muted-foreground">{item.quantity}x</span>{" "}
                 {item.name}
+                <OrderLineDetails line={item} />
               </span>
               <span className="font-medium">KES {item.totalPrice.toLocaleString()}</span>
             </div>

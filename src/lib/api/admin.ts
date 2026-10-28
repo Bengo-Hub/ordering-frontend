@@ -1,3 +1,4 @@
+import { toOrderLineView } from "@/lib/order-line";
 import { api } from "./base";
 import type { PaymentRetryInfo } from "./orders";
 
@@ -47,6 +48,9 @@ export interface AdminOrderItem {
   unitPrice: number;
   totalPrice: number;
   notes?: string;
+  /** Variant and modifier labels from the line metadata (lib/order-line). */
+  variantLabel?: string;
+  modifiers?: string[];
 }
 
 export interface AdminOrderFilters {
@@ -170,7 +174,10 @@ function normalizeOrder(o: Record<string, unknown>): AdminOrder {
     customerPhone,
     items: ((o.items as unknown[]) ?? []).map((item: unknown) => {
       const it = item as Record<string, unknown>;
+      const line = toOrderLineView(it, (o.currency as string | undefined) ?? "KES");
       return {
+        ...(line.variantLabel ? { variantLabel: line.variantLabel } : {}),
+        ...(line.modifiers ? { modifiers: line.modifiers } : {}),
         id: (it.id ?? "") as string,
         inventorySku: (it.inventorySku ?? "") as string,
         nameSnapshot: (it.nameSnapshot ?? it.name ?? "") as string,

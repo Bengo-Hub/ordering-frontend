@@ -1,3 +1,5 @@
+import { formatDeliveryAddress, toOrderLineView, type OrderLineView } from "@/lib/order-line";
+
 import { api } from "./base";
 
 // ─── Types ───────────────────────────────────────────────────────────
@@ -30,7 +32,8 @@ export interface Order {
   orderNumber: string;
   status: string;
   paymentIntentId?: string;
-  items: OrderItem[];
+  /** Normalised lines (see normalizeOrder): name, variant label and modifiers resolved. */
+  items: OrderLineView[];
   subtotal: number;
   deliveryFee: number;
   discount: number;
@@ -103,22 +106,43 @@ export interface MpesaPaymentRequest {
   phoneNumber: string;
 }
 
+// ─── Normalisation ───────────────────────────────────────────────────
+
+/**
+ * ordering-backend returns the domain Order: lines carry nameSnapshot/inventorySku and line
+ * metadata, the discount is discountTotal and the saved delivery address is an object. Every
+ * order read goes through here so the views get names, variants, modifiers, the discount and a
+ * one-line address without reading backend spellings themselves.
+ */
+export function normalizeOrder(raw: unknown): Order {
+  const o = (raw ?? {}) as Record<string, unknown>;
+  const currency = typeof o.currency === "string" ? o.currency : "KES";
+  const discount = Number(o.discount ?? o.discountTotal ?? 0) || 0;
+  return {
+    ...(o as unknown as Order),
+    currency,
+    discount,
+    items: ((o.items as unknown[]) ?? []).map((it) => toOrderLineView(it, currency)),
+    deliveryAddress: formatDeliveryAddress(o.deliveryAddress),
+  };
+}
+
 // ─── API Functions ───────────────────────────────────────────────────
 
 export async function createOrder(tenantSlug: string, data: CreateOrderRequest): Promise<Order> {
   const res = await api.post(`${tenantSlug}/orders`, data);
-  return res.data;
+  return normalizeOrder(res.data);
 }
 
 export async function getOrder(tenantSlug: string, orderId: string): Promise<Order> {
   const res = await api.get(`${tenantSlug}/orders/${orderId}`);
-  return res.data;
+  return normalizeOrder(res.data);
 }
 
 export async function getGuestOrder(tenantSlug: string, orderId: string, sessionId?: string): Promise<Order> {
   const params = sessionId ? { session_id: sessionId } : undefined;
   const res = await api.get(`${tenantSlug}/orders/guest/${orderId}`, { params });
-  return res.data;
+  return normalizeOrder(res.data);
 }
 
 export async function listOrders(
@@ -126,7 +150,7 @@ export async function listOrders(
   params?: { status?: string; limit?: number; offset?: number },
 ): Promise<{ orders: Order[]; total: number }> {
   const res = await api.get(`${tenantSlug}/orders`, { params });
-  return { orders: res.data.data ?? [], total: res.data.total ?? 0 };
+  return { orders: ((res.data.data ?? []) as unknown[]).map(normalizeOrder), total: res.data.total ?? 0 };
 }
 
 export async function cancelOrder(tenantSlug: string, orderId: string, reason: string): Promise<void> {
@@ -140,7 +164,7 @@ export async function rateOrder(
   comment: string,
 ): Promise<Order> {
   const res = await api.post(`${tenantSlug}/orders/${orderId}/rate`, { rating, comment });
-  return res.data;
+  return normalizeOrder(res.data);
 }
 
 export async function rateGuestOrder(
@@ -149,7 +173,7 @@ export async function rateGuestOrder(
   body: { rating: number; comment?: string; riderRating?: number; riderComment?: string },
 ): Promise<Order> {
   const res = await api.post(`${tenantSlug}/orders/guest/${orderId}/rate`, body);
-  return res.data;
+  return normalizeOrder(res.data);
 }
 
 /**

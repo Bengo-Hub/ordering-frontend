@@ -24,7 +24,9 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useOrder } from "@/hooks/use-orders";
 import { useOrderSSE } from "@/hooks/use-order-sse";
 import { formatDateTime } from "@/lib/datetime";
+import type { OrderLineView } from "@/lib/order-line";
 import { cn } from "@/lib/utils";
+import { OrderLineDetails } from "@/components/orders/order-line-details";
 
 // ─── Helpers ─────────────────────────────────────────────────────────
 
@@ -92,7 +94,7 @@ export default function TrackOrderPage() {
     id?: string;
     orderNumber?: string;
     status?: string;
-    items?: { menuItemId: string; name: string; quantity: number; unitPrice: number; totalPrice: number }[];
+    items?: OrderLineView[];
     grandTotal?: number;
     deliveryAddress?: string;
     currency?: string;
@@ -212,10 +214,11 @@ export default function TrackOrderPage() {
                   {typedOrder.items.map((item) => (
                     <div
                       key={item.menuItemId}
-                      className="flex items-center justify-between text-sm"
+                      className="flex items-start justify-between gap-2 text-sm"
                     >
-                      <span className="text-foreground">
+                      <span className="min-w-0 text-foreground">
                         {item.quantity}x {item.name}
+                        <OrderLineDetails line={item} />
                       </span>
                       <span className="text-muted-foreground">
                         KES {item.totalPrice.toLocaleString()}

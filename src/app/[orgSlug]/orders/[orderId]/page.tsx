@@ -19,6 +19,7 @@ import { useState } from "react";
 
 import { RequireAuth } from "@/components/auth/require-auth";
 import { SiteShell } from "@/components/layout/site-shell";
+import { OrderLineDetails } from "@/components/orders/order-line-details";
 import { OrderStatusPanel } from "@/components/orders/order-status-panel";
 import { PaymentRetryPanel } from "@/components/orders/payment-retry-panel";
 import { RatingDialog } from "@/components/orders/rating-dialog";
@@ -298,6 +299,7 @@ export default function OrderDetailPage() {
                     <div key={i} className="flex items-start justify-between gap-2 text-sm">
                       <div className="min-w-0 flex-1">
                         <p className="break-words font-medium text-foreground">{item.name}</p>
+                        <OrderLineDetails line={item} />
                         <p className="text-xs text-muted-foreground">
                           {item.quantity} x KES {item.unitPrice.toLocaleString()}
                         </p>
