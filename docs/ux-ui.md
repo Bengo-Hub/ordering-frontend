@@ -179,6 +179,12 @@ Mobile is the primary design target — over 85% of Kenyan users access via mobi
 - No raw SKU is shown. "Only N left" appears only from the variant's real on-hand stock (5 or fewer).
 - The product page shows "KES x - KES y" until a variant is chosen. A product deal also discounts
   the chosen variant, matching checkout.
+- Only a single variant is pre-selected (`initialVariantId`); with several the customer picks, on
+  the page and in the quick-add modal, so no size is ever added that nobody chose.
+- Size/colour chips per axis come from the listing facets and filter server side (`attrs`).
+- "Recently viewed" row on the product page: device only, per store, 12 newest.
+- Shared: `lib/variant-line.ts` builds the variant cart line; `orderAxes` in `lib/order-line.ts`
+  is the one axis order (colour, size, then A-Z) for the picker, cart names and order lines.
 
 ---
 
