@@ -144,11 +144,15 @@ export function VariantSelector({
             <div key={axis} className="space-y-2">
               <p className="text-sm text-muted-foreground">
                 {titleCase(axis)}
-                {current[axis] && <span className="ml-1 font-medium text-foreground">: {current[axis]}</span>}
+                {current[axis] && (
+                  <span className="ml-1 font-medium text-foreground">: {current[axis]}</span>
+                )}
               </p>
               <div role="radiogroup" aria-label={titleCase(axis)} className="flex flex-wrap gap-2">
                 {(valuesByAxis[axis] ?? []).map((value) => {
-                  const offered = variants.some((v) => v.attributes?.[axis] === value && matches(v, others));
+                  const offered = variants.some(
+                    (v) => v.attributes?.[axis] === value && matches(v, others),
+                  );
                   return (
                     <OptionButton
                       key={value}
@@ -197,7 +201,9 @@ function OptionButton({
         checked
           ? "border-primary bg-primary/5 text-foreground ring-1 ring-primary"
           : "border-border text-foreground hover:border-primary/50",
-        unavailable && !checked && "text-muted-foreground line-through decoration-muted-foreground/60",
+        unavailable &&
+          !checked &&
+          "text-muted-foreground line-through decoration-muted-foreground/60",
       )}
     >
       {children}

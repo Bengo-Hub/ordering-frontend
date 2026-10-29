@@ -1,6 +1,12 @@
 import { describe, expect, it } from "vitest";
 
-import { formatListPrice, formatMoney, formatPriceRange, hasPriceRange, listPrice } from "@/lib/list-price";
+import {
+  formatListPrice,
+  formatMoney,
+  formatPriceRange,
+  hasPriceRange,
+  listPrice,
+} from "@/lib/list-price";
 
 describe("list-price", () => {
   const ranged = { price: 0, priceFrom: 900, priceTo: 1100 };

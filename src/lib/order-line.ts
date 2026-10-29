@@ -66,7 +66,9 @@ export function modifierLabels(metadata: Raw | undefined, currency?: string): st
 /** Maps one backend order line (any known spelling) to the view shape. */
 export function toOrderLineView(raw: unknown, currency?: string): OrderLineView {
   const it = (raw ?? {}) as Raw;
-  const metadata = (it.metadata && typeof it.metadata === "object" ? it.metadata : undefined) as Raw | undefined;
+  const metadata = (it.metadata && typeof it.metadata === "object" ? it.metadata : undefined) as
+    | Raw
+    | undefined;
   const name = str(it.name) || str(it.nameSnapshot) || str(it.name_snapshot);
   const attrs = formatAttributes(metadata?.variant_attributes as Raw | undefined);
   const variantLabel = attrs && !name.endsWith(attrs) ? attrs : "";

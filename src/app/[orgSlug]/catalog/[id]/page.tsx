@@ -79,7 +79,11 @@ export default function CatalogItemPage() {
   const [isFavorite, setIsFavorite] = useState(false);
   // SERVICE items (e.g. salon/spa) are booked for a date+time rather than just added — the
   // selection is carried in the cart line's metadata and flows through to the order.
-  const [appointment, setAppointment] = useState<{ staffId: string | null; date: string; time: string } | null>(null);
+  const [appointment, setAppointment] = useState<{
+    staffId: string | null;
+    date: string;
+    time: string;
+  } | null>(null);
 
   const addItem = useCartStore((state) => state.addItem);
 
@@ -131,7 +135,9 @@ export default function CatalogItemPage() {
   // Auto-select the only/first variant so single-variant items behave like normal items.
   useEffect(() => {
     if (!hasVariants) return;
-    setSelectedVariantId((prev) => (prev && variants.some((v) => v.id === prev) ? prev : variants[0]!.id));
+    setSelectedVariantId((prev) =>
+      prev && variants.some((v) => v.id === prev) ? prev : variants[0]!.id,
+    );
   }, [hasVariants, variants]);
 
   const modifierAdjustment = useMemo(() => {
@@ -155,7 +161,9 @@ export default function CatalogItemPage() {
   // When a product has variants, the variant price replaces the base price. A deal on the product
   // also covers its variants: checkout matches a deal on the parent SKU for a variant line
   // (ordering-backend), so the page shows the same discounted price the customer will pay.
-  const rawBasePrice = hasVariants ? (selectedVariant?.price ?? item?.price ?? 0) : (item?.price ?? 0);
+  const rawBasePrice = hasVariants
+    ? (selectedVariant?.price ?? item?.price ?? 0)
+    : (item?.price ?? 0);
   const basePrice = activeDeal ? applyDeal(rawBasePrice, activeDeal.rule) : rawBasePrice;
   const unitPrice = basePrice + customizationAdjustment + modifierAdjustment;
   const totalPrice = unitPrice * quantity;
@@ -362,7 +370,10 @@ export default function CatalogItemPage() {
 
       <div className="mx-auto max-w-5xl px-4 pb-32 pt-6">
         {/* Breadcrumb */}
-        <nav aria-label="Breadcrumb" className="mb-4 flex items-center gap-1.5 text-xs text-muted-foreground sm:text-sm">
+        <nav
+          aria-label="Breadcrumb"
+          className="mb-4 flex items-center gap-1.5 text-xs text-muted-foreground sm:text-sm"
+        >
           <Link href={orgRoute(orgSlug, "/")} className="hover:text-foreground hover:underline">
             Home
           </Link>
@@ -461,7 +472,9 @@ export default function CatalogItemPage() {
                     </Badge>
                   )}
                   {activeDeal.isFlashSale && dealCountdown && (
-                    <Badge className="bg-amber-500 text-white hover:bg-amber-500">{dealCountdown}</Badge>
+                    <Badge className="bg-amber-500 text-white hover:bg-amber-500">
+                      {dealCountdown}
+                    </Badge>
                   )}
                 </>
               )}
@@ -648,7 +661,9 @@ export default function CatalogItemPage() {
               onSelect={setAppointment}
             />
             {!appointment && (
-              <p className="mt-3 text-sm text-muted-foreground">Select a date and time to continue.</p>
+              <p className="mt-3 text-sm text-muted-foreground">
+                Select a date and time to continue.
+              </p>
             )}
           </div>
         )}
@@ -729,13 +744,20 @@ export default function CatalogItemPage() {
               ("Choose a Time" / "Select Options") instead of the final action label. */}
           {(() => {
             const needsSelection =
-              (hasVariants && !selectedVariant) || !modifiersValid || (isAppointment && !appointment);
+              (hasVariants && !selectedVariant) ||
+              !modifiersValid ||
+              (isAppointment && !appointment);
             const ctaText = needsSelection ? cfg.selectOptionsLabel : cfg.ctaLabel;
             const CtaIcon = isAppointment ? CalendarClock : ShoppingCart;
             return (
               <Button
                 onClick={handleAddToCart}
-                disabled={!item.available || !modifiersValid || !variantValid || (isAppointment && !appointment)}
+                disabled={
+                  !item.available ||
+                  !modifiersValid ||
+                  !variantValid ||
+                  (isAppointment && !appointment)
+                }
                 size="lg"
                 className="min-w-[180px] gap-2 rounded-xl text-base font-semibold shadow-lg sm:min-w-[220px]"
               >

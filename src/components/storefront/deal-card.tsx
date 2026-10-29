@@ -24,7 +24,6 @@ export interface DealCardProps {
   className?: string;
 }
 
-
 /**
  * A product on a live promotion: photo with the store's logo, the saving as a percentage, the
  * deal price with the regular price struck through, and "Only N left" when real stock is low.

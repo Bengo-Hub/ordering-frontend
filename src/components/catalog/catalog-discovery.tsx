@@ -11,13 +11,17 @@ import {
   ShieldAlert,
   ShoppingCart as ShoppingCartIcon,
   SproutIcon,
-  WheatIcon
+  WheatIcon,
 } from "lucide-react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { toast } from "sonner";
 
-import { AddToCartModal, needsAddToCartModal, type AddToCartModalItem } from "@/components/catalog/add-to-cart-modal";
+import {
+  AddToCartModal,
+  needsAddToCartModal,
+  type AddToCartModalItem,
+} from "@/components/catalog/add-to-cart-modal";
 import { ImageWithFallback } from "@/components/ui/image-with-fallback";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -132,9 +136,7 @@ function DiscoveryMenuItem({
         <div className="space-y-2 sm:space-y-3">
           <header className="flex items-start justify-between gap-2 sm:gap-3">
             <div className="min-w-0">
-              <h3 className="text-base font-semibold text-foreground sm:text-lg">
-                {item.name}
-              </h3>
+              <h3 className="text-base font-semibold text-foreground sm:text-lg">{item.name}</h3>
               {cfg.showMakeModel && (item.manufacturer || item.model) && (
                 <p className="mt-0.5 truncate text-xs text-muted-foreground">
                   {[item.manufacturer, item.model].filter(Boolean).join(" · ")}
@@ -165,9 +167,7 @@ function DiscoveryMenuItem({
         </div>
         <footer className="mt-4 space-y-3 sm:mt-6">
           <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
-            <span className="text-base font-semibold text-foreground sm:text-sm">
-              {item.price}
-            </span>
+            <span className="text-base font-semibold text-foreground sm:text-sm">{item.price}</span>
             <div className="flex flex-wrap gap-1">
               {item.dietary.slice(0, 3).map((tag) => (
                 <span
@@ -185,7 +185,7 @@ function DiscoveryMenuItem({
               e.stopPropagation();
               onAddToCart(item);
             }}
-            className="w-full min-h-[48px]"
+            className="min-h-[48px] w-full"
             size="sm"
             variant={opensModal ? "outline" : "default"}
           >
@@ -275,19 +275,24 @@ function MenuRow({
       href={itemUrl}
       prefetch={false}
       data-menu-item-id={item.id}
-      className="group flex min-h-[96px] items-stretch gap-3 rounded-2xl border border-border bg-card p-3 shadow-sm transition active:scale-[0.99] hover:border-brand-emphasis/40 hover:shadow-md"
+      className="group flex min-h-[96px] items-stretch gap-3 rounded-2xl border border-border bg-card p-3 shadow-sm transition hover:border-brand-emphasis/40 hover:shadow-md active:scale-[0.99]"
     >
       <div className="flex min-w-0 flex-1 flex-col justify-between gap-1.5">
         <div className="min-w-0">
           <h3 className="text-[15px] font-semibold leading-snug text-foreground">{item.name}</h3>
           {item.description ? (
-            <p className="mt-0.5 line-clamp-2 text-xs leading-relaxed text-muted-foreground">{item.description}</p>
+            <p className="mt-0.5 line-clamp-2 text-xs leading-relaxed text-muted-foreground">
+              {item.description}
+            </p>
           ) : null}
         </div>
         <div className="flex items-center gap-2">
           <span className="text-sm font-bold text-foreground">{item.price}</span>
           {item.dietary.slice(0, 2).map((tag) => (
-            <span key={tag} className="rounded-full bg-brand-muted px-1.5 py-0.5 text-[10px] font-medium text-brand-dark">
+            <span
+              key={tag}
+              className="rounded-full bg-brand-muted px-1.5 py-0.5 text-[10px] font-medium text-brand-dark"
+            >
               {dietaryFilterOpts.find((f) => f.value === tag)?.label ?? tag}
             </span>
           ))}
@@ -316,7 +321,9 @@ function MenuRow({
             e.stopPropagation();
             onAddToCart(item);
           }}
-          aria-label={opensModal ? `${cfg.selectOptionsLabel}: ${item.name}` : `${cfg.ctaLabel}: ${item.name}`}
+          aria-label={
+            opensModal ? `${cfg.selectOptionsLabel}: ${item.name}` : `${cfg.ctaLabel}: ${item.name}`
+          }
           className={cn(
             "relative z-10 flex size-10 items-center justify-center rounded-full bg-brand text-brand-contrast shadow-md transition hover:scale-105 active:scale-95",
             item.image && "-mt-5 mr-1 ring-4 ring-card",
@@ -380,9 +387,13 @@ export function MenuDiscovery({
   const router = useRouter();
   const searchParams = useSearchParams();
   const [search, setSearch] = useState(initialSearch ?? "");
-  const [activeCategoryId, setActiveCategoryId] = useState<string | "all">(initialCategory ?? "all");
+  const [activeCategoryId, setActiveCategoryId] = useState<string | "all">(
+    initialCategory ?? "all",
+  );
   const [activeOutletId, setActiveOutletId] = useState<string>(initialOutlet ?? "");
-  const [activeDietary, setActiveDietary] = useState<DietaryTag[]>((initialDietary as DietaryTag[]) ?? []);
+  const [activeDietary, setActiveDietary] = useState<DietaryTag[]>(
+    (initialDietary as DietaryTag[]) ?? [],
+  );
   const [favoriteOnly, setFavoriteOnly] = useState(initialFavoriteOnly ?? false);
   const [sort, setSort] = useState<CatalogSort>((initialSort as CatalogSort) || "default");
   const [specialFilter, setSpecialFilter] = useState<string>(initialFilter ?? "");
@@ -408,7 +419,11 @@ export function MenuDiscovery({
   // food-oriented menu. cfg/copy drive layout, CTA labels, dietary filters, etc.;
   // effectiveUseCase also gates which categories the backend returns.
   const browsedOutlet = outlets.find((o) => o.id === (activeOutletId || firstOutletId));
-  const { config: cfg, copy, useCase: effectiveUseCase } = useOrderingConfig(browsedOutlet?.businessType);
+  const {
+    config: cfg,
+    copy,
+    useCase: effectiveUseCase,
+  } = useOrderingConfig(browsedOutlet?.businessType);
 
   const { data: categoriesData } = useCategories(orgSlug, firstOutletId, effectiveUseCase);
   const categoriesFromApi = useMemo(() => categoriesData ?? [], [categoriesData]);
@@ -450,23 +465,29 @@ export function MenuDiscovery({
       ...(appliedMaxPrice != null && { maxPrice: appliedMaxPrice }),
       withFacets: true,
     }),
-    [activeCategoryId, activeOutletId, search, activeDietary, favoriteOnly, brandId, sort, appliedMinPrice, appliedMaxPrice],
+    [
+      activeCategoryId,
+      activeOutletId,
+      search,
+      activeDietary,
+      favoriteOnly,
+      brandId,
+      sort,
+      appliedMinPrice,
+      appliedMaxPrice,
+    ],
   );
 
-  const { data: normalPage, isPending: normalPending, error: normalError } = useCatalogItems(
-    orgSlug,
-    filters,
-    page,
-    MENU_PAGE_SIZE,
-    !isSpecialListing,
-  );
-  const { data: specialPage, isPending: specialPending, error: specialError } = useCatalogItems(
-    orgSlug,
-    filters,
-    1,
-    SPECIAL_LISTING_BATCH_SIZE,
-    isSpecialListing,
-  );
+  const {
+    data: normalPage,
+    isPending: normalPending,
+    error: normalError,
+  } = useCatalogItems(orgSlug, filters, page, MENU_PAGE_SIZE, !isSpecialListing);
+  const {
+    data: specialPage,
+    isPending: specialPending,
+    error: specialError,
+  } = useCatalogItems(orgSlug, filters, 1, SPECIAL_LISTING_BATCH_SIZE, isSpecialListing);
   const { data: deals } = usePromoDeals();
   const { data: topSellerSales } = useTopSellers();
 
@@ -496,8 +517,8 @@ export function MenuDiscovery({
 
   const totalPages = isSpecialListing
     ? Math.max(1, Math.ceil(specialRankedItems.length / MENU_PAGE_SIZE))
-    : normalPage?.meta?.totalPages ?? 1;
-  const total = isSpecialListing ? specialRankedItems.length : normalPage?.meta?.total ?? 0;
+    : (normalPage?.meta?.totalPages ?? 1);
+  const total = isSpecialListing ? specialRankedItems.length : (normalPage?.meta?.total ?? 0);
 
   // The server applies the price range; the in-stock filter still runs on the loaded page.
   const visibleItems = useMemo(
@@ -548,13 +569,22 @@ export function MenuDiscovery({
       brand?: string | undefined;
     }) => {
       const p = new URLSearchParams(searchParams?.toString() ?? "");
-      if (updates.category !== undefined) (updates.category && updates.category !== "all") ? p.set("category", updates.category) : p.delete("category");
-      if (updates.outlet !== undefined) updates.outlet ? p.set("outlet", updates.outlet) : p.delete("outlet");
-      if (updates.search !== undefined) updates.search ? p.set("search", updates.search) : p.delete("search");
-      if (updates.dietary !== undefined) updates.dietary ? p.set("dietary", updates.dietary) : p.delete("dietary");
-      if (updates.sort !== undefined) (updates.sort && updates.sort !== "default") ? p.set("sort", updates.sort) : p.delete("sort");
-      if (updates.filter !== undefined) updates.filter ? p.set("filter", updates.filter) : p.delete("filter");
-      if (updates.brand !== undefined) updates.brand ? p.set("brand", updates.brand) : p.delete("brand");
+      if (updates.category !== undefined)
+        updates.category && updates.category !== "all"
+          ? p.set("category", updates.category)
+          : p.delete("category");
+      if (updates.outlet !== undefined)
+        updates.outlet ? p.set("outlet", updates.outlet) : p.delete("outlet");
+      if (updates.search !== undefined)
+        updates.search ? p.set("search", updates.search) : p.delete("search");
+      if (updates.dietary !== undefined)
+        updates.dietary ? p.set("dietary", updates.dietary) : p.delete("dietary");
+      if (updates.sort !== undefined)
+        updates.sort && updates.sort !== "default" ? p.set("sort", updates.sort) : p.delete("sort");
+      if (updates.filter !== undefined)
+        updates.filter ? p.set("filter", updates.filter) : p.delete("filter");
+      if (updates.brand !== undefined)
+        updates.brand ? p.set("brand", updates.brand) : p.delete("brand");
       const q = p.toString();
       router.replace(q ? `?${q}` : window.location.pathname, { scroll: false });
     },
@@ -570,7 +600,16 @@ export function MenuDiscovery({
     if (initialSort != null) setSort((initialSort as CatalogSort) || "default");
     if (initialFilter != null) setSpecialFilter(initialFilter);
     if (initialBrand != null) setBrandId(initialBrand);
-  }, [initialCategory, initialOutlet, initialSearch, initialDietary, initialFavoriteOnly, initialSort, initialFilter, initialBrand]);
+  }, [
+    initialCategory,
+    initialOutlet,
+    initialSearch,
+    initialDietary,
+    initialFavoriteOnly,
+    initialSort,
+    initialFilter,
+    initialBrand,
+  ]);
 
   const handleAddToCart = (item: MenuItem) => {
     // Variant/modifier products open the quick add-to-cart modal so the customer can
@@ -620,7 +659,7 @@ export function MenuDiscovery({
 
   const isSubscriptionError =
     (itemsError as any)?.response?.status === 402 ||
-    (itemsError as any)?.response?.data?.code === 'subscription_inactive';
+    (itemsError as any)?.response?.data?.code === "subscription_inactive";
 
   if (isSubscriptionError) {
     return (
@@ -629,7 +668,8 @@ export function MenuDiscovery({
           <ShieldAlert className="size-12 text-muted-foreground" aria-hidden />
           <h2 className="text-xl font-semibold text-foreground">Menu Temporarily Unavailable</h2>
           <p className="max-w-sm text-sm text-muted-foreground">
-            This menu is currently unavailable. Please check back later or contact the venue directly.
+            This menu is currently unavailable. Please check back later or contact the venue
+            directly.
           </p>
         </div>
       </section>
@@ -656,7 +696,7 @@ export function MenuDiscovery({
             <label htmlFor="menu-search" className="sr-only">
               Search {copy.itemLabelPlural.toLowerCase()}
             </label>
-            <div className="relative min-w-0 flex-1 md:max-w-md md:ml-auto">
+            <div className="relative min-w-0 flex-1 md:ml-auto md:max-w-md">
               <SearchIcon
                 className="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground"
                 aria-hidden
@@ -669,13 +709,20 @@ export function MenuDiscovery({
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
                 onBlur={() => updateUrl({ search: search.trim() || undefined })}
-                onKeyDown={(e) => e.key === "Enter" && updateUrl({ search: search.trim() || undefined })}
+                onKeyDown={(e) =>
+                  e.key === "Enter" && updateUrl({ search: search.trim() || undefined })
+                }
                 className="h-10 rounded-full pl-10"
               />
             </div>
           </div>
-          <nav aria-label="Menu sections" className="-mx-4 flex flex-nowrap gap-2 overflow-x-auto px-4 pb-1 [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden">
-            <SectionChip active={activeCategoryId === "all"} onClick={() => selectCategory("all")}>All</SectionChip>
+          <nav
+            aria-label="Menu sections"
+            className="-mx-4 flex flex-nowrap gap-2 overflow-x-auto px-4 pb-1 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+          >
+            <SectionChip active={activeCategoryId === "all"} onClick={() => selectCategory("all")}>
+              All
+            </SectionChip>
             {sectionTree.map((node) => (
               <SectionChip
                 key={node.id}
@@ -687,8 +734,15 @@ export function MenuDiscovery({
             ))}
           </nav>
           {activeSection && activeSection.children.length > 0 && (
-            <nav aria-label={`${activeSection.name} sub-sections`} className="-mx-4 flex flex-nowrap gap-2 overflow-x-auto px-4 pb-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
-              <SectionChip small active={activeCategoryId === activeSection.id} onClick={() => selectCategory(activeSection.id)}>
+            <nav
+              aria-label={`${activeSection.name} sub-sections`}
+              className="-mx-4 flex flex-nowrap gap-2 overflow-x-auto px-4 pb-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+            >
+              <SectionChip
+                small
+                active={activeCategoryId === activeSection.id}
+                onClick={() => selectCategory(activeSection.id)}
+              >
                 All {activeSection.name}
               </SectionChip>
               {activeSection.children.map((child) => (
@@ -709,7 +763,9 @@ export function MenuDiscovery({
         {activeCategoryId !== "all" && (
           <h2 className="text-base font-semibold text-foreground sm:text-lg">
             {categoriesFromApi.find((c) => c.id === activeCategoryId)?.name ?? copy.itemLabelPlural}
-            <span className="ml-2 text-sm font-normal text-muted-foreground">{total} {total === 1 ? "item" : "items"}</span>
+            <span className="ml-2 text-sm font-normal text-muted-foreground">
+              {total} {total === 1 ? "item" : "items"}
+            </span>
           </h2>
         )}
 
@@ -782,9 +838,20 @@ export function MenuDiscovery({
 
         {/* Brand facet: real counts for the current selection, from the listing's facets. */}
         {cfg.productLayout === "compact" && ((facets?.brands.length ?? 0) > 1 || !!brandId) && (
-          <nav aria-label="Filter by brand" className="-mx-4 flex flex-nowrap gap-2 overflow-x-auto px-4 pb-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+          <nav
+            aria-label="Filter by brand"
+            className="-mx-4 flex flex-nowrap gap-2 overflow-x-auto px-4 pb-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+          >
             {brandId && (
-              <SectionChip small active={false} onClick={() => { setBrandId(""); setPage(1); updateUrl({ brand: undefined }); }}>
+              <SectionChip
+                small
+                active={false}
+                onClick={() => {
+                  setBrandId("");
+                  setPage(1);
+                  updateUrl({ brand: undefined });
+                }}
+              >
                 All brands
               </SectionChip>
             )}
@@ -812,7 +879,7 @@ export function MenuDiscovery({
         {/* Outlet filter when multiple */}
         {outlets.length > 1 && (
           <div className="flex flex-wrap gap-2">
-            <span className="text-xs text-muted-foreground self-center">Outlet:</span>
+            <span className="self-center text-xs text-muted-foreground">Outlet:</span>
             {outlets.map((out) => (
               <Button
                 key={out.id}
@@ -846,44 +913,52 @@ export function MenuDiscovery({
                 : "border-border text-muted-foreground hover:border-red-500 hover:text-red-600",
             )}
           >
-            <Heart className={cn("size-4", initialAction === "whitelist" && "fill-current")} aria-hidden />
+            <Heart
+              className={cn("size-4", initialAction === "whitelist" && "fill-current")}
+              aria-hidden
+            />
             <span>Favorites</span>
           </button>
           {/* Dietary filters only make sense for food verticals (vegan/gluten-free/etc.) —
               hidden for retail/pharmacy/services/ticketing where they're meaningless. */}
-          {cfg.showDietaryFilters && dietaryFilterOpts.map((filter) => {
-            const isActive = activeDietary.includes(filter.value);
-            return (
-              <button
-                key={filter.value}
-                type="button"
-                onClick={() => {
-                  const next = isActive ? activeDietary.filter((tag) => tag !== filter.value) : [...activeDietary, filter.value];
-                  setActiveDietary(next);
-                  setPage(1);
-                  updateUrl({ dietary: next.length ? next.join(",") : undefined });
-                }}
-                className={cn(
-                  "inline-flex items-center gap-1 rounded-full border px-3 py-1 text-xs font-medium transition-colors",
-                  isActive
-                    ? "border-brand-emphasis bg-brand-emphasis/10 text-brand-emphasis"
-                    : "border-border text-muted-foreground hover:border-brand-emphasis hover:text-brand-emphasis",
-                )}
-              >
-                {filter.icon}
-                <span>{filter.label}</span>
-              </button>
-            );
-          })}
+          {cfg.showDietaryFilters &&
+            dietaryFilterOpts.map((filter) => {
+              const isActive = activeDietary.includes(filter.value);
+              return (
+                <button
+                  key={filter.value}
+                  type="button"
+                  onClick={() => {
+                    const next = isActive
+                      ? activeDietary.filter((tag) => tag !== filter.value)
+                      : [...activeDietary, filter.value];
+                    setActiveDietary(next);
+                    setPage(1);
+                    updateUrl({ dietary: next.length ? next.join(",") : undefined });
+                  }}
+                  className={cn(
+                    "inline-flex items-center gap-1 rounded-full border px-3 py-1 text-xs font-medium transition-colors",
+                    isActive
+                      ? "border-brand-emphasis bg-brand-emphasis/10 text-brand-emphasis"
+                      : "border-border text-muted-foreground hover:border-brand-emphasis hover:text-brand-emphasis",
+                  )}
+                >
+                  {filter.icon}
+                  <span>{filter.label}</span>
+                </button>
+              );
+            })}
         </div>
 
         {/* Items grid — denser (4-up) for product-style retail/wholesale verticals,
             comfortable (3-up) for food/services where cards carry more detail. */}
-        <div className={cn(
-          cfg.productLayout === "compact"
-            ? "grid gap-4 sm:grid-cols-2 sm:gap-6 lg:grid-cols-4"
-            : "grid grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-3",
-        )}>
+        <div
+          className={cn(
+            cfg.productLayout === "compact"
+              ? "grid gap-4 sm:grid-cols-2 sm:gap-6 lg:grid-cols-4"
+              : "grid grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-3",
+          )}
+        >
           {isPending && menuItems.length === 0 ? (
             Array.from({ length: 8 }, (_, i) =>
               cfg.productLayout === "compact" ? (
@@ -902,8 +977,7 @@ export function MenuDiscovery({
           ) : menuItems.length === 0 ? (
             <div className="col-span-full rounded-2xl border border-dashed border-border bg-card p-6 text-center sm:rounded-3xl sm:p-8">
               <p className="text-xs text-muted-foreground sm:text-sm">
-                No items match the current filters. Try clearing a filter or
-                adjusting your search.
+                No items match the current filters. Try clearing a filter or adjusting your search.
               </p>
             </div>
           ) : (
@@ -918,7 +992,13 @@ export function MenuDiscovery({
                   index={idx}
                 />
               ) : (
-                <MenuRow key={item.id} item={item} orgSlug={orgSlug} onAddToCart={handleAddToCart} cfg={cfg} />
+                <MenuRow
+                  key={item.id}
+                  item={item}
+                  orgSlug={orgSlug}
+                  onAddToCart={handleAddToCart}
+                  cfg={cfg}
+                />
               ),
             )
           )}

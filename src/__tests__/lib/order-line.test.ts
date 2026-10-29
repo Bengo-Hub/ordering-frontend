@@ -1,7 +1,12 @@
 import { describe, expect, it } from "vitest";
 
 import { normalizeOrder } from "@/lib/api/orders";
-import { formatAttributes, formatDeliveryAddress, orderLineDetails, toOrderLineView } from "@/lib/order-line";
+import {
+  formatAttributes,
+  formatDeliveryAddress,
+  orderLineDetails,
+  toOrderLineView,
+} from "@/lib/order-line";
 
 describe("order-line", () => {
   it("maps the backend line spelling to the view", () => {
@@ -48,7 +53,9 @@ describe("order-line", () => {
       currency: "KES",
       discountTotal: 100,
       deliveryAddress: { addressLine1: "Moi Avenue", city: "Nairobi" },
-      items: [{ nameSnapshot: "Cap", inventorySku: "CAP", quantity: 1, unitPrice: 400, totalPrice: 400 }],
+      items: [
+        { nameSnapshot: "Cap", inventorySku: "CAP", quantity: 1, unitPrice: 400, totalPrice: 400 },
+      ],
     });
     expect(order.discount).toBe(100);
     expect(order.deliveryAddress).toBe("Moi Avenue, Nairobi");
