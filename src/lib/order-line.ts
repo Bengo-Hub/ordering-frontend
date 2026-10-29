@@ -38,11 +38,16 @@ function axisRank(axis: string): number {
   return 2;
 }
 
+/** Variant axis names in display order (colour, size, then the rest A-Z); the variant picker,
+ *  order lines and cart names all use this one order. */
+export function orderAxes(keys: Iterable<string>): string[] {
+  return [...keys].sort((a, b) => axisRank(a) - axisRank(b) || a.localeCompare(b));
+}
+
 /** "Red / M" from an attribute map, in the same axis order as the variant picker. */
 export function formatAttributes(attrs: Record<string, unknown> | undefined): string {
   if (!attrs) return "";
-  return Object.keys(attrs)
-    .sort((a, b) => axisRank(a) - axisRank(b) || a.localeCompare(b))
+  return orderAxes(Object.keys(attrs))
     .map((k) => str(attrs[k]))
     .filter(Boolean)
     .join(" / ");

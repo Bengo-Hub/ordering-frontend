@@ -177,6 +177,8 @@ export async function fetchMenuItems(
   if (filters?.minPrice !== undefined) params.set("min_price", String(filters.minPrice));
   if (filters?.maxPrice !== undefined) params.set("max_price", String(filters.maxPrice));
   if (filters?.withFacets) params.set("facets", "1");
+  const attrs = Object.entries(filters?.attrs ?? {}).filter(([, v]) => v);
+  if (attrs.length > 0) params.set("attrs", attrs.map(([k, v]) => `${k}:${v}`).join(","));
   if (filters?.featured !== undefined) params.set("featured", String(filters.featured));
   if (filters?.outletId) params.set("outlet_id", filters.outletId);
   if (filters?.favoriteOnly) params.set("favorite", "true");

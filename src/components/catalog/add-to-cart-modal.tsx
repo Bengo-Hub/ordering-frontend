@@ -18,7 +18,11 @@ import {
   calculateModifierAdjustment,
   validateModifierSelections,
 } from "@/components/catalog/modifier-selector";
-import { VariantSelector, formatVariantAttributes } from "@/components/catalog/variant-selector";
+import {
+  VariantSelector,
+  initialVariantId,
+} from "@/components/catalog/variant-selector";
+import { variantCartFields } from "@/lib/variant-line";
 import { useCartStore } from "@/store/cart";
 import type { CatalogVariant, ModifierGroup } from "@/types/catalog";
 
@@ -78,9 +82,7 @@ export function AddToCartModal({ item, onClose, onAdded }: AddToCartModalProps) 
       if (defaultOptions.length > 0) defaults[group.id] = defaultOptions;
     }
     setModifierSelections(defaults);
-    setSelectedVariantId(
-      item.hasVariants && (item.variants?.length ?? 0) > 0 ? item.variants![0]!.id : null,
-    );
+    setSelectedVariantId(item.hasVariants ? initialVariantId(item.variants) : null);
   }, [item]);
 
   const modifierAdjustment = useMemo(() => {
@@ -129,28 +131,17 @@ export function AddToCartModal({ item, onClose, onAdded }: AddToCartModalProps) 
       });
     }
 
-    const variantAttrs = selectedVariant ? formatVariantAttributes(selectedVariant) : "";
-    const lineId = selectedVariant ? `${item.id}::${selectedVariant.id}` : item.id;
-    const lineName = selectedVariant ? `${item.name} — ${variantAttrs}` : item.name;
-
-    const metadata: Record<string, unknown> = {};
-    if (selectedVariant) {
-      metadata.variant_id = selectedVariant.id;
-      metadata.variant_sku = selectedVariant.sku;
-      metadata.variant_name = selectedVariant.name;
-      if (Object.keys(selectedVariant.attributes ?? {}).length > 0) {
-        metadata.variant_attributes = selectedVariant.attributes;
-      }
-    }
+    const line = variantCartFields(item, selectedVariant);
+    const metadata = line.metadata;
 
     addItem({
-      id: lineId,
-      name: lineName,
+      id: line.id,
+      name: line.name,
       price: unitPrice,
       quantity,
       ...(item.outletId ? { outletId: item.outletId } : {}),
       ...(item.outletName ? { outletName: item.outletName } : {}),
-      ...(selectedVariant ? { inventorySku: selectedVariant.sku } : {}),
+      ...(line.inventorySku ? { inventorySku: line.inventorySku } : {}),
       ...(cartModifiers.length > 0 ? { modifiers: cartModifiers } : {}),
       ...(item.image ? { image: item.image } : {}),
       ...(Object.keys(metadata).length > 0 ? { metadata } : {}),

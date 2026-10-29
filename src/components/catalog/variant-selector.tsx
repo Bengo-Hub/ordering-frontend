@@ -2,6 +2,7 @@
 
 import { useMemo, useState } from "react";
 
+import { orderAxes } from "@/lib/order-line";
 import { cn } from "@/lib/utils";
 import type { CatalogVariant } from "@/types/catalog";
 
@@ -18,28 +19,16 @@ interface VariantSelectorProps {
 /** Stock at or below this shows "Only N left" (real on-hand from inventory, never invented). */
 const LOW_STOCK = 5;
 
-/** Axis order shared with ordering-backend's variant names ("T-shirt, Red / M"): colour first,
- *  then size, then any other axis alphabetically. */
-function axisRank(axis: string): number {
-  const a = axis.toLowerCase();
-  if (a === "colour" || a === "color") return 0;
-  if (a === "size") return 1;
-  return 2;
-}
-
 function orderedAxes(variants: CatalogVariant[]): string[] {
   const seen = new Set<string>();
   for (const v of variants) for (const k of Object.keys(v.attributes ?? {})) if (k) seen.add(k);
-  return [...seen].sort((a, b) => axisRank(a) - axisRank(b) || a.localeCompare(b));
+  return orderAxes(seen);
 }
 
-/** Format a variant's attributes as "Red / M" (falls back to the variant name). */
-export function formatVariantAttributes(variant: CatalogVariant): string {
-  const attrs = variant.attributes ?? {};
-  const parts = orderedAxes([variant])
-    .map((k) => attrs[k])
-    .filter(Boolean);
-  return parts.length > 0 ? parts.join(" / ") : variant.name;
+/** Which variant starts selected: only a lone one. With several the customer chooses, so no
+ *  size or colour is ever added that nobody picked. */
+export function initialVariantId(variants: CatalogVariant[] | undefined): string | null {
+  return variants?.length === 1 ? variants[0]!.id : null;
 }
 
 function titleCase(s: string): string {

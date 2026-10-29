@@ -398,6 +398,8 @@ export function MenuDiscovery({
   const [sort, setSort] = useState<CatalogSort>((initialSort as CatalogSort) || "default");
   const [specialFilter, setSpecialFilter] = useState<string>(initialFilter ?? "");
   const [brandId, setBrandId] = useState<string>(initialBrand ?? "");
+  // Variant size/colour chips from the listing facets ({ size: "M" }), filtered server side.
+  const [attrFilter, setAttrFilter] = useState<Record<string, string>>({});
   // Price/in-stock filters: applied via an explicit "Apply" button (matches the reference
   // filter bar), not live-as-you-type — draft state is separate from what's actually applied.
   const [minPriceDraft, setMinPriceDraft] = useState("");
@@ -463,6 +465,7 @@ export function MenuDiscovery({
       ...((sort === "newest" || sort === "price_asc" || sort === "price_desc") && { sort }),
       ...(appliedMinPrice != null && { minPrice: appliedMinPrice }),
       ...(appliedMaxPrice != null && { maxPrice: appliedMaxPrice }),
+      ...(Object.keys(attrFilter).length > 0 && { attrs: attrFilter }),
       withFacets: true,
     }),
     [
@@ -475,6 +478,7 @@ export function MenuDiscovery({
       sort,
       appliedMinPrice,
       appliedMaxPrice,
+      attrFilter,
     ],
   );
 
@@ -835,6 +839,39 @@ export function MenuDiscovery({
             </select>
           </div>
         )}
+
+        {/* Size/colour facets: one chip row per variant axis, real product counts. */}
+        {cfg.productLayout === "compact" &&
+          Object.entries(facets?.attributes ?? {})
+            .filter(([axis, values]) => values.length > 1 || !!attrFilter[axis])
+            .map(([axis, values]) => (
+              <nav
+                key={axis}
+                aria-label={`Filter by ${axis}`}
+                className="-mx-4 flex flex-nowrap items-center gap-2 overflow-x-auto px-4 pb-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+              >
+                <span className="shrink-0 text-xs font-medium capitalize text-muted-foreground">{axis}</span>
+                {values.map((v) => (
+                  <SectionChip
+                    small
+                    key={v.name}
+                    active={attrFilter[axis]?.toLowerCase() === v.name.toLowerCase()}
+                    onClick={() => {
+                      setAttrFilter((prev) => {
+                        const next = { ...prev };
+                        if (next[axis]?.toLowerCase() === v.name.toLowerCase()) delete next[axis];
+                        else next[axis] = v.name;
+                        return next;
+                      });
+                      setPage(1);
+                    }}
+                  >
+                    {v.name}
+                    <span className="ml-1 text-muted-foreground">({v.count})</span>
+                  </SectionChip>
+                ))}
+              </nav>
+            ))}
 
         {/* Brand facet: real counts for the current selection, from the listing's facets. */}
         {cfg.productLayout === "compact" && ((facets?.brands.length ?? 0) > 1 || !!brandId) && (

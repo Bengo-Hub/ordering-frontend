@@ -27,7 +27,11 @@ import {
   calculateModifierAdjustment,
   validateModifierSelections,
 } from "@/components/catalog/modifier-selector";
-import { VariantSelector, formatVariantAttributes } from "@/components/catalog/variant-selector";
+import {
+  VariantSelector,
+  initialVariantId,
+} from "@/components/catalog/variant-selector";
+import { variantCartFields } from "@/lib/variant-line";
 import { SiteShell } from "@/components/layout/site-shell";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -38,7 +42,9 @@ import { useCountdown } from "@/hooks/use-countdown";
 import { useOrderingConfig } from "@/hooks/use-ordering-config";
 import { usePromoDeals } from "@/hooks/use-promo-deals";
 import { applyDeal, dealBadge, resolveDealItems } from "@/lib/api/promo-deals";
-import { formatMoney, formatPriceRange } from "@/lib/list-price";
+import { formatListPrice, formatMoney, formatPriceRange } from "@/lib/list-price";
+import { useRecentlyViewedStore } from "@/store/recently-viewed";
+import { RecentlyViewedRail } from "@/components/catalog/recently-viewed-rail";
 import { orgRoute } from "@/lib/routes";
 import { cn } from "@/lib/utils";
 import { useOrgSlug } from "@/providers/org-slug-provider";
@@ -132,13 +138,27 @@ export default function CatalogItemPage() {
     [variants, selectedVariantId],
   );
 
-  // Auto-select the only/first variant so single-variant items behave like normal items.
+  // Auto-select only a single variant, so it behaves like a normal item. With several, the
+  // customer picks the size/colour (the page shows the price range until then), as large
+  // retail stores do; never add a size nobody chose.
   useEffect(() => {
     if (!hasVariants) return;
     setSelectedVariantId((prev) =>
-      prev && variants.some((v) => v.id === prev) ? prev : variants[0]!.id,
+      prev && variants.some((v) => v.id === prev) ? prev : initialVariantId(variants),
     );
   }, [hasVariants, variants]);
+
+  // Remember this product for the "Recently viewed" row (device only).
+  const recordRecent = useRecentlyViewedStore((s) => s.record);
+  useEffect(() => {
+    if (!item) return;
+    recordRecent(orgSlug, {
+      id: item.id,
+      name: item.name,
+      image: item.image,
+      priceLabel: formatListPrice(item, item.currency),
+    });
+  }, [item, orgSlug, recordRecent]);
 
   const modifierAdjustment = useMemo(() => {
     if (!item?.modifierGroups?.length) return 0;
@@ -253,19 +273,8 @@ export default function CatalogItemPage() {
 
     // Variant lines get a composite key so different variants stay separate lines,
     // a "<product> — <variant>" name, and the variant SKU for checkout.
-    const variantAttrs = selectedVariant ? formatVariantAttributes(selectedVariant) : "";
-    const lineId = selectedVariant ? `${item.id}::${selectedVariant.id}` : item.id;
-    const lineName = selectedVariant ? `${item.name} — ${variantAttrs}` : item.name;
-
-    const metadata: Record<string, unknown> = {};
-    if (selectedVariant) {
-      metadata.variant_id = selectedVariant.id;
-      metadata.variant_sku = selectedVariant.sku;
-      metadata.variant_name = selectedVariant.name;
-      if (Object.keys(selectedVariant.attributes ?? {}).length > 0) {
-        metadata.variant_attributes = selectedVariant.attributes;
-      }
-    }
+    const line = variantCartFields(item, selectedVariant);
+    const metadata = line.metadata;
     if (isAppointment && appointment) {
       metadata.is_service = true;
       metadata.appointment_date = appointment.date;
@@ -274,13 +283,13 @@ export default function CatalogItemPage() {
     }
 
     addItem({
-      id: lineId,
-      name: lineName,
+      id: line.id,
+      name: line.name,
       price: unitPrice,
       outletId: item.outletId,
       outletName: item.outletName,
       quantity,
-      ...(selectedVariant ? { inventorySku: selectedVariant.sku } : {}),
+      ...(line.inventorySku ? { inventorySku: line.inventorySku } : {}),
       ...(cartModifiers.length > 0 ? { modifiers: cartModifiers } : {}),
       ...(item.image ? { image: item.image } : {}),
       ...(Object.keys(metadata).length > 0 ? { metadata } : {}),
@@ -694,7 +703,7 @@ export default function CatalogItemPage() {
                   <div className="p-2.5">
                     <p className="truncate text-sm font-medium text-foreground">{related.name}</p>
                     <p className="mt-0.5 text-sm font-semibold text-primary">
-                      {related.currency} {related.price.toLocaleString()}
+                      {formatListPrice(related, related.currency)}
                     </p>
                   </div>
                 </Link>
@@ -702,6 +711,10 @@ export default function CatalogItemPage() {
             </div>
           </div>
         )}
+
+        <div className="mt-8">
+          <RecentlyViewedRail orgSlug={orgSlug} excludeId={item.id} useCase={cfg.profile} />
+        </div>
       </div>
 
       {/* ============ Sticky bottom bar ============ */}

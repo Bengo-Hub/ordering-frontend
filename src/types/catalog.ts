@@ -236,6 +236,8 @@ export interface MenuFilters {
   sort?: string;
   /** Ask the listing for its facets (price bounds, brands, categories, variant values). */
   withFacets?: boolean;
+  /** Variant values to filter on, e.g. { size: "M" } (sent as attrs=size:M). */
+  attrs?: Record<string, string>;
   /** Item brand filter (client-side — inventory-api's BrandID isn't yet a list-filter param
    *  on ordering-backend's public items endpoint, matched against the mapped brandId field). */
   brandId?: string;
