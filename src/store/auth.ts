@@ -246,9 +246,16 @@ export const useAuthStore = create<AuthState>((set, get) => ({
         sessionStorage.setItem("sso_return_to", returnTo);
       }
 
-      // Build the callback URL for this frontend
+      // Callback on this origin under the tenant's slug. The slug comes from the caller, not the
+      // URL: on a tenant's own domain (src/proxy.ts) the address bar can read "/" or "/catalog"
+      // with no slug in it, which would build "//auth/callback" or "/catalog/auth/callback".
+      const slugSegment = tenant
+        ? `/${tenant}`
+        : typeof window !== "undefined"
+          ? window.location.pathname.split("/").slice(0, 2).join("/")
+          : "";
       const callbackUrl = typeof window !== "undefined"
-        ? `${window.location.origin}${window.location.pathname.split("/").slice(0, 2).join("/")}/auth/callback`
+        ? `${window.location.origin}${slugSegment}/auth/callback`
         : "";
 
       // Pass tenant so auth-api can mint token for that org; default urban-loft per plan.

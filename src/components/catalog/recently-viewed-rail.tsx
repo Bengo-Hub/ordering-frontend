@@ -15,7 +15,9 @@ interface RecentlyViewedRailProps {
 
 /** "Recently viewed": products this browser opened in this store, newest first. Device only. */
 export function RecentlyViewedRail({ orgSlug, excludeId, useCase }: RecentlyViewedRailProps) {
-  const items = useRecentlyViewedStore((s) => s.byTenant[orgSlug] ?? []).filter((r) => r.id !== excludeId);
+  const items = useRecentlyViewedStore((s) => s.byTenant[orgSlug] ?? []).filter(
+    (r) => r.id !== excludeId,
+  );
   if (items.length === 0) return null;
 
   return (
@@ -23,7 +25,7 @@ export function RecentlyViewedRail({ orgSlug, excludeId, useCase }: RecentlyView
       <h2 id="recently-viewed-title" className="font-semibold text-foreground">
         Recently viewed
       </h2>
-      <div className="flex gap-3 overflow-x-auto pb-2 scrollbar-none">
+      <div className="scrollbar-none flex gap-3 overflow-x-auto pb-2">
         {items.map((item) => (
           <Link
             key={item.id}

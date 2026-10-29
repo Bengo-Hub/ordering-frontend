@@ -32,6 +32,7 @@ export function variantCartFields(
     variant_sku: variant.sku,
     variant_name: variant.name,
   };
-  if (Object.keys(variant.attributes ?? {}).length > 0) metadata.variant_attributes = variant.attributes;
+  if (Object.keys(variant.attributes ?? {}).length > 0)
+    metadata.variant_attributes = variant.attributes;
   return { id: `${item.id}::${variant.id}`, name, inventorySku: variant.sku, metadata };
 }
