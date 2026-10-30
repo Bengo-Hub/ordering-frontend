@@ -9,10 +9,10 @@ import type {
     UserProfile,
     UserRole,
 } from "./types";
+import { serviceUrl } from "@/lib/service-urls";
 
 // SSO configuration
-const SSO_BASE_URL =
-  process.env.NEXT_PUBLIC_SSO_URL ?? "https://sso.codevertexafrica.com";
+const SSO_BASE_URL = serviceUrl("sso");
 const SSO_CLIENT_ID = process.env.NEXT_PUBLIC_SSO_CLIENT_ID ?? "ordering-ui";
 
 /**

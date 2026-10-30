@@ -64,6 +64,7 @@ import {
   useSelectGateway,
   useSelectedGateways,
 } from "@/hooks/use-gateways";
+import { serviceUrl } from "@/lib/service-urls";
 
 // ── Types ────────────────────────────────────────────────────────────────────
 
@@ -709,10 +710,8 @@ function SubscriptionAddonsTab({ tenantSlug: _tenantSlug }: { tenantSlug: string
 
 // ── Integrations Settings ────────────────────────────────────────────────────
 
-const AUTH_API_URL_DEFAULT =
-  process.env.NEXT_PUBLIC_AUTH_API_URL || "https://sso.codevertexafrica.com";
-const ORDERING_API_URL =
-  process.env.NEXT_PUBLIC_API_URL || "https://orderingapi.codevertexafrica.com";
+const AUTH_API_URL_DEFAULT = serviceUrl("sso");
+const ORDERING_API_URL = serviceUrl("ordering");
 
 function IntegrationsTab() {
   const [authApiUrl, setAuthApiUrl] = useState(AUTH_API_URL_DEFAULT);

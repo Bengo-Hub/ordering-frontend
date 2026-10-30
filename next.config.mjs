@@ -1,8 +1,15 @@
 import withPWA from "@ducanh2912/next-pwa";
 
+import { serviceRewrites } from "./src/lib/service-urls.config.mjs";
+
 const DEFAULT_SLUG = process.env.NEXT_PUBLIC_TENANT_SLUG || "urban-loft";
 
 const nextConfig = {
+  // On a tenant's own domain the browser calls the platform APIs through these same-origin
+  // paths (src/lib/service-urls.ts), so new tenant domains never need API CORS changes.
+  async rewrites() {
+    return serviceRewrites();
+  },
   ...(process.env.SKIP_STANDALONE !== 'true' && { output: 'standalone' }),
   reactStrictMode: true,
   images: {

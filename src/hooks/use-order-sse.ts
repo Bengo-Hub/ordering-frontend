@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 
 import { useOrgSlug } from "@/providers/org-slug-provider";
+import { serviceUrl } from "@/lib/service-urls";
 
 // ─── Types ───────────────────────────────────────────────────────────
 
@@ -28,7 +29,7 @@ interface OrderSSEState {
 
 // ─── Hook ────────────────────────────────────────────────────────────
 
-const DEFAULT_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:4000/api/v1/";
+const DEFAULT_BASE_URL = serviceUrl("ordering");
 const NORMALISED_BASE_URL = DEFAULT_BASE_URL.endsWith("/") ? DEFAULT_BASE_URL : `${DEFAULT_BASE_URL}/`;
 
 export function useOrderSSE(orderId: string | null): OrderSSEState {

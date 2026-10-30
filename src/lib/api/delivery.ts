@@ -1,11 +1,12 @@
 import axios from "axios";
+import { serviceUrl } from "@/lib/service-urls";
 
 /**
  * Delivery areas, quotes and place search come from logistics-api, the platform's single
  * owner of delivery zones and pricing. These endpoints are public (guest checkout) and
  * throttled per IP there. Ordering never computes distances or zone matches itself.
  */
-const LOGISTICS_API_URL = (process.env.NEXT_PUBLIC_LOGISTICS_API_URL || "https://logisticsapi.codevertexafrica.com/api/v1").replace(/\/+$/, "");
+const LOGISTICS_API_URL = serviceUrl("logistics").replace(/\/+$/, "");
 
 const logistics = axios.create({ baseURL: `${LOGISTICS_API_URL}/`, timeout: 10_000 });
 

@@ -3,10 +3,9 @@
 import { useQuery } from '@tanstack/react-query';
 import { useAuthStore } from '@/store/auth';
 import type { UsageAlert } from '@bengo-hub/shared-ui-lib/subscription';
+import { serviceUrl } from "@/lib/service-urls";
 
-const SUBSCRIPTIONS_API_URL =
-  process.env.NEXT_PUBLIC_SUBSCRIPTIONS_API_URL ||
-  'https://pricingapi.codevertexafrica.com';
+const SUBSCRIPTIONS_API_URL = serviceUrl('subscriptions');
 
 export function useUsageAlerts(): UsageAlert[] {
   const token = useAuthStore((s) => s.session?.accessToken);

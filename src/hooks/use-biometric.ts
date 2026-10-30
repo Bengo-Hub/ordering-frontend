@@ -1,8 +1,9 @@
 'use client';
 
 import { useCallback, useEffect, useState } from 'react';
+import { serviceUrl } from "@/lib/service-urls";
 
-const SSO_BASE_URL = process.env.NEXT_PUBLIC_SSO_URL || 'https://sso.codevertexafrica.com';
+const SSO_BASE_URL = serviceUrl('sso');
 
 export type BiometricState = 'idle' | 'registering' | 'authenticating' | 'success' | 'error' | 'unsupported';
 

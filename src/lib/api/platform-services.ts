@@ -1,4 +1,5 @@
 import axios from "axios";
+import { serviceUrl } from "@/lib/service-urls";
 
 /**
  * Cross-service API clients for tenant settings pages.
@@ -49,14 +50,8 @@ function createClient(baseURL: string) {
   return client;
 }
 
-export const treasuryApi = createClient(
-  process.env.NEXT_PUBLIC_TREASURY_API_URL || "http://localhost:4201",
-);
+export const treasuryApi = createClient(serviceUrl("treasury"));
 
-export const notificationsApi = createClient(
-  process.env.NEXT_PUBLIC_NOTIFICATIONS_API_URL || "http://localhost:4301",
-);
+export const notificationsApi = createClient(serviceUrl("notifications"));
 
-export const subscriptionsApi = createClient(
-  process.env.NEXT_PUBLIC_SUBSCRIPTIONS_API_URL || "http://localhost:4401",
-);
+export const subscriptionsApi = createClient(serviceUrl("subscriptions"));

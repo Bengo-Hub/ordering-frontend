@@ -13,6 +13,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { cn } from "@/lib/utils";
+import { serviceUrl } from "@/lib/service-urls";
 
 interface StaffMember {
   id: string;
@@ -53,7 +54,7 @@ function localDate(d: Date): string {
   return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
 }
 
-const POS_API_URL = process.env.NEXT_PUBLIC_POS_API_URL ?? "https://posapi.codevertexafrica.com";
+const POS_API_URL = serviceUrl("pos");
 
 interface BookedSlots {
   capacity: number;

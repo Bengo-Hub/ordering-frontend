@@ -31,8 +31,9 @@ import { orgRoute } from "@/lib/routes";
 import { cn } from "@/lib/utils";
 import { OrderLineDetails } from "@/components/orders/order-line-details";
 import { useOrgSlug } from "@/providers/org-slug-provider";
+import { serviceUrl } from "@/lib/service-urls";
 
-const TREASURY_API_URL = process.env.NEXT_PUBLIC_TREASURY_API_URL || "http://localhost:4201";
+const TREASURY_API_URL = serviceUrl("treasury");
 
 function statusVariant(status: string): "default" | "soft" | "outline" {
   if (["delivered", "completed"].includes(status)) return "default";

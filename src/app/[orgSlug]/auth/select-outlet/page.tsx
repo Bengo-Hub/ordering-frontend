@@ -15,11 +15,9 @@ import { useAuthStore } from '@/store/auth';
 import { Building2, CheckCircle2, ChevronRight, Crown, MapPin } from 'lucide-react';
 import { useParams, useRouter, useSearchParams } from 'next/navigation';
 import { Suspense, useCallback, useEffect, useMemo, useState } from 'react';
+import { serviceUrl } from "@/lib/service-urls";
 
-const AUTH_API_URL =
-  process.env.NEXT_PUBLIC_AUTH_API_URL ||
-  process.env.NEXT_PUBLIC_SSO_URL ||
-  'https://sso.codevertexafrica.com';
+const AUTH_API_URL = serviceUrl('sso');
 
 export const ORDERING_SELECTED_OUTLET_KEY = 'ordering-selected-outlet-id';
 

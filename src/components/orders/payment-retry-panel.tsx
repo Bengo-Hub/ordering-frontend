@@ -10,8 +10,9 @@ import { apiErrorMessage } from "@/lib/api/error-message";
 import type { Order, PaymentRetryResult } from "@/lib/api/orders";
 import { canRetryPayment, formatTimeLeft, retryMsLeft } from "@/lib/payment-retry";
 import { toast } from "@/lib/toast";
+import { serviceUrl } from "@/lib/service-urls";
 
-const TREASURY_API_URL = process.env.NEXT_PUBLIC_TREASURY_API_URL || "http://localhost:4201";
+const TREASURY_API_URL = serviceUrl("treasury");
 
 /**
  * "Payment not completed" for an online-payment order that is still unpaid. While the retry

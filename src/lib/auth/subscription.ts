@@ -1,3 +1,4 @@
+import { serviceUrl } from "@/lib/service-urls";
 /**
  * Subscription information fetched lazily after login.
  * Used for UI-level feature gating (banners, lock icons, upgrade modals).
@@ -25,9 +26,7 @@ export async function fetchSubscriptionInfo(
   tenantSlug: string,
   accessToken: string,
 ): Promise<SubscriptionInfo | null> {
-  const baseUrl =
-    process.env.NEXT_PUBLIC_SUBSCRIPTIONS_API_URL ||
-    "https://pricingapi.codevertexafrica.com";
+  const baseUrl = serviceUrl("subscriptions");
 
   try {
     const controller = new AbortController();
