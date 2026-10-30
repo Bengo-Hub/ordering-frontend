@@ -1,6 +1,7 @@
 "use client";
 
 import { DeliveryAreasCard } from "@/components/delivery/delivery-areas-card";
+import { GatewayManager } from "@/components/payments/gateway-manager";
 import { FeeConfigCard } from "@/components/settings/fee-config-card";
 import { useCallback, useEffect, useState } from "react";
 import {
@@ -19,7 +20,6 @@ import {
   SlidersHorizontal,
   Smartphone,
   Mail,
-  X,
 } from "lucide-react";
 import { useParams } from "next/navigation";
 
@@ -58,12 +58,6 @@ import { Textarea } from "@/components/ui/textarea";
 import { toast } from "@/lib/toast";
 import { apiErrorMessage } from "@/lib/api/error-message";
 import { notificationsApi, subscriptionsApi } from "@/lib/api/platform-services";
-import {
-  useAvailableGateways,
-  useDeactivateGateway,
-  useSelectGateway,
-  useSelectedGateways,
-} from "@/hooks/use-gateways";
 import { serviceUrl } from "@/lib/service-urls";
 
 // ── Types ────────────────────────────────────────────────────────────────────
@@ -260,145 +254,10 @@ function OrderAcceptanceCard() {
 }
 
 function PaymentSettingsTab({ tenantSlug: _tenantSlug }: { tenantSlug: string }) {
-  const { data: available = [], isLoading: availableLoading } = useAvailableGateways();
-  const { data: selected = [], isLoading: selectedLoading } = useSelectedGateways();
-  const selectGateway = useSelectGateway();
-  const deactivateGateway = useDeactivateGateway();
-
-  // Track which gateway row has a mutation in flight (for per-row spinners).
-  const [pendingType, setPendingType] = useState<string | null>(null);
-
-  const isLoading = availableLoading || selectedLoading;
-
-  // Map enabled gateways by type for quick lookup of active/primary state.
-  const selectedByType = new Map(selected.map((g) => [g.gateway_type, g]));
-  const primary = selected.find((g) => g.is_primary && g.is_active);
-
-  const handleEnable = (gatewayType: string) => {
-    setPendingType(gatewayType);
-    selectGateway.mutate(
-      { gatewayType },
-      {
-        onSuccess: () => toast.success("Payment gateway enabled"),
-        onError: async (err) => toast.error(await apiErrorMessage(err, "Failed to enable gateway")),
-        onSettled: () => setPendingType(null),
-      },
-    );
-  };
-
-  const handleDisable = (gatewayType: string) => {
-    setPendingType(gatewayType);
-    deactivateGateway.mutate(gatewayType, {
-      onSuccess: () => toast.success("Payment gateway disabled"),
-      onError: async (err) => toast.error(await apiErrorMessage(err, "Failed to disable gateway")),
-      onSettled: () => setPendingType(null),
-    });
-  };
-
-  if (isLoading) {
-    return (
-      <div className="flex items-center justify-center py-20">
-        <Loader2 className="size-8 animate-spin text-primary" />
-      </div>
-    );
-  }
-
   return (
     <div className="space-y-6">
       <OrderAcceptanceCard />
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <CreditCard className="size-5" />
-            Payment Gateway
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          {primary && (
-            <div className="mb-6 rounded-lg border border-primary/20 bg-primary/5 p-4">
-              <p className="text-sm font-medium text-muted-foreground">Primary gateway</p>
-              <p className="text-lg font-bold">{primary.name}</p>
-              <Badge variant="default" className="mt-1">
-                {primary.gateway_type.replace(/_/g, " ")}
-              </Badge>
-            </div>
-          )}
-
-          {available.length === 0 ? (
-            <div className="py-8 text-center">
-              <Settings className="mx-auto mb-2 size-8 text-muted-foreground" />
-              <p className="text-sm text-muted-foreground">
-                No payment gateways available. Ask the platform admin to configure gateways.
-              </p>
-            </div>
-          ) : (
-            <div className="space-y-3">
-              <p className="mb-3 text-sm text-muted-foreground">
-                Enable payment gateways for your organization:
-              </p>
-              {available.map((gw) => {
-                const sel = selectedByType.get(gw.gateway_type);
-                const isEnabled = !!sel?.is_active;
-                const isPrimary = !!sel?.is_primary && isEnabled;
-                const isPending = pendingType === gw.gateway_type;
-                return (
-                  <div
-                    key={gw.gateway_type}
-                    className={`flex items-center justify-between rounded-lg border p-4 transition-colors ${
-                      isEnabled
-                        ? "border-primary bg-primary/5"
-                        : "border-border hover:border-muted-foreground/30"
-                    }`}
-                  >
-                    <div>
-                      <p className="flex items-center gap-2 font-medium">
-                        {gw.name}
-                        {isPrimary && (
-                          <Badge variant="default" className="text-[10px]">
-                            <Check className="mr-1 size-3" /> Primary
-                          </Badge>
-                        )}
-                      </p>
-                      <p className="text-xs text-muted-foreground">
-                        {gw.gateway_type.replace(/_/g, " ")}
-                        {gw.transaction_fee_type &&
-                          ` · ${gw.transaction_fee_type.replace(/_/g, " ")} fee`}
-                        {gw.supports_stk_push && " · STK push"}
-                      </p>
-                    </div>
-                    {isEnabled ? (
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        className="text-destructive hover:text-destructive"
-                        disabled={isPending}
-                        onClick={() => handleDisable(gw.gateway_type)}
-                      >
-                        {isPending ? (
-                          <Loader2 className="mr-1 size-3 animate-spin" />
-                        ) : (
-                          <X className="mr-1 size-3" />
-                        )}
-                        Disable
-                      </Button>
-                    ) : (
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        disabled={isPending}
-                        onClick={() => handleEnable(gw.gateway_type)}
-                      >
-                        {isPending ? <Loader2 className="mr-1 size-3 animate-spin" /> : null}
-                        Enable
-                      </Button>
-                    )}
-                  </div>
-                );
-              })}
-            </div>
-          )}
-        </CardContent>
-      </Card>
+      <GatewayManager emptyText="No payment gateways available. Ask the platform admin to configure gateways." />
     </div>
   );
 }
