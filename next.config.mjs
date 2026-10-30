@@ -4,6 +4,17 @@ import { serviceRewrites } from "./src/lib/service-urls.config.mjs";
 
 const DEFAULT_SLUG = process.env.NEXT_PUBLIC_TENANT_SLUG || "urban-loft";
 
+/** The app's own host (and local dev hosts), as a `has: host` pattern. */
+const APP_HOST_PATTERN = (() => {
+  let host = "ordering.codevertexafrica.com";
+  try {
+    host = new URL(process.env.NEXT_PUBLIC_APP_URL || `https://${host}`).hostname;
+  } catch {
+    // keep the default
+  }
+  return `(?:${host.replace(/\./g, "\\.")}|localhost|127\\.0\\.0\\.1)`;
+})();
+
 const nextConfig = {
   // On a tenant's own domain the browser calls the platform APIs through these same-origin
   // paths (src/lib/service-urls.ts), so new tenant domains never need API CORS changes.
@@ -68,24 +79,34 @@ const nextConfig = {
   },
   turbopack: {},
   async redirects() {
+    // Slug-less paths go to the default store only on the app's own host. On a tenant's domain the
+    // proxy serves "/catalog" from that tenant's store (redirects run before the proxy, so without
+    // the host condition every tenant domain was sent to the default store).
+    const onAppHost = [{ type: "host", value: APP_HOST_PATTERN }];
+    const slugless = [
+      ["/catalog", "/catalog", false],
+      ["/catalog/:id", "/catalog/:id", false],
+      ["/menu", "/catalog", true],
+      ["/menu/:id", "/catalog/:id", true],
+      ["/checkout", "/checkout", false],
+      ["/auth", "/auth", false],
+      ["/auth/callback", "/auth/callback", false],
+      ["/track/:orderId", "/track/:orderId", false],
+      ["/dashboard/:path*", "/dashboard/:path*", false],
+      ["/profile", "/profile", false],
+      ["/admin/:path*", "/admin/:path*", false],
+      ["/customers/:path*", "/customers/:path*", false],
+      ["/outlet/:id", "/outlet/:id", false],
+    ].map(([source, dest, permanent]) => ({
+      source,
+      destination: `/${DEFAULT_SLUG}${dest}`,
+      permanent,
+      has: onAppHost,
+    }));
     return [
-      // Catalog (new canonical route)
-      { source: "/catalog", destination: `/${DEFAULT_SLUG}/catalog`, permanent: false },
-      { source: "/catalog/:id", destination: `/${DEFAULT_SLUG}/catalog/:id`, permanent: false },
-      // Legacy /menu → /catalog redirects
-      { source: "/menu", destination: `/${DEFAULT_SLUG}/catalog`, permanent: true },
-      { source: "/menu/:id", destination: `/${DEFAULT_SLUG}/catalog/:id`, permanent: true },
+      ...slugless,
       { source: "/:orgSlug/menu", destination: `/:orgSlug/catalog`, permanent: true },
       { source: "/:orgSlug/menu/:id", destination: `/:orgSlug/catalog/:id`, permanent: true },
-      { source: "/checkout", destination: `/${DEFAULT_SLUG}/checkout`, permanent: false },
-      { source: "/auth", destination: `/${DEFAULT_SLUG}/auth`, permanent: false },
-      { source: "/auth/callback", destination: `/${DEFAULT_SLUG}/auth/callback`, permanent: false },
-      { source: "/track/:orderId", destination: `/${DEFAULT_SLUG}/track/:orderId`, permanent: false },
-      { source: "/dashboard/:path*", destination: `/${DEFAULT_SLUG}/dashboard/:path*`, permanent: false },
-      { source: "/profile", destination: `/${DEFAULT_SLUG}/profile`, permanent: false },
-      { source: "/admin/:path*", destination: `/${DEFAULT_SLUG}/admin/:path*`, permanent: false },
-      { source: "/customers/:path*", destination: `/${DEFAULT_SLUG}/customers/:path*`, permanent: false },
-      { source: "/outlet/:id", destination: `/${DEFAULT_SLUG}/outlet/:id`, permanent: false },
     ];
   },
 };
