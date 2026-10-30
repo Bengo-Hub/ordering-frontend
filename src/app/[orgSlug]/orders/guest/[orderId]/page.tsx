@@ -630,7 +630,7 @@ function GuestOrderContent() {
       {/* Actions */}
       <div className="flex flex-col gap-3 sm:flex-row">
         <Button asChild variant="outline" className="min-h-11 w-full gap-2 sm:w-auto">
-          <Link href={orgRoute(orgSlug, "/menu")}>Continue Shopping</Link>
+          <Link href={orgRoute(orgSlug, "/catalog")}>Continue Shopping</Link>
         </Button>
         {!["delivered", "completed", "cancelled", "failed"].includes(order.status) && (
           <Button asChild variant="outline" className="min-h-11 w-full gap-2 sm:w-auto">
