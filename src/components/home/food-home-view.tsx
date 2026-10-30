@@ -49,7 +49,7 @@ import { useOrgSlug } from "@/providers/org-slug-provider";
 import { useCartStore } from "@/store/cart";
 import { useDiningModeStore } from "@/store/dining-mode";
 import { FoodHero } from "@/components/storefront/food-hero";
-import { useBrandConfig } from "@/hooks/use-brand";
+import { storefrontName, useBrandConfig } from "@/hooks/use-brand";
 
 export function FoodHomeView() {
   const orgSlug = useOrgSlug();
@@ -270,7 +270,7 @@ export function FoodHomeView() {
     <SiteShell>
       {/* Restaurant hero: order mode first (Glovo), one dish in the spotlight (Java House). */}
       <FoodHero
-        brandName={brandConfig?.name || firstOutletName || "Our menu"}
+        brandName={storefrontName(brandConfig) || firstOutletName || "Our menu"}
         tagline={brandConfig?.tagline}
         outlet={firstOutlet}
         spotlight={featuredItems[0]?.href ? { ...featuredItems[0], href: featuredItems[0].href } : undefined}

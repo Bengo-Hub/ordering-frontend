@@ -74,6 +74,12 @@ export function appDisplayName(config: BrandConfig | undefined, fallback: string
   return serviceAppName(config?.name, fallback, undefined, config?.appName ? { name: config.appName } : null);
 }
 
+/** The store's name as a headline: its own app name ("Urban Eats") when the tenant set one, else the
+ *  business's short name. Never the registered company name with "LIMITED". */
+export function storefrontName(config: BrandConfig | undefined): string | undefined {
+  return config?.appName || config?.shortName || config?.name || undefined;
+}
+
 export function useBrandConfig() {
   const orgSlug = useOrgSlug();
   const slug = orgSlug || (process.env.NEXT_PUBLIC_TENANT_SLUG as string) || "";
