@@ -170,8 +170,27 @@ export default function CheckoutPage() {
                 />
               ) : null}
 
+              {/* The pin is the outlet itself: nothing to deliver, so offer pickup. */}
+              {state.isAtOutlet && (
+                <div className="flex items-start gap-3 rounded-xl border border-primary/40 bg-primary/5 p-4 text-sm">
+                  <Store className="mt-0.5 size-5 shrink-0 text-primary" />
+                  <div className="flex-1">
+                    <p className="font-medium">
+                      You&apos;re at {state.deliveryQuote?.outlet?.name ?? "our outlet"}
+                    </p>
+                    <p className="mt-1 text-muted-foreground">
+                      There is nothing to deliver here, so pick up your order at the counter. If you want it sent somewhere
+                      else, choose that location on the map.
+                    </p>
+                    <Button type="button" size="sm" className="mt-3" onClick={() => state.handleFulfillmentChange("pickup")}>
+                      Pick up instead
+                    </Button>
+                  </div>
+                </div>
+              )}
+
               {/* Zone validation error */}
-              {state.isOutsideDeliveryZone && (
+              {state.isOutsideDeliveryZone && !state.isAtOutlet && (
                 <div className="flex items-start gap-3 rounded-xl border border-destructive/50 bg-destructive/10 p-4 text-sm text-destructive">
                   <AlertTriangle className="mt-0.5 size-5 shrink-0" />
                   <div>

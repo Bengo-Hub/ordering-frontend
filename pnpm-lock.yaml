@@ -12,8 +12,8 @@ importers:
         specifier: github:Bengo-Hub/maps#v0.3.0
         version: https://codeload.github.com/Bengo-Hub/maps/tar.gz/db926f556a1f9ef55eab1bad0cc0efa68e5e3bdb(maplibre-gl@5.21.0)(react-dom@19.0.0(react@19.0.0))(react@19.0.0)
       '@bengo-hub/shared-ui-lib':
-        specifier: github:Bengo-Hub/shared-ui-lib#v0.1.117
-        version: https://codeload.github.com/Bengo-Hub/shared-ui-lib/tar.gz/a3487320a7396a2e2b363460c1c18c6fa0287450(@floating-ui/dom@1.7.5)(@tanstack/react-query@5.90.20(react@19.0.0))(@tiptap/core@3.31.4(@tiptap/pm@3.31.4))(@types/react-dom@19.2.2(@types/react@19.2.2))(@types/react@19.2.2)(lucide-react@0.452.0(react@19.0.0))(react-dom@19.0.0(react@19.0.0))(react@19.0.0)
+        specifier: github:Bengo-Hub/shared-ui-lib#v0.1.118
+        version: https://codeload.github.com/Bengo-Hub/shared-ui-lib/tar.gz/d667c1c26e931b0ed1514be3394569ad42a35253(@floating-ui/dom@1.7.5)(@tanstack/react-query@5.90.20(react@19.0.0))(@tiptap/core@3.31.4(@tiptap/pm@3.31.4))(@types/react-dom@19.2.2(@types/react@19.2.2))(@types/react@19.2.2)(lucide-react@0.452.0(react@19.0.0))(react-dom@19.0.0(react@19.0.0))(react@19.0.0)
       '@hookform/resolvers':
         specifier: ^3.10.0
         version: 3.10.0(react-hook-form@7.71.1(react@19.0.0))
@@ -811,9 +811,9 @@ packages:
       react: '>=18.0.0'
       react-dom: '>=18.0.0'
 
-  '@bengo-hub/shared-ui-lib@https://codeload.github.com/Bengo-Hub/shared-ui-lib/tar.gz/a3487320a7396a2e2b363460c1c18c6fa0287450':
-    resolution: {tarball: https://codeload.github.com/Bengo-Hub/shared-ui-lib/tar.gz/a3487320a7396a2e2b363460c1c18c6fa0287450}
-    version: 0.1.117
+  '@bengo-hub/shared-ui-lib@https://codeload.github.com/Bengo-Hub/shared-ui-lib/tar.gz/d667c1c26e931b0ed1514be3394569ad42a35253':
+    resolution: {tarball: https://codeload.github.com/Bengo-Hub/shared-ui-lib/tar.gz/d667c1c26e931b0ed1514be3394569ad42a35253}
+    version: 0.1.118
     peerDependencies:
       '@tanstack/react-query': '>=5.0.0'
       lucide-react: '>=0.400.0'
@@ -7326,7 +7326,7 @@ snapshots:
       react: 19.0.0
       react-dom: 19.0.0(react@19.0.0)
 
-  '@bengo-hub/shared-ui-lib@https://codeload.github.com/Bengo-Hub/shared-ui-lib/tar.gz/a3487320a7396a2e2b363460c1c18c6fa0287450(@floating-ui/dom@1.7.5)(@tanstack/react-query@5.90.20(react@19.0.0))(@tiptap/core@3.31.4(@tiptap/pm@3.31.4))(@types/react-dom@19.2.2(@types/react@19.2.2))(@types/react@19.2.2)(lucide-react@0.452.0(react@19.0.0))(react-dom@19.0.0(react@19.0.0))(react@19.0.0)':
+  '@bengo-hub/shared-ui-lib@https://codeload.github.com/Bengo-Hub/shared-ui-lib/tar.gz/d667c1c26e931b0ed1514be3394569ad42a35253(@floating-ui/dom@1.7.5)(@tanstack/react-query@5.90.20(react@19.0.0))(@tiptap/core@3.31.4(@tiptap/pm@3.31.4))(@types/react-dom@19.2.2(@types/react@19.2.2))(@types/react@19.2.2)(lucide-react@0.452.0(react@19.0.0))(react-dom@19.0.0(react@19.0.0))(react@19.0.0)':
     dependencies:
       '@tiptap/extension-link': 3.31.4(@tiptap/core@3.31.4(@tiptap/pm@3.31.4))(@tiptap/pm@3.31.4)
       '@tiptap/pm': 3.31.4

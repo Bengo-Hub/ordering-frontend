@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useQuery } from "@tanstack/react-query";
+import { isValidPhone } from "@bengo-hub/shared-ui-lib/contact";
 
 import { useAddresses } from "@/hooks/use-addresses";
 import { useCheckout, useGuestCheckout, useFeeBreakdown } from "@/hooks/use-cart-api";
@@ -242,6 +243,8 @@ export function useCheckoutState() {
   );
   const isOutsideDeliveryZone =
     fulfillmentMode !== "pickup" && !!deliveryPin && !!deliveryQuote && !quoteLoading && !deliveryQuote.serviceable;
+  // The pin is the outlet itself (the customer is standing in it): offer pickup, not delivery.
+  const isAtOutlet = isOutsideDeliveryZone && deliveryQuote?.reason === "at_outlet";
   const isDeliveryPricingUnavailable = fulfillmentMode !== "pickup" && !!deliveryPin && quoteError && !deliveryQuote;
   const deliveryFee = deliveryQuote?.serviceable ? deliveryQuote.fee : remoteFees?.delivery_fee ?? 0;
 
@@ -552,10 +555,11 @@ export function useCheckoutState() {
         toast.error("Please enter a valid email address");
         return;
       }
-      // A bad phone means the rider/outlet can't reach the customer — validate the format
-      // (optional leading +, 8–15 digits, spaces/dashes allowed) when one is provided.
-      if (guestPhone.trim() && !/^\+?\d[\d\s-]{7,14}$/.test(guestPhone.trim())) {
-        toast.error("Please enter a valid phone number");
+      // A bad phone means the rider/outlet can't reach the customer, so a number that is given
+      // must be a real one for its country (libphonenumber), not just 8 to 15 digits: the loose
+      // check let "+254 254 717..." through as the order's contact number.
+      if (guestPhone.trim() && !isValidPhone(guestPhone.trim())) {
+        toast.error("Please enter a valid phone number, for example +254 712 345 678");
         return;
       }
     }
@@ -569,6 +573,10 @@ export function useCheckoutState() {
             ? "That saved address has no map location. Pick your location on the map."
             : "Please choose your delivery location",
         );
+        return;
+      }
+      if (isAtOutlet) {
+        toast.error("You're at our outlet, so there is nothing to deliver. Choose pickup to collect your order.");
         return;
       }
       if (isOutsideDeliveryZone) {
@@ -639,8 +647,11 @@ export function useCheckoutState() {
         if (guestEmail.trim()) guestPayload.contactEmail = guestEmail.trim();
         if (guestPhone.trim()) guestPayload.contactPhone = guestPhone.trim();
         if (guestName.trim()) guestPayload.contactName = guestName.trim();
-        // Delivery address from saved address or guest-picked location
-        if (selectedAddr) {
+        // Delivery address from saved address or guest-picked location (deliveries only: a
+        // pickup order must not carry the browsing location as a drop-off).
+        if (effectiveFulfillment === "pickup") {
+          // no drop-off
+        } else if (selectedAddr) {
           guestPayload.deliveryAddress = selectedAddr.address_line1 ?? "";
           guestPayload.deliveryLat = selectedAddr.latitude ?? 0;
           guestPayload.deliveryLng = selectedAddr.longitude ?? 0;
@@ -679,7 +690,7 @@ export function useCheckoutState() {
         if (user?.email) payload.contactEmail = user.email;
         if (user?.fullName) payload.contactName = user.fullName;
         if (user?.phone != null) payload.contactPhone = user.phone;
-        if (fulfillmentMode !== "pickup") {
+        if (effectiveFulfillment !== "pickup") {
           if (selectedAddressId) {
             payload.deliveryAddressId = selectedAddressId;
           } else if (deliveryLocation) {
@@ -750,7 +761,7 @@ export function useCheckoutState() {
     }
   }, [
     isGuestMode, guestEmail, guestPhone, guestName, deliveryLocation, deliveryPin, deliveryQuote,
-    isDeliveryPricingUnavailable, fulfillmentMode, selectedAddressId, isOutsideDeliveryZone, scheduledTime,
+    isDeliveryPricingUnavailable, fulfillmentMode, selectedAddressId, isOutsideDeliveryZone, isAtOutlet, scheduledTime,
     items, sessionId, deliveryNotes, promoCode, orderNotes, requestUtensils, isTicketOnly, noFulfillment,
     checkoutMutation, guestCheckoutMutation, orgSlug, router, clearCart,
     selectedMethod, selectedOption, handleWalletPayment, mpesaCode,
@@ -819,6 +830,7 @@ export function useCheckoutState() {
     selectedAddress,
     setSelectedAddressId,
     isOutsideDeliveryZone,
+    isAtOutlet,
     deliveryQuote,
     deliveryPin,
     isDeliveryPricingUnavailable,

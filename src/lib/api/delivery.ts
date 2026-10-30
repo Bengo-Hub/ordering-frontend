@@ -90,6 +90,7 @@ export const NOT_SERVICEABLE_TEXT: Record<string, string> = {
   no_outlet_location: "Delivery isn't set up yet.",
   no_delivery_coverage: "Delivery isn't set up yet.",
   invalid_location: "Pick a valid location.",
+  at_outlet: "You're at our outlet, so there is nothing to deliver.",
 };
 
 /** Why a pin is out of range: which way it lies and how far it is from our delivery routes. */
