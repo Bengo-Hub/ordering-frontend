@@ -391,7 +391,7 @@ export function UserMenuDrawer({ open, onOpenChange }: UserMenuDrawerProps) {
             className="flex w-full items-center gap-4 text-left"
           >
             <div className="flex size-14 items-center justify-center rounded-2xl bg-foreground p-2 shadow-lg">
-              <TenantLogo src={menuLogo} alt={brand.name} className="h-full" />
+              <TenantLogo src={menuLogo} alt={brandConfig?.name || brand.name} className="h-full" />
             </div>
             <div>
               <p className="text-base font-bold">There&apos;s more to love</p>

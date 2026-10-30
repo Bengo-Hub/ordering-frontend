@@ -13,8 +13,8 @@ import { DeliveryLocationPicker, type DeliveryPoint } from "@/components/locatio
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
-import { brand } from "@/config/brand";
 import { useCreateAddress } from "@/hooks/use-addresses";
+import { storefrontName, useBrandConfig } from "@/hooks/use-brand";
 import { orgRoute } from "@/lib/routes";
 import { useOrgSlug } from "@/providers/org-slug-provider";
 import { useAuthStore } from "@/store/auth";
@@ -32,6 +32,9 @@ function SaveDeliveryAddressPage() {
   const orgSlug = useOrgSlug();
   const user = useAuthStore((state) => state.user);
   const createAddress = useCreateAddress();
+  const { data: brandConfig } = useBrandConfig();
+  // The store the shopper is signing up with, never the platform name.
+  const storeName = storefrontName(brandConfig) || "this store";
 
   const [label, setLabel] = useState("Home");
   const [contactName, setContactName] = useState(user?.fullName ?? "");
@@ -85,7 +88,7 @@ function SaveDeliveryAddressPage() {
           </h1>
           <p className="text-base text-muted-foreground">
             Add your delivery point so checkout is one tap next time you order from{" "}
-            {brand.shortName}.
+            {storeName}.
           </p>
         </div>
       </section>
@@ -226,7 +229,7 @@ function SaveDeliveryAddressPage() {
                 <ShieldCheckIcon className="size-6 text-primary" aria-hidden />
                 <h3 className="text-xl font-semibold text-foreground">Your data stays protected</h3>
                 <p className="text-sm text-muted-foreground">
-                  {brand.shortName} uses secure authentication, encryption at rest, and
+                  {storeName} uses secure authentication, encryption at rest, and
                   privacy-first defaults. Only you and authorised staff can access your profile.
                 </p>
               </CardHeader>

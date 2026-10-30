@@ -5,7 +5,7 @@ import { useParams } from "next/navigation";
 import { PwaInstallPrompt } from "@bengo-hub/shared-ui-lib/offline";
 
 import { brand } from "@/config/brand";
-import { useBrandConfig } from "@/hooks/use-brand";
+import { appDisplayName, useBrandConfig } from "@/hooks/use-brand";
 
 const DISMISS_KEY = "pwa-install-dismissed";
 
@@ -46,8 +46,7 @@ export function PWAInstallPrompt() {
   const { data: brandConfig } = useBrandConfig();
 
   // Same name the installed app gets from the manifest (tenant's own app name first).
-  const appName =
-    brandConfig?.appName || (brandConfig?.name ? `${brandConfig.name} Ordering` : brand.shortName);
+  const appName = appDisplayName(brandConfig, brand.appNameSuffix);
 
   return (
     <PwaInstallPrompt
