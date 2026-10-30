@@ -42,13 +42,6 @@ interface SiteHeaderProps {
   onMenuClick?: () => void;
 }
 
-type SearchCategory = {
-  id: string;
-  name: string;
-  label: string;
-  emoji?: string;
-};
-
 type SearchOutlet = {
   id: string;
   name: string;
@@ -60,15 +53,7 @@ type SearchOutlet = {
  * Search categories for multi-business ordering platform.
  * Top categories shown in search dropdown - matching Uber Eats style.
  */
-const searchCategories: SearchCategory[] = [
-  { id: "pizza", name: "pizza", label: "Pizza", emoji: "🍕" },
-  { id: "grocery", name: "grocery", label: "Grocery", emoji: "🥬" },
-  { id: "chicken", name: "chicken", label: "Chicken", emoji: "🍗" },
-  { id: "sushi", name: "sushi", label: "Sushi", emoji: "🍣" },
-  { id: "fast-food", name: "fast-food", label: "Fast Food", emoji: "🍟" },
-  { id: "chinese", name: "chinese", label: "Chinese", emoji: "🥡" },
-  { id: "indian", name: "indian", label: "Indian", emoji: "🍛" },
-];
+
 
 
 import { appDisplayName, useBrandConfig } from "@/hooks/use-brand";
@@ -86,6 +71,8 @@ export function SiteHeader({ onMenuClick }: SiteHeaderProps) {
   // pattern — food verticals use the outlet-ranking model + delivery/pickup chrome instead.
   const showCategoryNav = !isFoodVertical;
   const { data: categoriesData } = useCategories(orgSlug, undefined, effectiveUseCase);
+  // The search panel's shortcuts: the store's own top-level categories.
+  const topCategories = (categoriesData ?? []).filter((c) => !c.parentId).slice(0, 8);
   const [userMenuOpen, setUserMenuOpen] = useState(false);
   const [cartOpen, setCartOpen] = useState(false);
   const [locationDialogOpen, setLocationDialogOpen] = useState(false);
@@ -234,7 +221,7 @@ export function SiteHeader({ onMenuClick }: SiteHeaderProps) {
                     value="all"
                     className="rounded-none border-b-2 border-transparent px-4 py-3 text-sm data-[state=active]:border-foreground data-[state=active]:shadow-none"
                   >
-                    All
+                    Categories
                   </TabsTrigger>
                   <TabsTrigger
                     value="outlets"
@@ -242,53 +229,29 @@ export function SiteHeader({ onMenuClick }: SiteHeaderProps) {
                   >
                     Outlets
                   </TabsTrigger>
-                  {isFoodVertical && (
-                    <TabsTrigger
-                      value="grocery"
-                      className="rounded-none border-b-2 border-transparent px-4 py-3 text-sm data-[state=active]:border-foreground data-[state=active]:shadow-none"
-                    >
-                      Grocery
-                    </TabsTrigger>
-                  )}
-                  {isFoodVertical && (
-                    <TabsTrigger
-                      value="alcohol"
-                      className="rounded-none border-b-2 border-transparent px-4 py-3 text-sm data-[state=active]:border-foreground data-[state=active]:shadow-none"
-                    >
-                      Alcohol
-                    </TabsTrigger>
-                  )}
                 </TabsList>
 
-                {/* All Tab - Top Categories (food verticals only — a hardware/retail/
-                    pharmacy tenant has no use for pizza/sushi/chicken shortcuts) */}
-                {isFoodVertical && (
-                  <TabsContent value="all" className="m-0 p-4">
-                    <p className="mb-3 text-sm font-medium text-muted-foreground">Top categories</p>
+                {/* The store's own top-level categories (never a fixed list). */}
+                <TabsContent value="all" className="m-0 p-4">
+                  {topCategories.length > 0 ? (
                     <div className="space-y-0">
-                      {searchCategories.map((category) => (
+                      {topCategories.map((category) => (
                         <button
                           key={category.id}
                           onClick={() => {
                             router.push(orgRoute(orgSlug, `/catalog?category=${category.id}`));
                             setSearchOpen(false);
                           }}
-                          className="flex w-full items-center gap-4 py-3 text-sm transition hover:bg-muted/50"
+                          className="flex w-full items-center py-3 text-left text-sm font-medium text-foreground transition hover:bg-muted/50"
                         >
-                          <span className="text-2xl">{category.emoji}</span>
-                          <span className="font-medium text-foreground">{category.label}</span>
+                          {category.name}
                         </button>
                       ))}
                     </div>
-                  </TabsContent>
-                )}
-                {!isFoodVertical && (
-                  <TabsContent value="all" className="m-0 p-4">
-                    <p className="py-4 text-center text-sm text-muted-foreground">
-                      Start typing to search the catalog
-                    </p>
-                  </TabsContent>
-                )}
+                  ) : (
+                    <p className="py-4 text-center text-sm text-muted-foreground">Start typing to search the catalog</p>
+                  )}
+                </TabsContent>
 
                 {/* Outlets Tab */}
                 <TabsContent value="outlets" className="m-0 p-4">
@@ -320,68 +283,6 @@ export function SiteHeader({ onMenuClick }: SiteHeaderProps) {
                     </p>
                   )}
                 </TabsContent>
-
-                {/* Grocery Tab (food verticals only) */}
-                {isFoodVertical && (
-                <TabsContent value="grocery" className="m-0 p-4">
-                  <p className="mb-3 text-sm font-medium text-muted-foreground">
-                    Grocery & Essentials
-                  </p>
-                  <div className="space-y-0">
-                    {[
-                      { label: "Fresh Produce", emoji: "🥬" },
-                      { label: "Dairy & Eggs", emoji: "🥛" },
-                      { label: "Meat & Fish", emoji: "🥩" },
-                      { label: "Bakery", emoji: "🍞" },
-                      { label: "Beverages", emoji: "🥤" },
-                    ].map((item) => (
-                      <button
-                        key={item.label}
-                        onClick={() => {
-                          router.push(
-                            orgRoute(orgSlug, `/catalog?category=grocery&sub=${item.label.toLowerCase().replace(/ & /g, "-")}`),
-                          );
-                          setSearchOpen(false);
-                        }}
-                        className="flex w-full items-center gap-4 py-3 text-sm transition hover:bg-muted/50"
-                      >
-                        <span className="text-2xl">{item.emoji}</span>
-                        <span className="font-medium text-foreground">{item.label}</span>
-                      </button>
-                    ))}
-                  </div>
-                </TabsContent>
-                )}
-
-                {/* Alcohol Tab (food verticals only) */}
-                {isFoodVertical && (
-                <TabsContent value="alcohol" className="m-0 p-4">
-                  <p className="mb-3 text-sm font-medium text-muted-foreground">Drinks & Alcohol</p>
-                  <div className="space-y-0">
-                    {[
-                      { label: "Beer", emoji: "🍺" },
-                      { label: "Wine", emoji: "🍷" },
-                      { label: "Spirits", emoji: "🥃" },
-                      { label: "Ready to Drink", emoji: "🍹" },
-                      { label: "Non-Alcoholic", emoji: "🧃" },
-                    ].map((item) => (
-                      <button
-                        key={item.label}
-                        onClick={() => {
-                          router.push(
-                            orgRoute(orgSlug, `/catalog?category=alcohol&sub=${item.label.toLowerCase().replace(/ /g, "-")}`),
-                          );
-                          setSearchOpen(false);
-                        }}
-                        className="flex w-full items-center gap-4 py-3 text-sm transition hover:bg-muted/50"
-                      >
-                        <span className="text-2xl">{item.emoji}</span>
-                        <span className="font-medium text-foreground">{item.label}</span>
-                      </button>
-                    ))}
-                  </div>
-                </TabsContent>
-                )}
               </Tabs>
             </PopoverContent>
           </Popover>

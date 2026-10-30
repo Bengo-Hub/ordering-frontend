@@ -2,19 +2,15 @@ import {
   Car,
   CreditCard,
   ExternalLink,
-  Flower,
   Heart,
   HelpCircle,
   Home,
   Package,
-  Pill,
   Shield,
-  ShoppingCart,
+  Store,
   Tag,
   User,
-  Wine,
   X,
-  Zap,
 } from "lucide-react";
 import Image from "next/image";
 import { mediaLoaderProps } from "@/lib/media-loader";
@@ -25,6 +21,7 @@ import { Button } from "@/components/ui/button";
 import { TenantLogo } from "@/components/layout/tenant-logo";
 import { brand } from "@/config/brand";
 import { useBrandConfig } from "@/hooks/use-brand";
+import { useCategories } from "@/hooks/use-catalog";
 import { useOrderingConfig } from "@/hooks/use-ordering-config";
 import { usePwaInstall } from "@/hooks/use-pwa-install";
 import { useSubscription } from "@/hooks/use-subscription";
@@ -47,7 +44,7 @@ export function UserMenuDrawer({ open, onOpenChange }: UserMenuDrawerProps) {
   const user = useAuthStore((state) => state.user);
   const logout = useAuthStore((state) => state.logout);
   const { data: brandConfig } = useBrandConfig();
-  const { copy } = useOrderingConfig();
+  const { copy, useCase } = useOrderingConfig();
   const { hasFeature } = useSubscription();
   // Plan-gated nav entries (exempt tenants pass via hasFeature).
   const hasWallet = hasFeature("wallet");
@@ -101,6 +98,9 @@ export function UserMenuDrawer({ open, onOpenChange }: UserMenuDrawerProps) {
   };
 
   // Navigation logic from sidebar
+  const { data: categoriesData } = useCategories(orgSlug, undefined, useCase);
+  const topCategories = (categoriesData ?? []).filter((c) => !c.parentId).slice(0, 6);
+
   const menuItems = [
     ...(isPlatformOwner
       ? [
@@ -166,42 +166,9 @@ export function UserMenuDrawer({ open, onOpenChange }: UserMenuDrawerProps) {
           },
         ]
       : []),
-    // Category items moved from sidebar
-    {
-      icon: ShoppingCart,
-      label: "Grocery",
-      href: "/catalog?category=grocery",
-    },
-    {
-      icon: Package,
-      label: "Convenience",
-      href: "/catalog?category=convenience",
-    },
-    {
-      icon: Wine,
-      label: "Alcohol",
-      href: "/catalog?category=alcohol",
-    },
-    {
-      icon: Pill,
-      label: "Health",
-      href: "/catalog?category=health",
-    },
-    {
-      icon: Package,
-      label: "Retail",
-      href: "/catalog?category=retail",
-    },
-    {
-      icon: Flower,
-      label: "Flowers",
-      href: "/catalog?category=flowers",
-    },
-    {
-      icon: Zap,
-      label: "Offers",
-      href: "/catalog?filter=offers",
-    },
+    // The store's own top-level categories (a fixed Grocery/Alcohol/Flowers list linked to
+    // categories no store has).
+    ...topCategories.map((c) => ({ icon: Store, label: c.name, href: `/catalog?category=${c.id}` })),
   ];
 
   if (!open) return null;
