@@ -5,7 +5,7 @@ import { MapPin, RotateCcw, Truck } from "lucide-react";
 
 import { usePosOutlet } from "@/hooks/use-pos-outlet";
 import { fetchDeliveryCoverage, fetchDeliveryQuote, reachNote } from "@/lib/api/delivery";
-import { notDeliverableNote, outletArea } from "@/lib/delivery-fee";
+import { atOutletNote, notDeliverableNote, outletArea } from "@/lib/delivery-fee";
 import { formatMoney } from "@/lib/list-price";
 import { selectDeliveryPlace, useDiningModeStore } from "@/store/dining-mode";
 
@@ -51,6 +51,9 @@ export function DeliveryReturnsBox({ orgSlug, outlet, showReturns }: DeliveryRet
         const fee = q.free || q.fee === 0 ? "free" : formatMoney(q.currency, Math.round(q.fee));
         const eta = q.eta_minutes ? `, about ${q.eta_minutes} min` : "";
         delivery = `Delivery to ${place ?? "your location"}: ${fee}${eta}.`;
+      } else if (q.reason === "at_outlet") {
+        // Inside the outlet's pickup-only radius: not a refusal.
+        delivery = atOutletNote(outlet?.name);
       } else {
         delivery = [notDeliverableNote(place, outletArea(outlet)), reachNote(q)].filter(Boolean).join(" ");
       }

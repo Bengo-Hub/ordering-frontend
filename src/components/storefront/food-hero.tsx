@@ -4,7 +4,7 @@ import Link from "next/link";
 import { Clock, Phone, Star } from "lucide-react";
 
 import { ImageWithFallback } from "@/components/ui/image-with-fallback";
-import { deliveryFeeLabel, notDeliverableNote, outletArea } from "@/lib/delivery-fee";
+import { atOutletNote, deliveryFeeLabel, notDeliverableNote, outletArea } from "@/lib/delivery-fee";
 import { formatMoney } from "@/lib/list-price";
 import { cn } from "@/lib/utils";
 import { selectDeliveryPlace, useDiningModeStore, type DiningMode } from "@/store/dining-mode";
@@ -96,7 +96,7 @@ export function FoodHero({ brandName, tagline, outlet, spotlight, menuHref, supp
               {outlet.deliveryTime && mode === "delivery" && (
                 <li className="inline-flex items-center gap-1.5"><Clock className="size-4" aria-hidden /> {outlet.deliveryTime}</li>
               )}
-              {outlet.deliveryFee && mode === "delivery" && outlet.deliveryFee !== "not-deliverable" && (
+              {outlet.deliveryFee && mode === "delivery" && outlet.deliveryFee !== "not-deliverable" && outlet.deliveryFee !== "at-outlet" && (
                 <li>{deliveryFeeLabel(outlet.deliveryFee, place)}</li>
               )}
               {mode === "pickup" && outlet.address && <li>Pick up at {outlet.address}</li>}
@@ -109,9 +109,9 @@ export function FoodHero({ brandName, tagline, outlet, spotlight, menuHref, supp
             </ul>
           )}
 
-          {outlet?.deliveryFee === "not-deliverable" && mode === "delivery" && (
+          {(outlet?.deliveryFee === "not-deliverable" || outlet?.deliveryFee === "at-outlet") && mode === "delivery" && (
             <p role="status" className="max-w-prose rounded-xl bg-black/20 px-4 py-3 text-sm">
-              {notDeliverableNote(place, outletArea(outlet))}{" "}
+              {outlet.deliveryFee === "at-outlet" ? atOutletNote(outlet.name) : notDeliverableNote(place, outletArea(outlet))}{" "}
               {modes.includes("pickup") ? (
                 <button type="button" onClick={() => setMode("pickup")} className="font-semibold underline underline-offset-4">
                   Pick up instead

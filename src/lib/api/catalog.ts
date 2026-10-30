@@ -304,6 +304,8 @@ interface BackendOutlet {
   estimated_time_minutes?: number;
   distance_km?: number;
   deliverable?: boolean;
+  /** The shopper's pin is at this outlet (pickup at the counter, not a refusal). */
+  at_outlet?: boolean;
   // The discovery listing sends these in snake_case (outlet_discovery.go); reading only the
   // camelCase useCase lost every listing's vertical and offer badge.
   use_case?: string;
@@ -312,8 +314,9 @@ interface BackendOutlet {
   promo_text?: string;
 }
 
-/** Card label for the listing fee: "free", a number, "from N", or "not-deliverable". */
-export function listingDeliveryFee(o: Pick<BackendOutlet, "delivery_fee" | "deliverable">): string {
+/** Card label for the listing fee: "free", a number, "from N", "not-deliverable" or "at-outlet". */
+export function listingDeliveryFee(o: Pick<BackendOutlet, "delivery_fee" | "deliverable" | "at_outlet">): string {
+  if (o.at_outlet) return "at-outlet";
   if (o.deliverable === false) return "not-deliverable";
   if (o.delivery_fee == null) return "";
   const fee = Math.round(o.delivery_fee);

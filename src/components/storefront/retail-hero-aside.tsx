@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { MapPin, PackageSearch, Phone, Truck } from "lucide-react";
 
-import { deliveryFeeLabel, notDeliverableNote, outletArea } from "@/lib/delivery-fee";
+import { atOutletNote, deliveryFeeLabel, notDeliverableNote, outletArea } from "@/lib/delivery-fee";
 import { orgRoute } from "@/lib/routes";
 import { selectDeliveryPlace, useDiningModeStore } from "@/store/dining-mode";
 import type { Outlet } from "@/types/catalog";
@@ -58,7 +58,9 @@ export function RetailHeroAside({ orgSlug, supportPhone, outlet }: RetailHeroAsi
       icon: <Truck className="size-5" aria-hidden />,
       title: "Delivery",
       body:
-        outlet.deliveryFee === "not-deliverable"
+        outlet.deliveryFee === "at-outlet"
+          ? atOutletNote(outlet.name)
+          : outlet.deliveryFee === "not-deliverable"
           ? notDeliverableNote(place, outletArea(outlet))
           : [outlet.deliveryTime, outlet.deliveryFee ? deliveryFeeLabel(outlet.deliveryFee, place) : ""].filter(Boolean).join(", "),
     });
