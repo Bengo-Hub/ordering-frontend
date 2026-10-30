@@ -35,6 +35,9 @@ import { rankBestSellers } from "@/lib/api/top-sellers";
 import { orgRoute } from "@/lib/routes";
 import { useOrgSlug } from "@/providers/org-slug-provider";
 import type { MenuItem } from "@/types/catalog";
+import { useBrandConfig } from "@/hooks/use-brand";
+import { CategoryCarousel } from "@/components/category/category-carousel";
+import { RetailHeroAside } from "@/components/storefront/retail-hero-aside";
 
 const TRUST_BADGES = [
   { icon: Truck, label: "Fast Delivery" },
@@ -117,6 +120,7 @@ export function RetailHomeView() {
   const { data: deals } = usePromoDeals();
   const { data: topSellerSales } = useTopSellers();
   const { data: brands } = useBrands(orgSlug);
+  const { data: brandConfig } = useBrandConfig();
   const { data: outletsPage, isLoading: outletsLoading } = useOutlets(
     orgSlug,
     { sort: "relevance" },
@@ -242,7 +246,7 @@ export function RetailHomeView() {
             width of this container (not indented by the sidebar column) — a sidebar tall enough
             to sit beside the entire page reads as broken once content below it runs on for
             several unrelated sections. */}
-        <div className="md:grid md:grid-cols-[240px_1fr] md:gap-8">
+        <div className="grid gap-4 md:grid-cols-[240px_1fr] md:gap-6 lg:grid-cols-[240px_1fr_280px]">
           {/* Shop by Category: the left rail from tablet width up. Phones already get the same
               categories in the header's scrollable category bar, so the rail stays hidden there
               and the hero and products come first. */}
@@ -265,7 +269,30 @@ export function RetailHomeView() {
               <PromoBannerCarousel banners={heroBanners} />
             </div>
           )}
+
+          {/* Service tiles (Jumia's "Call or WhatsApp to order" column): beside the banner on
+              wide screens, under it in two columns on tablets and phones. */}
+          <div className="min-w-0 md:col-span-2 lg:col-span-1 [&>ul]:sm:grid-cols-2 [&>ul]:lg:grid-cols-1">
+            <RetailHeroAside orgSlug={orgSlug} supportPhone={brandConfig?.supportPhone} outlet={outletsPage?.data?.[0]} />
+          </div>
         </div>
+
+        {/* Round category shortcuts on phones (the rail is hidden there), like Jumia's app. */}
+        {categories.length > 0 && (
+          <div className="mt-4 md:hidden">
+            <CategoryCarousel
+              categories={categories.map((c) => ({
+                id: c.id,
+                name: c.name,
+                ...(c.emoji ? { emoji: c.emoji } : {}),
+                ...(c.image ? { imageUrl: c.image } : {}),
+              }))}
+              activeCategory={activeCategory}
+              onCategoryChange={handleCategoryChange}
+              useCase={effectiveUseCase}
+            />
+          </div>
+        )}
 
         {/* Full-width sections below the hero row */}
         <div className="mt-6 space-y-6">

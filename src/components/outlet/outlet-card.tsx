@@ -9,6 +9,7 @@ import { ImageWithFallback } from "@/components/ui/image-with-fallback";
 import { cn } from "@/lib/utils";
 import { useOrgSlug } from "@/providers/org-slug-provider";
 import { useIsPickupMode } from "@/store/dining-mode";
+import { deliveryFeeLabel } from "@/lib/delivery-fee";
 
 export type OutletCardProps = {
   id: string;
@@ -70,17 +71,6 @@ export function OutletCard({
 
   const outletUrl = href || `/${orgSlug}/outlet/${id}`;
 
-  // Format delivery fee display
-  // Labels from the logistics quote (with the customer's pin) or the cheapest area fee.
-  const formatDeliveryFee = (fee: string) => {
-    const f = fee.toLowerCase();
-    if (f === "free") return "Free delivery";
-    if (f === "free-nearby") return "Free delivery nearby";
-    if (f === "not-deliverable") return "Doesn't deliver to you";
-    if (f.startsWith("from ")) return `Delivery from KES ${fee.slice(5)}`;
-    if (fee.match(/^\d+$/)) return `KES ${fee} delivery`;
-    return fee;
-  };
 
   // Format review count
   const formatReviewCount = (count: number) => {
@@ -191,7 +181,7 @@ export function OutletCard({
                   <span className="text-[10px]">{"\uD83D\uDEF5"}</span>
                 </span>
                 {deliveryFee ? (
-                  <span>{formatDeliveryFee(deliveryFee)}</span>
+                  <span>{deliveryFeeLabel(deliveryFee)}</span>
                 ) : (
                   <span className="text-muted-foreground">--</span>
                 )}

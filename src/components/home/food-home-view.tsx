@@ -48,6 +48,8 @@ import { toast } from "@/lib/toast";
 import { useOrgSlug } from "@/providers/org-slug-provider";
 import { useCartStore } from "@/store/cart";
 import { useDiningModeStore } from "@/store/dining-mode";
+import { FoodHero } from "@/components/storefront/food-hero";
+import { useBrandConfig } from "@/hooks/use-brand";
 
 export function FoodHomeView() {
   const orgSlug = useOrgSlug();
@@ -103,6 +105,7 @@ export function FoodHomeView() {
   );
   const { data: featuredData } = useFeaturedItems(orgSlug, firstOutletId || undefined, 10);
   const { data: promoBanners } = usePromoBanners(effectiveUseCase);
+  const { data: brandConfig } = useBrandConfig();
   // Item-level deals grid ("Today's offers on menu items", Uber-Eats-style deal cards) —
   // reuses the exact same deal-matching utilities RetailHomeView already built, rather than
   // re-implementing scope-matching/price math for the food vertical.
@@ -265,6 +268,17 @@ export function FoodHomeView() {
 
   return (
     <SiteShell>
+      {/* Restaurant hero: order mode first (Glovo), one dish in the spotlight (Java House). */}
+      <FoodHero
+        brandName={brandConfig?.name || firstOutletName || "Our menu"}
+        tagline={brandConfig?.tagline}
+        outlet={firstOutlet}
+        spotlight={featuredItems[0]?.href ? { ...featuredItems[0], href: featuredItems[0].href } : undefined}
+        menuHref={orgRoute(orgSlug, "/catalog")}
+        supportPhone={brandConfig?.supportPhone}
+        useCase={profile}
+      />
+
       {/* Category Carousel - Sticky below header */}
       <section className="sticky top-[104px] z-20 border-b border-border bg-background/95 py-2 backdrop-blur-sm sm:py-3 md:top-16">
         <div className="mx-auto w-full max-w-6xl px-3 sm:px-4 lg:px-8">
