@@ -37,7 +37,8 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { ImageWithFallback } from "@/components/ui/image-with-fallback";
 import { Skeleton } from "@/components/ui/skeleton";
-import { useCatalogItem, useCatalogItems } from "@/hooks/use-catalog";
+import { useCatalogItem, useCatalogItems, useOutlet } from "@/hooks/use-catalog";
+import { DeliveryReturnsBox } from "@/components/catalog/delivery-returns-box";
 import { useCountdown } from "@/hooks/use-countdown";
 import { useOrderingConfig } from "@/hooks/use-ordering-config";
 import { usePromoDeals } from "@/hooks/use-promo-deals";
@@ -77,6 +78,8 @@ export default function CatalogItemPage() {
   const { config: cfg } = useOrderingConfig();
 
   const { data: item, isLoading, error } = useCatalogItem(orgSlug, itemId);
+  // The selling outlet, for the pickup point and delivery note (name and address).
+  const { data: itemOutlet } = useOutlet(orgSlug, item?.outletId ?? "");
 
   const [quantity, setQuantity] = useState(1);
   const [selectedOptions, setSelectedOptions] = useState<Record<string, string[]>>({});
@@ -657,6 +660,21 @@ export default function CatalogItemPage() {
             )}
           </div>
         </div>
+
+        {/* ---------- Delivery and returns (live quote, pickup point, returns window) ---------- */}
+        {!isAppointment && (
+          <div className="mt-8 max-w-2xl">
+            <DeliveryReturnsBox
+              orgSlug={orgSlug}
+              outlet={
+                item.outletId
+                  ? { id: item.outletId, name: itemOutlet?.name ?? item.outletName ?? "", address: itemOutlet?.address ?? "" }
+                  : null
+              }
+              showReturns={["retail", "pharmacy", "wholesale", "general"].includes(cfg.profile)}
+            />
+          </div>
+        )}
 
         {/* ---------- Service appointment (SERVICE items / services vertical) ---------- */}
         {isAppointment && (

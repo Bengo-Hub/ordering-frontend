@@ -83,12 +83,15 @@ const nextConfig = {
     // proxy serves "/catalog" from that tenant's store (redirects run before the proxy, so without
     // the host condition every tenant domain was sent to the default store).
     const onAppHost = [{ type: "host", value: APP_HOST_PATTERN }];
+    // Shopping paths without a store go to the marketplace (every store), not to one tenant.
+    const toMarketplace = ["/catalog", "/catalog/:id", "/menu", "/menu/:id", "/checkout"].map((source) => ({
+      source,
+      destination: "/",
+      permanent: false,
+      has: onAppHost,
+    }));
+    // Sign-in, tracking and staff paths keep the default store (OAuth callbacks rely on them).
     const slugless = [
-      ["/catalog", "/catalog", false],
-      ["/catalog/:id", "/catalog/:id", false],
-      ["/menu", "/catalog", true],
-      ["/menu/:id", "/catalog/:id", true],
-      ["/checkout", "/checkout", false],
       ["/auth", "/auth", false],
       ["/auth/callback", "/auth/callback", false],
       ["/track/:orderId", "/track/:orderId", false],
@@ -104,6 +107,7 @@ const nextConfig = {
       has: onAppHost,
     }));
     return [
+      ...toMarketplace,
       ...slugless,
       { source: "/:orgSlug/menu", destination: `/:orgSlug/catalog`, permanent: true },
       { source: "/:orgSlug/menu/:id", destination: `/:orgSlug/catalog/:id`, permanent: true },

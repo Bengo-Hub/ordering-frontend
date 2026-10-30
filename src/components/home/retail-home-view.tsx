@@ -9,7 +9,7 @@
  * a hardware/general-goods storefront.
  */
 
-import { Headset, MapPin, ShieldCheck, Tag, Truck } from "lucide-react";
+import { Headset, MapPin, PackageSearch, RotateCcw, ShieldCheck, Store } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useMemo, useState } from "react";
@@ -38,13 +38,10 @@ import type { MenuItem } from "@/types/catalog";
 import { useBrandConfig } from "@/hooks/use-brand";
 import { CategoryCarousel } from "@/components/category/category-carousel";
 import { RetailHeroAside } from "@/components/storefront/retail-hero-aside";
+import { usePosOutlet } from "@/hooks/use-pos-outlet";
+import { retailKind, retailKindLayout } from "@/lib/storefront-profile";
+import { useDiningModeStore } from "@/store/dining-mode";
 
-const TRUST_BADGES = [
-  { icon: Truck, label: "Fast Delivery" },
-  { icon: ShieldCheck, label: "Secure Payment" },
-  { icon: Tag, label: "Best Prices" },
-  { icon: Headset, label: "24/7 Support" },
-];
 
 /** Number of top-level categories to render a "Products by Category" row for — capped so the
  *  homepage doesn't grow unbounded on tenants with many categories. */
@@ -130,6 +127,23 @@ export function RetailHomeView() {
 
   const categories = categoriesData ?? [];
   const items = itemsPage?.data ?? [];
+
+  // The kind of shop (beauty, auto parts, electronics ...) from its own category names; it sets
+  // the section order and copy, never new claims.
+  const layout = useMemo(
+    () => retailKindLayout(retailKind(categories.map((c) => c.name)), copy.itemLabelPlural.toLowerCase()),
+    [categories, copy.itemLabelPlural],
+  );
+  const posOutlet = usePosOutlet(orgSlug, undefined);
+  const supportedModes = useDiningModeStore((s) => s.supportedModes);
+  // Badges state only what this store really offers.
+  const trustBadges = [
+    { icon: ShieldCheck, label: "Pay with M-Pesa" },
+    { icon: PackageSearch, label: "Track every order" },
+    ...(supportedModes.includes("pickup") ? [{ icon: Store, label: "Pick up in store" }] : []),
+    ...(posOutlet?.returnWindowDays ? [{ icon: RotateCcw, label: `Returns within ${posOutlet.returnWindowDays} days` }] : []),
+    ...(brandConfig?.supportPhone ? [{ icon: Headset, label: `Call ${brandConfig.supportPhone}` }] : []),
+  ].slice(0, 4);
 
   // Flash Sales: discount-driven (per the explicit spec, falls back to any item with a
   // discount price set when no promo is flagged is_flash_sale — resolveDealItems already
@@ -239,6 +253,38 @@ export function RetailHomeView() {
     ];
   }, [promoBanners, copy.heroTitle, copy.heroSubtitle, orgSlug, effectiveUseCase]);
 
+  const brandsRow =
+    brands != null && brands.length > 0 ? (
+      <div>
+        <h2 className="mb-3 text-base font-bold text-foreground sm:mb-4 sm:text-xl">{layout.brandsTitle}</h2>
+        <div className="scrollbar-hide flex gap-3 overflow-x-auto pb-2 sm:gap-4">
+          {brands.map((brand) => (
+            <Link
+              key={brand.id}
+              href={orgRoute(orgSlug, `/catalog?brand=${brand.id}`)}
+              className="flex w-24 shrink-0 flex-col items-center gap-2 rounded-xl border border-border bg-card p-3 text-center transition hover:shadow-md sm:w-28"
+            >
+              <span className="flex size-14 items-center justify-center overflow-hidden rounded-full bg-muted sm:size-16">
+                {brand.logoUrl ? (
+                  <MediaImage
+                    src={brand.logoUrl}
+                    alt={brand.name}
+                    displayWidth={64}
+                    fit="cover"
+                    aspect={1}
+                    className="size-full object-cover"
+                  />
+                ) : (
+                  <span className="text-lg font-bold text-muted-foreground">{brand.name.charAt(0).toUpperCase()}</span>
+                )}
+              </span>
+              <span className="line-clamp-1 text-xs font-medium text-foreground">{brand.name}</span>
+            </Link>
+          ))}
+        </div>
+      </div>
+    ) : null;
+
   return (
     <SiteShell>
       <div className="mx-auto w-full max-w-7xl px-3 py-4 sm:px-4 sm:py-6 lg:px-8">
@@ -296,6 +342,8 @@ export function RetailHomeView() {
 
         {/* Full-width sections below the hero row */}
         <div className="mt-6 space-y-6">
+          {layout.brandsFirst && brandsRow}
+
           {/* Flash Sales — discount-driven, distinct from Top Deals below */}
           {flashSaleItems.length > 0 && (
             <FlashSaleStrip
@@ -311,9 +359,7 @@ export function RetailHomeView() {
               <div className="mb-3 flex items-center justify-between sm:mb-4">
                 <div>
                   <h2 className="text-base font-bold text-foreground sm:text-xl">Top Deals</h2>
-                  <p className="text-xs text-muted-foreground sm:text-sm">
-                    Our best-selling {copy.itemLabelPlural.toLowerCase()}
-                  </p>
+                  <p className="text-xs text-muted-foreground sm:text-sm">{layout.topDealsSubtitle}</p>
                 </div>
                 <Button variant="ghost" size="sm" className="h-9 text-primary" asChild>
                   <Link href={orgRoute(orgSlug, "/catalog?sort=best_selling")}>See all</Link>
@@ -360,43 +406,8 @@ export function RetailHomeView() {
             />
           ))}
 
-          {/* Top Brands */}
-          {brands != null && brands.length > 0 && (
-            <div>
-              <h2 className="mb-3 text-base font-bold text-foreground sm:mb-4 sm:text-xl">
-                Shop by Brand
-              </h2>
-              <div className="scrollbar-hide flex gap-3 overflow-x-auto pb-2 sm:gap-4">
-                {brands.map((brand) => (
-                  <Link
-                    key={brand.id}
-                    href={orgRoute(orgSlug, `/catalog?brand=${brand.id}`)}
-                    className="flex w-24 shrink-0 flex-col items-center gap-2 rounded-xl border border-border bg-card p-3 text-center transition hover:shadow-md sm:w-28"
-                  >
-                    <span className="flex size-14 items-center justify-center overflow-hidden rounded-full bg-muted sm:size-16">
-                      {brand.logoUrl ? (
-                        <MediaImage
-                          src={brand.logoUrl}
-                          alt={brand.name}
-                          displayWidth={64}
-                          fit="cover"
-                          aspect={1}
-                          className="size-full object-cover"
-                        />
-                      ) : (
-                        <span className="text-lg font-bold text-muted-foreground">
-                          {brand.name.charAt(0).toUpperCase()}
-                        </span>
-                      )}
-                    </span>
-                    <span className="line-clamp-1 text-xs font-medium text-foreground">
-                      {brand.name}
-                    </span>
-                  </Link>
-                ))}
-              </div>
-            </div>
-          )}
+          {/* Shop by brand, here for general stores (first for parts, devices and beauty) */}
+          {!layout.brandsFirst && brandsRow}
         </div>
       </div>
 
@@ -418,7 +429,7 @@ export function RetailHomeView() {
       {/* Trust badge strip */}
       <section className="border-t border-border py-8 sm:py-10">
         <div className="mx-auto grid w-full max-w-6xl grid-cols-2 gap-4 px-3 sm:grid-cols-4 sm:gap-6 sm:px-4 lg:px-8">
-          {TRUST_BADGES.map(({ icon: Icon, label }) => (
+          {trustBadges.map(({ icon: Icon, label }) => (
             <div key={label} className="flex flex-col items-center gap-2 text-center">
               <span className="flex size-11 items-center justify-center rounded-full bg-muted text-foreground">
                 <Icon className="size-5" />

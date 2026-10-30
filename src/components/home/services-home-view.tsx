@@ -17,6 +17,7 @@ import { toCardProps } from "@/components/home/home-helpers";
 import { SiteShell } from "@/components/layout/site-shell";
 import { OutletSection } from "@/components/outlet/outlet-section";
 import { PromoBannerCarousel } from "@/components/promo/promo-banner-carousel";
+import { ServiceSteps } from "@/components/storefront/service-steps";
 import { Button } from "@/components/ui/button";
 import { useOrderingConfig } from "@/hooks/use-ordering-config";
 import { useOutletSections } from "@/hooks/use-outlet-sections";
@@ -70,6 +71,9 @@ export function ServicesHomeView() {
           </div>
         </section>
       )}
+
+      {/* The trade's job steps (printing, garage, laundry ...) from the POS outlet profile */}
+      <ServiceSteps orgSlug={orgSlug} />
 
       {/* Featured */}
       <OutletSection
