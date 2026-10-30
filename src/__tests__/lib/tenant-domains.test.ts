@@ -6,7 +6,8 @@ describe("tenant domains", () => {
   it("maps each tenant domain to its slug, ignoring port and case", () => {
     expect(slugForHost("AlphaChinaMarket.co.ke:443")).toBe("alpha-china-market");
     expect(slugForHost("www.alphachinamarket.co.ke")).toBe("alpha-china-market");
-    expect(slugForHost("urbaneats.theurbanloftcafe.com")).toBe("urban-loft");
+    // urbaneats is connected from the SSO Domains screen (resolveTenantHost), not the fixed map.
+    expect(slugForHost("urbaneats.theurbanloftcafe.com")).toBeUndefined();
     expect(slugForHost("theurbanloftcafe.com")).toBeUndefined(); // the cafe website
     expect(slugForHost("ordering.codevertexafrica.com")).toBeUndefined();
     expect(normaliseHost(null)).toBe("");

@@ -13,8 +13,6 @@
 export const HOSTNAME_SLUG_MAP: Readonly<Record<string, string>> = {
   "alphachinamarket.co.ke": "alpha-china-market",
   "www.alphachinamarket.co.ke": "alpha-china-market",
-  // theurbanloftcafe.com itself is the cafe website (devops-k8s apps/cafe-website).
-  "urbaneats.theurbanloftcafe.com": "urban-loft",
 };
 
 /** The tenant slug for a request host (port and case ignored), or undefined. */
