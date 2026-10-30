@@ -4,10 +4,10 @@ import Link from "next/link";
 import { Clock, Phone, Star } from "lucide-react";
 
 import { ImageWithFallback } from "@/components/ui/image-with-fallback";
-import { deliveryFeeLabel } from "@/lib/delivery-fee";
+import { deliveryFeeLabel, notDeliverableNote, outletArea } from "@/lib/delivery-fee";
 import { formatMoney } from "@/lib/list-price";
 import { cn } from "@/lib/utils";
-import { useDiningModeStore, type DiningMode } from "@/store/dining-mode";
+import { selectDeliveryPlace, useDiningModeStore, type DiningMode } from "@/store/dining-mode";
 import type { Outlet } from "@/types/catalog";
 
 export interface FoodHeroSpotlight {
@@ -49,6 +49,8 @@ export function FoodHero({ brandName, tagline, outlet, spotlight, menuHref, supp
   const mode = useDiningModeStore((s) => s.mode);
   const modes = useDiningModeStore((s) => s.supportedModes);
   const setMode = useDiningModeStore((s) => s.setMode);
+  // The delivery location the shopper picked in the header, named in the "no delivery" note.
+  const place = useDiningModeStore(selectDeliveryPlace);
   const note = outlet ? hoursNote(outlet) : null;
 
   return (
@@ -94,7 +96,9 @@ export function FoodHero({ brandName, tagline, outlet, spotlight, menuHref, supp
               {outlet.deliveryTime && mode === "delivery" && (
                 <li className="inline-flex items-center gap-1.5"><Clock className="size-4" aria-hidden /> {outlet.deliveryTime}</li>
               )}
-              {outlet.deliveryFee && mode === "delivery" && <li>{deliveryFeeLabel(outlet.deliveryFee)}</li>}
+              {outlet.deliveryFee && mode === "delivery" && outlet.deliveryFee !== "not-deliverable" && (
+                <li>{deliveryFeeLabel(outlet.deliveryFee, place)}</li>
+              )}
               {mode === "pickup" && outlet.address && <li>Pick up at {outlet.address}</li>}
               {outlet.rating > 0 && (
                 <li className="inline-flex items-center gap-1.5">
@@ -103,6 +107,19 @@ export function FoodHero({ brandName, tagline, outlet, spotlight, menuHref, supp
                 </li>
               )}
             </ul>
+          )}
+
+          {outlet?.deliveryFee === "not-deliverable" && mode === "delivery" && (
+            <p role="status" className="max-w-prose rounded-xl bg-black/20 px-4 py-3 text-sm">
+              {notDeliverableNote(place, outletArea(outlet))}{" "}
+              {modes.includes("pickup") ? (
+                <button type="button" onClick={() => setMode("pickup")} className="font-semibold underline underline-offset-4">
+                  Pick up instead
+                </button>
+              ) : (
+                "Change your delivery location at the top of the page."
+              )}
+            </p>
           )}
 
           <div className="mt-auto flex flex-wrap gap-3">

@@ -1,6 +1,6 @@
 "use client";
 
-import { Heart, Star } from "lucide-react";
+import { Bike, Heart, Star } from "lucide-react";
 import Link from "next/link";
 import { useState } from "react";
 
@@ -177,9 +177,7 @@ export function OutletCard({
               <>{distance && <span className="font-medium">{distance}</span>}</>
             ) : (
               <>
-                <span className="inline-flex size-4 items-center justify-center rounded-full bg-primary/10">
-                  <span className="text-[10px]">{"\uD83D\uDEF5"}</span>
-                </span>
+                <Bike className="size-3.5 shrink-0" aria-hidden />
                 {deliveryFee ? (
                   <span>{deliveryFeeLabel(deliveryFee)}</span>
                 ) : (

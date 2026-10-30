@@ -12,6 +12,12 @@ export interface LocationInfo {
   placeName?: string | undefined;
 }
 
+/** A short name for the chosen delivery location ("Kinoo ward"), for notes like "No delivery to ...". */
+export function selectDeliveryPlace(s: { deliveryLocation: LocationInfo | null }): string | undefined {
+  const loc = s.deliveryLocation;
+  return loc?.placeName || loc?.address?.split(",")[0]?.trim() || undefined;
+}
+
 export interface ScheduledTime {
   date: Date;
   label: string; // e.g., "Today, 2:30 PM"

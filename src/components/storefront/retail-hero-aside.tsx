@@ -3,8 +3,9 @@
 import Link from "next/link";
 import { MapPin, PackageSearch, Phone, Truck } from "lucide-react";
 
-import { deliveryFeeLabel } from "@/lib/delivery-fee";
+import { deliveryFeeLabel, notDeliverableNote, outletArea } from "@/lib/delivery-fee";
 import { orgRoute } from "@/lib/routes";
+import { selectDeliveryPlace, useDiningModeStore } from "@/store/dining-mode";
 import type { Outlet } from "@/types/catalog";
 
 interface RetailHeroAsideProps {
@@ -27,6 +28,7 @@ function whatsappNumber(phone: string): string {
  * the store has that fact.
  */
 export function RetailHeroAside({ orgSlug, supportPhone, outlet }: RetailHeroAsideProps) {
+  const place = useDiningModeStore(selectDeliveryPlace);
   const tiles: { key: string; icon: React.ReactNode; title: string; body: React.ReactNode }[] = [];
   if (supportPhone) {
     tiles.push({
@@ -55,7 +57,10 @@ export function RetailHeroAside({ orgSlug, supportPhone, outlet }: RetailHeroAsi
       key: "delivery",
       icon: <Truck className="size-5" aria-hidden />,
       title: "Delivery",
-      body: [outlet.deliveryTime, outlet.deliveryFee ? deliveryFeeLabel(outlet.deliveryFee) : ""].filter(Boolean).join(" · "),
+      body:
+        outlet.deliveryFee === "not-deliverable"
+          ? notDeliverableNote(place, outletArea(outlet))
+          : [outlet.deliveryTime, outlet.deliveryFee ? deliveryFeeLabel(outlet.deliveryFee, place) : ""].filter(Boolean).join(", "),
     });
   }
   if (outlet?.address) {

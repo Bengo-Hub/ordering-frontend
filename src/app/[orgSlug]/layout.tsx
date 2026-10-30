@@ -14,8 +14,9 @@ export async function generateMetadata({
   const { orgSlug } = await params;
   const branding = await getAppBranding(orgSlug);
   return {
+    // Absolute: the store's own name only, without the platform suffix from the root template.
     title: {
-      default: branding.appName,
+      absolute: branding.appName,
       template: `%s | ${branding.appName}`,
     },
     description: branding.description,

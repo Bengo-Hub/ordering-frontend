@@ -88,6 +88,9 @@ export const brand = {
     surface: hexToRgbTriplet(brandPalette.surface),
     dark: hexToRgbTriplet(brandPalette.dark),
   },
+  /** The word after a business name when a tenant has not named its store ("Alpha China Market
+   *  Marketplace"); used by the page title, manifest and header alike. */
+  appNameSuffix: "Marketplace",
   metadata: {
     defaultTitle: `${brandShortName} ${process.env.NEXT_PUBLIC_BRAND_SUFFIX ?? "Marketplace"}`,
     template:

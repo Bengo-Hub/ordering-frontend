@@ -69,7 +69,7 @@ function staticBrandConfig(): BrandConfig {
 
 /** App name for headers and install prompts, by the shared rule (shared-ui-lib branding): the
  *  tenant's own app name ("Urban Eats", service_branding.ordering via ordering-backend's
- *  app_name), else "<brand word> <fallback>" ("The Urban OrderApp"). */
+ *  app_name), else "<brand word> <fallback>" ("Alpha China Market Marketplace"). */
 export function appDisplayName(config: BrandConfig | undefined, fallback: string): string {
   return serviceAppName(config?.name, fallback, undefined, config?.appName ? { name: config.appName } : null);
 }

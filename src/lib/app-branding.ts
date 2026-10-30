@@ -7,7 +7,7 @@
  * resolveAppIdentity (shared-ui-lib branding). A tenant can name the ordering
  * app in its service branding (tenant metadata `service_branding.ordering`, set
  * in Accounts > Branding > App Names and Icons), e.g. urban-loft's "Urban Eats".
- * Without an entry the app is "<Business> Ordering" with the business logo.
+ * Without an entry the app is "<Business> Marketplace" with the business logo.
  */
 
 import {
@@ -15,6 +15,7 @@ import {
   type AppIdentity,
   type PublicTenantBranding,
 } from "@bengo-hub/shared-ui-lib/branding";
+import { brand } from "@/config/brand";
 import { serviceUrl } from "@/lib/service-urls";
 
 export { appIconPath } from "@bengo-hub/shared-ui-lib/app-icon";
@@ -41,7 +42,7 @@ export async function getAppBranding(slug: string): Promise<AppBranding> {
   return resolveAppIdentity(await fetchTenant(slug), {
     slug,
     service: "ordering",
-    label: "Ordering",
+    label: brand.appNameSuffix,
     defaultThemeColor: DEFAULT_THEME_COLOR,
     defaultDescription: (business) => `Order from ${business} for pickup or delivery.`,
   });

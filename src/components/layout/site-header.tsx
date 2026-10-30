@@ -112,7 +112,7 @@ export function SiteHeader({ onMenuClick }: SiteHeaderProps) {
   const logout = useAuthStore((state) => state.logout);
   const cartItems = useCartStore((state) => state.items);
   const { data: outletsData } = useOutlets(orgSlug, undefined, 1, 10);
-  const displayName = appDisplayName(brandConfig, 'OrderApp');
+  const displayName = appDisplayName(brandConfig, brand.appNameSuffix);
   const displayLogo = brandConfig?.appIconUrl || brandConfig?.logoUrl || brand.assets.logo;
   const outlets: SearchOutlet[] = (outletsData?.data ?? []).map((o) => ({
     id: o.id,
