@@ -94,7 +94,7 @@ export default function PublicEventPage() {
       if (n <= 0) continue;
       addItem({
         id: `${event.id}::${tier.tier_id}`,
-        name: `${event.name} — ${tier.name}`,
+        name: `${event.name}, ${tier.name}`,
         price: tier.price,
         quantity: n,
         inventorySku: event.sku,
@@ -161,7 +161,7 @@ export default function PublicEventPage() {
       <div className="space-y-3 p-4">
         {event.sold_out && (
           <div className="rounded-xl bg-red-500/10 p-3 text-center text-sm font-semibold text-red-600 dark:text-red-400">
-            🎫 This event is sold out
+            This event is sold out
           </div>
         )}
         {event.tiers.length === 0 && !event.sold_out && (
@@ -192,7 +192,7 @@ export default function PublicEventPage() {
                     </span>
                   ) : lowStock ? (
                     <span className="mt-1 inline-flex items-center gap-1 text-xs font-semibold text-amber-500">
-                      <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-amber-500" />
+                      <span className="h-1.5 w-1.5 rounded-full bg-amber-500" aria-hidden />
                       Only {tier.remaining} left
                     </span>
                   ) : (

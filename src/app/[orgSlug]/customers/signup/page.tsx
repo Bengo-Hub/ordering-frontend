@@ -205,10 +205,10 @@ function SaveDeliveryAddressPage() {
             <Card className="bg-brand-muted/40">
               <CardHeader className="space-y-3">
                 <h3 className="text-xl font-semibold text-foreground">What you&apos;ll enjoy</h3>
-                <ul className="space-y-2 text-sm text-muted-foreground">
-                  <li>• Save multiple delivery addresses for quick checkout</li>
-                  <li>• Earn rewards and personalised offers every time you order</li>
-                  <li>• Get instant push and email updates as your rider makes progress</li>
+                <ul className="list-disc space-y-2 pl-5 text-sm text-muted-foreground">
+                  <li>Save your delivery addresses for a faster checkout</li>
+                  <li>See every order and where it is in one place</li>
+                  <li>Get updates as your order is prepared and delivered</li>
                 </ul>
               </CardHeader>
             </Card>
