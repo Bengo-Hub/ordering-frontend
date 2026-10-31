@@ -198,6 +198,23 @@ export async function fetchMenuItems(
   return toPaginated({ ...res.data, data });
 }
 
+/** A few items for each of several categories in one request (the home page's category rows). */
+export async function fetchItemsByCategory(
+  tenantSlug: string,
+  categoryIds: string[],
+  perCategory = 8,
+): Promise<Record<string, MenuItem[]>> {
+  const params = new URLSearchParams({ category_ids: categoryIds.join(","), limit: String(perCategory), include: "variants" });
+  const res = await api.get<{ data: Record<string, BackendMenuItem[]> }>(
+    `${tenantSlug}/catalog/items/by-category?${params.toString()}`,
+  );
+  const out: Record<string, MenuItem[]> = {};
+  for (const [id, items] of Object.entries(res.data.data ?? {})) {
+    out[id] = items.map((b) => backendItemToMenuItem(b));
+  }
+  return out;
+}
+
 export async function fetchMenuItem(
   tenantSlug: string,
   id: string,

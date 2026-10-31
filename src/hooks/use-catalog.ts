@@ -10,6 +10,7 @@ import {
   fetchCategories,
   fetchFeaturedItems,
   fetchMenuItem,
+  fetchItemsByCategory,
   fetchMenuItems,
   fetchOutlet,
   fetchOutletMenu,
@@ -53,6 +54,17 @@ const CATALOG_GC_MS = CATALOG_STALE_MS * 2;
 /**
  * Hook to fetch paginated menu items with filters (requires tenant slug for API path).
  */
+/** Items for several categories in one request (the retail home's category rows). */
+export function useItemsByCategory(tenantSlug: string, categoryIds: string[], perCategory = 8) {
+  return useQuery({
+    queryKey: [tenantSlug, ...catalogKeys.all, "by-category", categoryIds.join(","), perCategory],
+    queryFn: () => fetchItemsByCategory(tenantSlug, categoryIds, perCategory),
+    enabled: !!tenantSlug && categoryIds.length > 0,
+    staleTime: CATALOG_STALE_MS,
+    gcTime: CATALOG_GC_MS,
+  });
+}
+
 export function useCatalogItems(
   tenantSlug: string,
   filters?: MenuFilters,

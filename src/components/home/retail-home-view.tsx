@@ -23,7 +23,7 @@ import { OutletSection } from "@/components/outlet/outlet-section";
 import { FlashSaleStrip } from "@/components/promo/flash-sale-strip";
 import { PromoBannerCarousel, type PromoBanner } from "@/components/promo/promo-banner-carousel";
 import { Button } from "@/components/ui/button";
-import { useBrands, useCategories, useCatalogItems, useOutlets } from "@/hooks/use-catalog";
+import { useBrands, useCategories, useCatalogItems, useItemsByCategory, useOutlets } from "@/hooks/use-catalog";
 
 import { useOrderingConfig } from "@/hooks/use-ordering-config";
 import { usePromoBanners } from "@/hooks/use-promo-banners";
@@ -63,23 +63,22 @@ function itemToCardProps(item: MenuItem, orgSlug: string, useCase: string): Feat
   };
 }
 
-/** One "Products by Category" row — its own component so each category's item fetch is a
- *  proper per-instance hook call (mapping over N of these, rather than looping useCatalogItems
- *  inside one component, keeps this rules-of-hooks-safe regardless of how many categories a
- *  tenant has). Renders nothing while the category has no items yet. */
+/** One "Products by Category" row. Its items come from the page's single by-category request
+ *  (useItemsByCategory). Renders nothing while the category has no items. */
 function CategoryProductsRow({
   categoryId,
   categoryName,
   orgSlug,
   useCase,
+  items,
 }: {
   categoryId: string;
   categoryName: string;
   orgSlug: string;
   useCase: string;
+  /** This row's items, from the page's single by-category request. */
+  items: MenuItem[];
 }) {
-  const { data } = useCatalogItems(orgSlug, { category: categoryId }, 1, 8);
-  const items = data?.data ?? [];
   if (items.length === 0) return null;
 
   return (
@@ -206,6 +205,12 @@ export function RetailHomeView() {
     () => buildCategoryTree(categories).slice(0, MAX_CATEGORY_ROWS),
     [categories],
   );
+  // Every row's items in one request (each is the same listing as /catalog?category=<id>).
+  const { data: rowItems } = useItemsByCategory(
+    orgSlug,
+    categoryRows.map((c) => c.id),
+    8,
+  );
 
   const handleFavoriteToggle = (id: string, isFavorite: boolean) => {
     setFavorites((prev) => {
@@ -297,7 +302,7 @@ export function RetailHomeView() {
               categories in the header's scrollable category bar, so the rail stays hidden there
               and the hero and products come first. */}
           {categories.length > 0 && (
-            <aside className="hidden md:block">
+            <aside className="hidden md:block md:h-[440px] md:overflow-y-auto md:overscroll-contain md:pr-1">
               <CategorySidebar
                 categories={categories}
                 activeCategory={activeCategory}
@@ -307,18 +312,18 @@ export function RetailHomeView() {
             </aside>
           )}
 
-          {/* Hero / marketing banner — stretches to match the sidebar's height (CSS grid's
-              default row-stretch) so a short banner never leaves a blank gap in its cell
-              before the full-width sections below begin. */}
+          {/* Hero / marketing banner. The whole row has one fixed height from tablet width up:
+              the category rail scrolls inside it, so a store with a long category list never
+              stretches the banner and tiles. */}
           {heroBanners.length > 0 && (
-            <div className="h-48 min-w-0 sm:h-56 md:h-full md:min-h-[280px]">
+            <div className="h-48 min-w-0 sm:h-56 md:h-[440px]">
               <PromoBannerCarousel banners={heroBanners} />
             </div>
           )}
 
           {/* Service tiles (Jumia's "Call or WhatsApp to order" column): beside the banner on
               wide screens, under it in two columns on tablets and phones. */}
-          <div className="min-w-0 md:col-span-2 lg:col-span-1 [&>ul]:sm:grid-cols-2 [&>ul]:lg:grid-cols-1">
+          <div className="min-w-0 md:col-span-2 lg:col-span-1 lg:h-[440px] lg:overflow-y-auto [&>ul]:sm:grid-cols-2 [&>ul]:lg:grid-cols-1">
             <RetailHeroAside orgSlug={orgSlug} supportPhone={brandConfig?.supportPhone} outlet={outletsPage?.data?.[0]} />
           </div>
         </div>
@@ -403,6 +408,7 @@ export function RetailHomeView() {
               categoryName={cat.name}
               orgSlug={orgSlug}
               useCase={profile}
+              items={rowItems?.[cat.id] ?? []}
             />
           ))}
 
