@@ -1,4 +1,5 @@
 import { api } from "./base";
+import { listFrom } from "./list";
 
 // ─── Types ───────────────────────────────────────────────────────────
 //
@@ -58,19 +59,19 @@ export interface AssignRoleRequest {
 /** List the tenant's ordering roles. */
 export async function listRoles(slug: string): Promise<OrderingRole[]> {
   const res = await api.get(`${slug}/rbac/roles`);
-  return res.data?.roles ?? [];
+  return listFrom<OrderingRole>(res.data, "roles");
 }
 
 /** List the ordering permission catalog. */
 export async function listPermissions(slug: string): Promise<OrderingPermission[]> {
   const res = await api.get(`${slug}/rbac/permissions`);
-  return res.data?.permissions ?? [];
+  return listFrom<OrderingPermission>(res.data, "permissions");
 }
 
 /** List current user→role assignments. */
 export async function listAssignments(slug: string): Promise<UserRoleAssignment[]> {
   const res = await api.get(`${slug}/rbac/assignments`);
-  return res.data?.assignments ?? [];
+  return listFrom<UserRoleAssignment>(res.data, "assignments");
 }
 
 /** Assign a role to a user. */

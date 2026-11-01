@@ -3,6 +3,7 @@
  * No auth required — tenant resolved from the URL slug.
  */
 import { api } from "./base";
+import { listFrom } from "./list";
 
 export interface EventTier {
   tier_id: string;
@@ -31,7 +32,7 @@ export interface PublicEvent {
 
 export async function fetchPublicEvents(tenantSlug: string): Promise<PublicEvent[]> {
   const res = await api.get<{ data: PublicEvent[]; total: number }>(`${tenantSlug}/catalog/events`);
-  return res.data?.data ?? [];
+  return listFrom<PublicEvent>(res.data, "data");
 }
 
 export async function fetchPublicEvent(tenantSlug: string, eventId: string): Promise<PublicEvent> {

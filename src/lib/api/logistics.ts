@@ -1,4 +1,5 @@
 import { api } from "./base";
+import { listFrom } from "./list";
 
 /**
  * A rider the staff queue can assign. ordering-backend answers GET /admin/riders from logistics'
@@ -22,5 +23,5 @@ export function riderName(r: Pick<Rider, "first_name" | "last_name" | "phone" | 
 /** Active riders of the tenant, from ordering-backend (orders.manage, same as assigning). */
 export async function listAvailableRiders(tenantSlug: string): Promise<Rider[]> {
   const res = await api.get<{ data?: Rider[] }>(`${tenantSlug}/admin/riders`);
-  return res.data?.data ?? [];
+  return listFrom<Rider>(res.data, "data");
 }

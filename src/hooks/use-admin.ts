@@ -6,19 +6,13 @@ import {
   cancelAdminOrder,
   assignOrderRider,
   deleteAdminOrder,
-  createMenuItem,
-  deleteMenuItem,
   getAdminOrder,
   getAdminOrderCounts,
   listAdminOrders,
-  listCategories,
-  listMenuItems,
   setOutletBookingDeposit,
-  updateMenuItem,
   updateOrderStatus,
   verifyOrderPayment,
   type AdminOrderFilters,
-  type CreateMenuItemRequest,
 } from "@/lib/api/admin";
 import { listAvailableRiders } from "@/lib/api/logistics";
 import { useOrgSlug } from "@/providers/org-slug-provider";
@@ -30,10 +24,6 @@ export const adminKeys = {
   orders: () => [...adminKeys.all, "orders"] as const,
   orderList: (filters: AdminOrderFilters) => [...adminKeys.orders(), filters] as const,
   orderDetail: (id: string) => [...adminKeys.orders(), id] as const,
-  categories: () => [...adminKeys.all, "categories"] as const,
-  categoryList: (filters: Record<string, unknown>) => [...adminKeys.categories(), filters] as const,
-  menuItems: () => [...adminKeys.all, "menu-items"] as const,
-  menuItemList: (filters: Record<string, unknown>) => [...adminKeys.menuItems(), filters] as const,
 };
 
 // ─── Order Queries ───────────────────────────────────────────────────
@@ -143,62 +133,6 @@ export function useAssignRider() {
       assignOrderRider(slug, orderId, fleetMemberId),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: adminKeys.orders() });
-    },
-  });
-}
-
-// ─── Category Queries ────────────────────────────────────────────────
-
-export function useCategories(params?: { isActive?: boolean; search?: string }) {
-  const slug = useOrgSlug();
-  return useQuery({
-    queryKey: adminKeys.categoryList(params ?? {}),
-    queryFn: () => listCategories(slug, params),
-    staleTime: 60_000,
-  });
-}
-
-// ─── Menu Item Queries ───────────────────────────────────────────────
-
-export function useMenuItems(params?: { categoryId?: string; isAvailable?: boolean; search?: string }) {
-  const slug = useOrgSlug();
-  return useQuery({
-    queryKey: adminKeys.menuItemList(params ?? {}),
-    queryFn: () => listMenuItems(slug, params),
-    staleTime: 60_000,
-  });
-}
-
-export function useCreateMenuItem() {
-  const slug = useOrgSlug();
-  const queryClient = useQueryClient();
-  return useMutation({
-    mutationFn: (data: CreateMenuItemRequest) => createMenuItem(slug, data),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: adminKeys.menuItems() });
-    },
-  });
-}
-
-export function useUpdateMenuItem() {
-  const slug = useOrgSlug();
-  const queryClient = useQueryClient();
-  return useMutation({
-    mutationFn: ({ sku, data }: { sku: string; data: Partial<CreateMenuItemRequest & { isAvailable: boolean }> }) =>
-      updateMenuItem(slug, sku, data),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: adminKeys.menuItems() });
-    },
-  });
-}
-
-export function useDeleteMenuItem() {
-  const slug = useOrgSlug();
-  const queryClient = useQueryClient();
-  return useMutation({
-    mutationFn: (sku: string) => deleteMenuItem(slug, sku),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: adminKeys.menuItems() });
     },
   });
 }

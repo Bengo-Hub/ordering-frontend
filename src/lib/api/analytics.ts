@@ -1,6 +1,7 @@
 import type { AxiosError } from "axios";
 
 import { api } from "./base";
+import { listFrom } from "./list";
 
 // ─── Types ───────────────────────────────────────────────────────────
 //
@@ -71,7 +72,9 @@ function isFeatureDisabled(err: unknown): boolean {
   // "advanced_analytics") (handler.go:38–39), so a 403 here always means the
   // tenant's plan doesn't include advanced analytics — the page should render
   // the upgrade state rather than a hard error.
-  return ax?.response?.status === 403;
+  // 402 is what the plan gate answers once the subscription lapses.
+  const status = ax?.response?.status;
+  return status === 403 || status === 402;
 }
 
 // ─── API Functions ───────────────────────────────────────────────────
@@ -82,8 +85,8 @@ export async function listAnalyticsDashboards(
 ): Promise<AnalyticsDashboardInfo[]> {
   try {
     const res = await api.get(`${slug}/analytics/dashboards`);
-    const body = res.data ?? {};
-    return (body.data ?? body) as AnalyticsDashboardInfo[];
+    // The body is { data: [...] }, but { data: null } when no dashboard is configured.
+    return listFrom<AnalyticsDashboardInfo>(res.data, "data");
   } catch (err) {
     if (isFeatureDisabled(err)) throw new AnalyticsFeatureDisabledError();
     throw err;

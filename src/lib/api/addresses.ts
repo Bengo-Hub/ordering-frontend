@@ -1,4 +1,5 @@
 import { api } from "./base";
+import { listFrom } from "./list";
 
 // ─── Types ───────────────────────────────────────────────────────────
 // Field names below match ordering-backend's actual wire shapes exactly:
@@ -49,7 +50,7 @@ export type UpdateAddressRequest = Partial<CreateAddressRequest>;
 
 export async function getAddresses(slug: string): Promise<Address[]> {
   const res = await api.get(`${slug}/addresses`);
-  return res.data;
+  return listFrom<Address>(res.data, "data", "addresses");
 }
 
 export async function createAddress(slug: string, data: CreateAddressRequest): Promise<Address> {

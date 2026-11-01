@@ -4,6 +4,7 @@ import {
   Activity,
   CreditCard,
   DollarSign,
+  ExternalLink,
   KeyRound,
   LayoutDashboard,
   Loader2,
@@ -29,7 +30,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { useAuthStore } from "@/store/auth";
 import { useAdminOrderCounts, useAdminOrders } from "@/hooks/use-admin";
 import { DeliveryAreasCard } from "@/components/delivery/delivery-areas-card";
-import { GatewayManager } from "@/components/payments/gateway-manager";
+import { TREASURY_UI_URL } from "@/lib/app-urls";
 import { useUseCaseConfig } from "@/lib/api/use-case";
 import {
   useEncryptionKeyStatus,
@@ -202,7 +203,7 @@ export default function PlatformDashboardPage({
 
           {/* ─── Payment Gateway Status Tab ────────────────────────── */}
           <TabsContent value="payments" className="space-y-6">
-            <GatewayManager emptyText="No payment gateways available. Configure gateways in treasury first." />
+            <TreasuryGatewaysCard orgSlug={orgSlug} />
           </TabsContent>
 
           {/* ─── Delivery Zones Tab ────────────────────────────────── */}
@@ -217,6 +218,36 @@ export default function PlatformDashboardPage({
         </Tabs>
       </div>
     </>
+  );
+}
+
+/* ─── Payment Gateways Tab ───────────────────────────────────────────── */
+//
+// Treasury owns gateway setup (M-Pesa, PayHero, card and so on). Ordering only reads the
+// enabled methods at checkout, so this tab opens treasury-ui instead of keeping a copy.
+
+function TreasuryGatewaysCard({ orgSlug }: { orgSlug: string }) {
+  return (
+    <Card>
+      <CardHeader>
+        <CardTitle className="flex items-center gap-2 text-lg">
+          <CreditCard className="size-5 text-primary" />
+          Payment gateways
+        </CardTitle>
+      </CardHeader>
+      <CardContent className="space-y-4">
+        <p className="text-sm text-muted-foreground">
+          Gateways, their credentials and which one is primary are set up in Treasury. The
+          checkout offers whatever Treasury has enabled for this business.
+        </p>
+        <Button asChild>
+          <a href={`${TREASURY_UI_URL}/${orgSlug}/settings?tab=payments`} target="_blank" rel="noopener noreferrer">
+            Open payment settings in Treasury
+            <ExternalLink className="ml-1.5 size-4" />
+          </a>
+        </Button>
+      </CardContent>
+    </Card>
   );
 }
 

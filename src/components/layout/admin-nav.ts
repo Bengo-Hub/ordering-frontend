@@ -18,7 +18,7 @@ import {
 } from "lucide-react";
 
 import { useSubscription } from "@/hooks/use-subscription";
-import { LOGISTICS_UI_URL } from "@/lib/app-urls";
+import { INVENTORY_UI_URL, LOGISTICS_UI_URL, NOTIFICATIONS_UI_URL } from "@/lib/app-urls";
 import { userCanAccess, userHasRole } from "@/lib/auth/permissions";
 import type { Permission, UserRole } from "@/lib/auth/types";
 import { useOrgSlug } from "@/providers/org-slug-provider";
@@ -28,7 +28,7 @@ export interface AdminNavItem {
   label: string;
   href: string;
   icon: LucideIcon;
-  /** Opens a sibling app (logistics owns riders and delivery areas). */
+  /** Opens the sibling app that owns the data (inventory, notifications, logistics). */
   external?: boolean;
   /** True when the plan lacks the item's feature: it stays visible with a lock. */
   locked?: boolean;
@@ -76,12 +76,14 @@ export function useAdminNav(): AdminNavGroup[] {
 
   const operations: AdminNavItem[] = [
     { label: "Order queue", href: "/dashboard/staff", icon: ClipboardList },
-    { label: "Menu", href: "/dashboard/staff/menu", icon: UtensilsCrossed },
+    // The menu, prices and stock live in inventory; ordering only sells what it publishes.
+    { label: "Menu", href: `${INVENTORY_UI_URL}/${orgSlug}/catalog`, icon: UtensilsCrossed, external: true },
   ];
   if (can(["ordering.orders.delete"], ["admin", "superuser"])) {
     operations.push({ label: "Refunds", href: "/dashboard/staff/refunds", icon: RotateCcw });
   }
-  operations.push({ label: "Notifications", href: "/dashboard/staff/notifications", icon: Bell });
+  // Senders, templates and message branding are managed in notifications.
+  operations.push({ label: "Notifications", href: `${NOTIFICATIONS_UI_URL}/settings`, icon: Bell, external: true });
   groups.push({ label: "Operations", items: operations });
 
   if (can(["ordering.analytics.view"])) {
