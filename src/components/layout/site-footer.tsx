@@ -17,7 +17,7 @@ export function SiteFooter() {
   const tenantName = brandConfig?.name || brand.name;
 
   return (
-    <footer className="mt-auto w-full border-t border-border bg-card">
+    <footer className="glass-bar mt-auto w-full border-t border-border/70">
       <div className="mx-auto flex max-w-7xl flex-col items-center gap-4 px-4 py-6 sm:px-6 md:flex-row md:justify-between lg:px-8">
         <div className="flex flex-col items-center gap-2 md:items-start">
           <p className="text-sm text-muted-foreground">

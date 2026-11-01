@@ -149,7 +149,7 @@ export function SiteHeader({ onMenuClick }: SiteHeaderProps) {
   }, [deliveryLocation, setDeliveryLocation, orgSlug]);
 
   return (
-    <header ref={headerRef} className="sticky top-0 z-40 border-b border-border bg-background">
+    <header ref={headerRef} className="glass-bar sticky top-0 z-40 border-b border-border/70">
       <div className="mx-auto flex h-16 w-full max-w-7xl items-center justify-between gap-2 px-3 sm:gap-3 sm:px-4 md:px-6 lg:px-8">
         {/* Left: Hamburger + Logo */}
         <div className="flex items-center gap-2 sm:gap-3">
@@ -204,7 +204,7 @@ export function SiteHeader({ onMenuClick }: SiteHeaderProps) {
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
                   onFocus={() => setSearchOpen(true)}
-                  className="w-full rounded-full border border-border bg-muted/30 py-2.5 pl-10 pr-4 text-sm placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/20"
+                  className="glass-field w-full rounded-full border border-border py-2.5 pl-10 pr-4 text-sm placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/30"
                   aria-label="Search"
                 />
               </div>

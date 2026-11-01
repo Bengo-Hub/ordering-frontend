@@ -324,7 +324,7 @@ export default function CheckoutPage() {
         !state.isGuestMode &&
         state.walletBalance !== null &&
         state.walletBalance > 0 && (
-          <div className="fixed inset-x-0 bottom-0 z-40 border-t border-border bg-background p-4 shadow-lg sm:relative sm:bottom-auto sm:z-auto sm:mx-auto sm:mt-0 sm:max-w-md sm:rounded-xl sm:border">
+          <div className="glass-bar fixed inset-x-0 bottom-0 z-40 border-t border-border/70 p-4 shadow-lg sm:relative sm:bottom-auto sm:z-auto sm:mx-auto sm:mt-0 sm:max-w-md sm:rounded-xl sm:border">
             <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
               Pay with Wallet
             </p>

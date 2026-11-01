@@ -34,7 +34,7 @@ export function SiteShell({
   return (
     <div
       className={cn(
-        "flex min-h-[100dvh] flex-col bg-background text-foreground transition-colors duration-150 ease-out",
+        "flex min-h-[100dvh] flex-col text-foreground transition-colors duration-150 ease-out",
         className,
       )}
     >

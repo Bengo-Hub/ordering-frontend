@@ -296,7 +296,7 @@ export default function CartPage() {
 
       {/* Phones: the total and "Proceed to Checkout" stay pinned to the bottom of the screen, so
           the customer never has to scroll past every card (or open the cart drawer) to find it. */}
-      <div className="fixed inset-x-0 bottom-0 z-30 border-t border-border bg-background/95 px-4 pb-[max(0.75rem,env(safe-area-inset-bottom))] pt-3 backdrop-blur-sm md:hidden">
+      <div className="glass-bar fixed inset-x-0 bottom-0 z-30 border-t border-border/70 px-4 pb-[max(0.75rem,env(safe-area-inset-bottom))] pt-3 md:hidden">
         <div className="mx-auto flex max-w-2xl items-center gap-3">
           <div className="min-w-0 shrink-0">
             <p className="text-xs text-muted-foreground">Total</p>

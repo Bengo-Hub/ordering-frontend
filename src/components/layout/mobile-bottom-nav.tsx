@@ -34,7 +34,7 @@ export function MobileBottomNav() {
 
   return (
     <nav
-      className="fixed inset-x-0 bottom-0 z-40 border-t border-border bg-background/95 backdrop-blur-sm md:hidden safe-area-pb safe-area-px"
+      className="glass-bar fixed inset-x-0 bottom-0 z-40 border-t border-border/70 md:hidden safe-area-pb safe-area-px"
       role="navigation"
       aria-label="Main navigation"
     >

@@ -30,7 +30,7 @@ export function SlideToConfirm({
   return (
     <>
       {/* Phones (including landscape): slide gesture, fixed to the bottom so it is always visible */}
-      <div className="fixed inset-x-0 bottom-0 z-30 border-t border-border bg-background/95 px-4 py-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] backdrop-blur-sm md:hidden">
+      <div className="glass-bar fixed inset-x-0 bottom-0 z-30 border-t border-border/70 px-4 py-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] md:hidden">
         {disabled ? (
           <div className="flex h-14 items-center justify-center rounded-full bg-muted text-sm font-medium text-muted-foreground">
             Select delivery address or pickup to continue

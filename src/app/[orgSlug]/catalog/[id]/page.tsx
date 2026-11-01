@@ -736,7 +736,7 @@ export default function CatalogItemPage() {
       </div>
 
       {/* ============ Sticky bottom bar ============ */}
-      <div className="fixed inset-x-0 bottom-0 z-30 border-t border-border bg-background/95 backdrop-blur-sm">
+      <div className="glass-bar fixed inset-x-0 bottom-0 z-30 border-t border-border/70">
         <div className="mx-auto flex max-w-5xl items-center gap-4 px-4 py-3">
           {/* Price breakdown (compact) */}
           <div className="hidden flex-1 sm:block">

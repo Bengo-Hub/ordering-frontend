@@ -178,14 +178,14 @@ export function UserMenuDrawer({ open, onOpenChange }: UserMenuDrawerProps) {
   return (
     <>
       <div
-        className="fixed inset-0 z-[100] bg-black/50 backdrop-blur-sm transition-opacity"
+        className="glass-scrim fixed inset-0 z-[100] transition-opacity"
         onClick={handleClose}
         aria-hidden
       />
 
       <div
         className={cn(
-          "fixed inset-y-0 left-0 z-[101] flex w-80 max-w-[85vw] flex-col bg-background shadow-2xl transition-transform duration-300 ease-in-out",
+          "glass-sheet fixed inset-y-0 left-0 z-[101] flex w-80 max-w-[85vw] flex-col rounded-r-[1.75rem] border-r border-border/70 transition-transform duration-300 ease-out",
           "animate-in slide-in-from-left",
         )}
         role="dialog"

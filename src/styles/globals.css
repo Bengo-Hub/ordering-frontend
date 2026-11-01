@@ -22,6 +22,54 @@
   --gold: 200 150 62;
   --mist: 248 240 244;
   --sale: 220 38 38;
+
+  /* Glass finish. Surfaces are translucent fills over a soft wash tinted by the tenant brand,
+     with the blur on a ::before layer (see .glass-* below). Alphas drop to 1 where blur is
+     unsupported or the visitor asks for less transparency, so text never sits on a busy fill. */
+  --glass-card-a: 0.74;
+  --glass-bar-a: 0.78;
+  --glass-sheet-a: 0.9;
+  --glass-field-a: 0.7;
+  --glass-blur: 16px;
+  --glass-blur-strong: 28px;
+  --glass-edge: 0 0% 100% / 0.7;
+  --wash-primary-a: 0.13;
+  --wash-emphasis-a: 0.1;
+  --shadow-soft:
+    0 1px 2px rgb(var(--brand-dark) / 0.04), 0 10px 28px -16px rgb(var(--brand-dark) / 0.22);
+  --shadow-float:
+    0 2px 6px rgb(var(--brand-dark) / 0.06), 0 28px 64px -28px rgb(var(--brand-dark) / 0.42);
+}
+
+.dark {
+  --glass-card-a: 0.62;
+  --glass-bar-a: 0.72;
+  --glass-sheet-a: 0.86;
+  --glass-field-a: 0.55;
+  --glass-edge: 0 0% 100% / 0.07;
+  --wash-primary-a: 0.2;
+  --wash-emphasis-a: 0.1;
+  --shadow-soft: 0 1px 2px rgb(0 0 0 / 0.3), 0 12px 32px -16px rgb(0 0 0 / 0.6);
+  --shadow-float: 0 2px 8px rgb(0 0 0 / 0.35), 0 32px 72px -24px rgb(0 0 0 / 0.75);
+}
+
+@supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
+  :root,
+  .dark {
+    --glass-card-a: 1;
+    --glass-bar-a: 1;
+    --glass-sheet-a: 1;
+  }
+}
+
+@media (prefers-reduced-transparency: reduce) {
+  :root,
+  .dark {
+    --glass-card-a: 1;
+    --glass-bar-a: 1;
+    --glass-sheet-a: 1;
+    --glass-field-a: 1;
+  }
 }
 
 * {
@@ -47,6 +95,20 @@ body {
   padding-left: env(safe-area-inset-left);
   padding-right: env(safe-area-inset-right);
   @apply min-h-screen antialiased transition-colors duration-150 ease-out;
+}
+
+/* The ambient wash the glass surfaces frost over: two soft light pools in the tenant's own
+   colours (BrandThemeSync writes --brand-* on <html>), fixed so it never scrolls or reflows. */
+body::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  background:
+    radial-gradient(56rem 36rem at -8% -12%, rgb(var(--brand-primary) / var(--wash-primary-a)), transparent 62%),
+    radial-gradient(44rem 30rem at 108% 4%, rgb(var(--brand-emphasis) / var(--wash-emphasis-a)), transparent 64%),
+    radial-gradient(60rem 34rem at 50% 118%, rgb(var(--brand-primary) / calc(var(--wash-primary-a) * 0.55)), transparent 60%);
 }
 
 img,
@@ -138,6 +200,60 @@ button:focus-visible {
   }
   body {
     @apply bg-background text-foreground;
+  }
+}
+
+/* Glass surfaces. In the components layer so any bg-*, shadow-* or position utility a caller
+   passes still wins. The fill is on the element (a caller's tint replaces it) and the blur is
+   on ::before: backdrop-filter on the element itself would trap fixed children such as the
+   cart drawer inside the header box. isolation keeps the -1 layer inside the surface. */
+@layer components {
+  .glass-card,
+  .glass-bar,
+  .glass-sheet {
+    position: relative;
+    isolation: isolate;
+  }
+  .glass-card::before,
+  .glass-bar::before,
+  .glass-sheet::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    z-index: -1;
+    border-radius: inherit;
+    pointer-events: none;
+    -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(1.4);
+    backdrop-filter: blur(var(--glass-blur)) saturate(1.4);
+  }
+  .glass-card {
+    background-color: hsl(var(--card) / var(--glass-card-a));
+    box-shadow: inset 0 1px 0 hsl(var(--glass-edge)), var(--shadow-soft);
+  }
+  .glass-bar {
+    background-color: hsl(var(--background) / var(--glass-bar-a));
+  }
+  .glass-sheet {
+    background-color: hsl(var(--popover) / var(--glass-sheet-a));
+    box-shadow: inset 0 1px 0 hsl(var(--glass-edge)), var(--shadow-float);
+  }
+  .glass-sheet::before,
+  .glass-bar::before {
+    -webkit-backdrop-filter: blur(var(--glass-blur-strong)) saturate(1.5);
+    backdrop-filter: blur(var(--glass-blur-strong)) saturate(1.5);
+  }
+  /* Inputs cannot carry a ::before, and fields sit on cards that already frost, so a field
+     is a light translucent fill with the same top edge. */
+  .glass-field {
+    background-color: hsl(var(--card) / var(--glass-field-a));
+    box-shadow: inset 0 1px 2px rgb(var(--brand-dark) / 0.04);
+  }
+  /* Scrim behind sheets and dialogs: dark enough to isolate the sheet, blurred so the page
+     reads as set aside (blur used for dismissal, not decoration). */
+  .glass-scrim {
+    background-color: rgb(var(--brand-dark) / 0.45);
+    -webkit-backdrop-filter: blur(4px);
+    backdrop-filter: blur(4px);
   }
 }
 

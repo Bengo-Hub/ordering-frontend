@@ -88,7 +88,7 @@ export default function PlatformDashboardPage({
         </header>
 
         <Tabs defaultValue="orders" className="space-y-6">
-          <TabsList>
+          <TabsList className="w-full justify-start sm:w-auto">
             <TabsTrigger value="orders">
               <ShoppingBag className="mr-1.5 size-4" />
               Orders

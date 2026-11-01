@@ -45,7 +45,7 @@ export function AdminShell({ children }: { children: React.ReactNode }) {
     <nav className="flex h-full flex-col">
       <div className="flex h-16 shrink-0 items-center gap-2 border-b border-border px-4">
         <TenantLogo src={logo} alt="Logo" className="h-9 w-auto max-w-[140px] object-contain" />
-        <button type="button" className="ml-auto md:hidden" onClick={() => setOpen(false)} aria-label="Close menu">
+        <button type="button" className="ml-auto inline-flex size-11 items-center justify-center rounded-full hover:bg-muted/70 md:hidden" onClick={() => setOpen(false)} aria-label="Close menu">
           <X className="size-5" />
         </button>
       </div>
@@ -59,10 +59,10 @@ export function AdminShell({ children }: { children: React.ReactNode }) {
               {g.items.map((item) => {
                 const Icon = item.icon;
                 const cls = cn(
-                  "flex items-center gap-3 rounded-lg px-3 py-2 text-sm transition-colors",
+                  "flex min-h-11 items-center gap-3 rounded-xl px-3 py-2 text-sm transition-colors md:min-h-10",
                   isActive(item)
-                    ? "bg-primary font-semibold text-primary-foreground"
-                    : "text-foreground/70 hover:bg-muted hover:text-foreground",
+                    ? "bg-primary font-semibold text-primary-foreground shadow-[0_8px_18px_-10px_hsl(var(--primary)/0.7)]"
+                    : "text-foreground/75 hover:bg-primary/10 hover:text-foreground",
                 );
                 const body = (
                   <>
@@ -95,17 +95,17 @@ export function AdminShell({ children }: { children: React.ReactNode }) {
   );
 
   return (
-    <div className="flex h-[100dvh] overflow-hidden bg-background text-foreground">
-      <aside className="hidden w-64 shrink-0 border-r border-border bg-card md:block">{sidebar}</aside>
+    <div className="flex h-[100dvh] overflow-hidden text-foreground">
+      <aside className="glass-bar hidden w-64 shrink-0 border-r border-border/70 md:block">{sidebar}</aside>
       {open && (
         <div className="fixed inset-0 z-50 md:hidden">
-          <div className="absolute inset-0 bg-black/40" onClick={() => setOpen(false)} />
-          <aside className="absolute inset-y-0 left-0 w-72 bg-card shadow-xl">{sidebar}</aside>
+          <div className="glass-scrim absolute inset-0" onClick={() => setOpen(false)} />
+          <aside className="glass-sheet absolute inset-y-0 left-0 w-72 max-w-[85vw] rounded-r-[1.75rem]">{sidebar}</aside>
         </div>
       )}
       <div className="flex min-w-0 flex-1 flex-col">
-        <header className="flex h-16 shrink-0 items-center gap-3 border-b border-border bg-card px-4 lg:px-6">
-          <button type="button" className="md:hidden" onClick={() => setOpen(true)} aria-label="Open menu">
+        <header className="glass-bar flex h-16 shrink-0 items-center gap-3 border-b border-border/70 px-4 lg:px-6">
+          <button type="button" className="-ml-2 inline-flex size-11 items-center justify-center rounded-full hover:bg-muted/70 md:hidden" onClick={() => setOpen(true)} aria-label="Open menu">
             <Menu className="size-5" />
           </button>
           <div className="ml-auto flex items-center gap-2">

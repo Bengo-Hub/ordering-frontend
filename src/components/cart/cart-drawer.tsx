@@ -152,12 +152,12 @@ export function CartDrawer({ open, onOpenChange }: CartDrawerProps) {
   return (
     <>
       {/* Backdrop */}
-      <div className="fixed inset-0 z-50 bg-black/50" onClick={handleClose} aria-hidden />
+      <div className="glass-scrim fixed inset-0 z-50" onClick={handleClose} aria-hidden />
 
       {/* Drawer - Right side slide in (Uber Eats style) */}
       <div
         className={cn(
-          "fixed inset-y-0 right-0 z-50 flex w-full max-w-md flex-col bg-background shadow-2xl",
+          "glass-sheet fixed inset-y-0 right-0 z-50 flex w-full max-w-md flex-col border-l border-border/70 sm:rounded-l-[1.75rem]",
           "duration-300 animate-in slide-in-from-right",
           // Ensure drawer respects safe areas and doesn't extend behind system UI
           "max-h-[100dvh]",
