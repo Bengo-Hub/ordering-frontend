@@ -29,8 +29,10 @@ interface AddressSelectorProps {
   outletId?: string | null | undefined;
   orderTotal?: number | undefined;
   isGuest?: boolean;
-  scheduledTime?: { date: Date; label: string } | null;
-  onSchedule?: (date: Date) => void;
+  /** True when the order is booked for a later time (the schedule picker is open below). */
+  scheduled?: boolean;
+  /** Switch between delivering now and booking a time. Leave out when the plan has no scheduling. */
+  onTimingChange?: (mode: "delivery" | "schedule") => void;
 }
 
 export function AddressSelector({
@@ -43,8 +45,8 @@ export function AddressSelector({
   outletId,
   orderTotal,
   isGuest = false,
-  scheduledTime,
-  onSchedule,
+  scheduled = false,
+  onTimingChange,
 }: AddressSelectorProps) {
   const selectedAddress = addresses.find((a) => a.id === selectedId);
   // First visit: open the picker straight away so the customer's location is preselected.
@@ -168,23 +170,26 @@ export function AddressSelector({
                 }}
               />
 
-              {onSchedule && (
+              {onTimingChange && (
                 <div>
                   <p className="mb-2 text-sm font-medium">Time preference</p>
                   <div className="flex gap-2">
                     <Button
-                      variant={!scheduledTime ? "default" : "outline"}
+                      type="button"
+                      variant={!scheduled ? "default" : "outline"}
                       size="sm"
                       className="flex-1 gap-1.5"
+                      onClick={() => onTimingChange("delivery")}
                     >
                       <Clock className="size-4" />
                       Deliver now
                     </Button>
                     <Button
-                      variant={scheduledTime ? "default" : "outline"}
+                      type="button"
+                      variant={scheduled ? "default" : "outline"}
                       size="sm"
                       className="flex-1 gap-1.5"
-                      onClick={() => onSchedule(new Date())}
+                      onClick={() => onTimingChange("schedule")}
                     >
                       <Calendar className="size-4" />
                       Schedule

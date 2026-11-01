@@ -159,8 +159,8 @@ export default function CheckoutPage() {
                   outletId={state.outletId}
                   orderTotal={state.cartSubtotal}
                   isGuest={state.isGuestMode}
-                  scheduledTime={state.scheduledTime}
-                  onSchedule={state.handleScheduleSelect}
+                  scheduled={state.fulfillmentMode === "schedule"}
+                  {...(showScheduledDelivery ? { onTimingChange: state.handleFulfillmentChange } : {})}
                 />
               ) : state.outlets.length > 0 ? (
                 <PickupOutletSelector
