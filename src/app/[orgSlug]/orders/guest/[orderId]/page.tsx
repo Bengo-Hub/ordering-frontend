@@ -364,7 +364,9 @@ function GuestOrderContent() {
           <div>
             <p className="text-sm font-semibold text-green-800">Payment confirmed!</p>
             <p className="text-xs text-green-700">
-              Your order has been received and is being processed.
+              {["completed", "delivered"].includes(order.status)
+                ? "Thank you for your order."
+                : "Your order has been received and is being processed."}
             </p>
           </div>
         </div>
@@ -409,10 +411,18 @@ function GuestOrderContent() {
 
       {/* Pay Now — prepaid (Paystack / M-Pesa) orders that are still awaiting payment
           can be completed right here, no login required. */}
+      {/* A pay-on-collection order may be paid early, but nothing is due yet: a quiet button. */}
       {isPayable && (
-        <Button type="button" size="lg" className="w-full gap-2" onClick={() => setPayOpen(true)}>
+        <Button
+          type="button"
+          size="lg"
+          variant={paymentBanner === "cod" ? "outline" : "default"}
+          className="w-full gap-2"
+          onClick={() => setPayOpen(true)}
+        >
           <CreditCard className="size-5" />
-          Pay Now — {order.currency ?? "KES"} {order.grandTotal.toLocaleString()}
+          {paymentBanner === "cod" ? "Pay online now instead" : "Pay now"} · {order.currency ?? "KES"}{" "}
+          {order.grandTotal.toLocaleString()}
         </Button>
       )}
 
