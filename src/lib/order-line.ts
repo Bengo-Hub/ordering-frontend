@@ -104,3 +104,51 @@ export function formatDeliveryAddress(addr: unknown): string {
   const a = addr as Raw;
   return [str(a.addressLine1), str(a.addressLine2), str(a.city)].filter(Boolean).join(", ");
 }
+
+/** Fulfilment types an order is delivered for (ordering-backend isDeliveryFulfilment). */
+export function isDeliveryOrder(fulfillmentType: unknown): boolean {
+  return fulfillmentType === "delivery" || fulfillmentType === "scheduled";
+}
+
+/** Where a delivery order goes, as every order screen shows it. */
+export interface OrderDropoff {
+  /** Address or place the customer chose, e.g. "Nyamasaria" or "Mega Plaza, Kisumu". */
+  address: string;
+  /** Delivery area the fee came from, e.g. "Kondele". */
+  area?: string;
+  /** Notes for the rider (gate code, landmark). */
+  notes?: string;
+  lat?: number;
+  lng?: number;
+}
+
+/**
+ * Reads a delivery order's drop-off from the backend order. A saved address comes as an object;
+ * a place picked on the map is the first line of `instructions` (the rider's notes follow on the
+ * next lines), and the picked place name and priced area are in metadata.delivery_quote. Returns
+ * null for pickup and dine-in orders.
+ */
+export function orderDropoff(o: Raw): OrderDropoff | null {
+  // Without a fulfilment type (older responses) a saved address still marks a delivery.
+  if (o.fulfillmentType ? !isDeliveryOrder(o.fulfillmentType) : !formatDeliveryAddress(o.deliveryAddress)) return null;
+  const quote = (o.metadata && typeof o.metadata === "object" ? (o.metadata as Raw).delivery_quote : undefined) as Raw | undefined;
+  const lines = str(o.instructions).split(/\r?\n/).map((l) => l.trim()).filter(Boolean);
+  const saved = formatDeliveryAddress(o.deliveryAddress);
+  const address = saved || lines[0] || str(quote?.place_name) || "";
+  const notes = (saved ? lines : lines.slice(1)).join("\n");
+  const lat = optNum(o.deliveryLatitude ?? o.deliveryLat);
+  const lng = optNum(o.deliveryLongitude ?? o.deliveryLng);
+  const area = str(quote?.zone_name);
+  return {
+    address: address || (lat != null && lng != null ? `${lat.toFixed(5)}, ${lng.toFixed(5)}` : ""),
+    ...(area ? { area } : {}),
+    ...(notes ? { notes } : {}),
+    ...(lat != null ? { lat } : {}),
+    ...(lng != null ? { lng } : {}),
+  };
+}
+
+function optNum(v: unknown): number | undefined {
+  const n = typeof v === "string" ? Number(v) : v;
+  return typeof n === "number" && Number.isFinite(n) ? n : undefined;
+}

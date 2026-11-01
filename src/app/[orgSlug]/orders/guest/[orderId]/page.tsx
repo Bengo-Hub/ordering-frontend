@@ -23,6 +23,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { getGuestOrder, rateGuestOrder, type Order } from "@/lib/api/orders";
 import { getGoogleReviewUrl } from "@/lib/api/integrations";
+import { OrderDestinationCard } from "@/components/orders/order-destination-card";
 import { OrderStatusPanel } from "@/components/orders/order-status-panel";
 import { PaymentRetryPanel } from "@/components/orders/payment-retry-panel";
 import { isDeliveryFulfillment, timelineFor, timelineIndex } from "@/lib/order-timeline";
@@ -151,7 +152,7 @@ function RateOrderCard({
   const [riderComment, setRiderComment] = useState("");
   const [submitted, setSubmitted] = useState(false);
 
-  const hasRider = !!order.riderName || !!order.deliveryAddress;
+  const hasRider = !!order.riderName || !!order.dropoff;
   const alreadyRated = order.rating != null && order.rating > 0;
 
   useEffect(() => {
@@ -577,26 +578,7 @@ function GuestOrderContent() {
 
       {/* Delivery & Payment */}
       <div className="grid gap-4 sm:grid-cols-2">
-        <Card>
-          <CardHeader className="pb-2">
-            <CardTitle className="flex items-center gap-2 text-base">
-              <MapPin className="size-4 text-brand-emphasis" />
-              Delivery
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <p className="text-sm text-muted-foreground">{order.deliveryAddress || "Pickup"}</p>
-            {order.estimatedDeliveryAt && (
-              <p className="mt-1 text-xs text-muted-foreground">
-                ETA:{" "}
-                {formatDateTime(order.estimatedDeliveryAt, {
-                  hour: "2-digit",
-                  minute: "2-digit",
-                })}
-              </p>
-            )}
-          </CardContent>
-        </Card>
+        <OrderDestinationCard order={order} />
         <Card>
           <CardHeader className="pb-2">
             <CardTitle className="flex items-center gap-2 text-base">

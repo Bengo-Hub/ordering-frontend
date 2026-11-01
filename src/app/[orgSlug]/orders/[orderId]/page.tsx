@@ -22,6 +22,7 @@ import { SiteShell } from "@/components/layout/site-shell";
 import { OrderLineDetails } from "@/components/orders/order-line-details";
 import { OrderStatusPanel } from "@/components/orders/order-status-panel";
 import { PaymentRetryPanel } from "@/components/orders/payment-retry-panel";
+import { OrderDestinationCard } from "@/components/orders/order-destination-card";
 import { RatingDialog } from "@/components/orders/rating-dialog";
 import { timelineFor, timelineIndex } from "@/lib/order-timeline";
 import { Badge } from "@/components/ui/badge";
@@ -339,28 +340,7 @@ export default function OrderDetailPage() {
 
               {/* Delivery & Payment Info */}
               <div className="grid gap-4 sm:grid-cols-2">
-                <Card>
-                  <CardHeader className="pb-2">
-                    <CardTitle className="flex items-center gap-2 text-base">
-                      <MapPin className="size-4 text-brand-emphasis" />
-                      Delivery
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <p className="text-sm text-muted-foreground">
-                      {order.deliveryAddress || "Pickup"}
-                    </p>
-                    {order.estimatedDeliveryAt && (
-                      <p className="mt-1 text-xs text-muted-foreground">
-                        ETA:{" "}
-                        {formatDateTime(order.estimatedDeliveryAt, {
-                          hour: "2-digit",
-                          minute: "2-digit",
-                        })}
-                      </p>
-                    )}
-                  </CardContent>
-                </Card>
+                <OrderDestinationCard order={order} />
                 <Card>
                   <CardHeader className="pb-2">
                     <CardTitle className="flex items-center gap-2 text-base">

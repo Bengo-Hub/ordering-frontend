@@ -62,4 +62,31 @@ describe("order-line", () => {
     expect(order.items[0]?.name).toBe("Cap");
     expect(formatDeliveryAddress(undefined)).toBe("");
   });
+
+  it("reads a map-picked drop-off from instructions and the delivery quote", () => {
+    const order = normalizeOrder({
+      id: "o2",
+      fulfillmentType: "delivery",
+      instructions: "Nyamasaria\nBlue gate, call on arrival",
+      deliveryLatitude: -0.1133456,
+      deliveryLongitude: 34.7887812,
+      metadata: { delivery_quote: { zone_name: "Nyamasaria", place_name: "Nyamasaria" } },
+      items: [],
+    });
+    expect(order.deliveryAddress).toBe("Nyamasaria");
+    expect(order.dropoff).toEqual({
+      address: "Nyamasaria",
+      area: "Nyamasaria",
+      notes: "Blue gate, call on arrival",
+      lat: -0.1133456,
+      lng: 34.7887812,
+    });
+    expect(order.deliveryLat).toBe(-0.1133456);
+  });
+
+  it("has no drop-off for pickup orders", () => {
+    const order = normalizeOrder({ id: "o3", fulfillmentType: "pickup", instructions: "No onions", items: [] });
+    expect(order.dropoff).toBeNull();
+    expect(order.deliveryAddress).toBe("");
+  });
 });

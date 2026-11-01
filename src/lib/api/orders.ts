@@ -1,4 +1,4 @@
-import { formatDeliveryAddress, toOrderLineView, type OrderLineView } from "@/lib/order-line";
+import { orderDropoff, toOrderLineView, type OrderDropoff, type OrderLineView } from "@/lib/order-line";
 
 import { api } from "./base";
 
@@ -43,7 +43,10 @@ export interface Order {
   paymentStatus: string;
   /** How the order is fulfilled: "delivery" | "pickup" | "dine_in" | "scheduled". */
   fulfillmentType?: string;
+  /** Drop-off address of a delivery order; empty for pickup and dine-in. */
   deliveryAddress: string;
+  /** Delivery orders: where it goes (address, area, rider notes, pin). Null otherwise. */
+  dropoff: OrderDropoff | null;
   deliveryLat?: number;
   deliveryLng?: number;
   estimatedDeliveryAt?: string;
@@ -118,12 +121,16 @@ export function normalizeOrder(raw: unknown): Order {
   const o = (raw ?? {}) as Record<string, unknown>;
   const currency = typeof o.currency === "string" ? o.currency : "KES";
   const discount = Number(o.discount ?? o.discountTotal ?? 0) || 0;
+  const dropoff = orderDropoff(o);
   return {
     ...(o as unknown as Order),
     currency,
     discount,
     items: ((o.items as unknown[]) ?? []).map((it) => toOrderLineView(it, currency)),
-    deliveryAddress: formatDeliveryAddress(o.deliveryAddress),
+    deliveryAddress: dropoff?.address ?? "",
+    dropoff,
+    ...(dropoff?.lat != null ? { deliveryLat: dropoff.lat } : {}),
+    ...(dropoff?.lng != null ? { deliveryLng: dropoff.lng } : {}),
   };
 }
 

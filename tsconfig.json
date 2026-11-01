@@ -50,6 +50,7 @@
     "storybook-static",
     "vitest.config.ts",
     "vitest.setup.ts",
-    "src/__tests__"
+    "src/__tests__",
+    "e2e/docs-capture"
   ]
 }

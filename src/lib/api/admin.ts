@@ -1,4 +1,4 @@
-import { toOrderLineView } from "@/lib/order-line";
+import { orderDropoff, toOrderLineView } from "@/lib/order-line";
 import { api } from "./base";
 import type { PaymentRetryInfo } from "./orders";
 
@@ -160,12 +160,10 @@ function normalizeOrder(o: Record<string, unknown>): AdminOrder {
   const customerPhone =
     ((o.customerPhone as string) || (isGuest ? (meta.contactPhone as string) : "")) ?? "";
 
-  // Resolve delivery address — backend now returns it as a string in the
-  // AdminOrderSummary; full Order has a nested object under deliveryAddress.
-  let deliveryAddress = (o.deliveryAddress as string) ?? "";
-  if (!deliveryAddress && o.instructions) {
-    deliveryAddress = o.instructions as string;
-  }
+  // The admin summary sends the drop-off as a string; a full order keeps it in instructions or a
+  // saved address. Both go through the storefront's one rule (orderDropoff).
+  const deliveryAddress =
+    (typeof o.deliveryAddress === "string" && o.deliveryAddress) || orderDropoff(o)?.address || "";
 
   return {
     ...o,
