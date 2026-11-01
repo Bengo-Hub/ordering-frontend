@@ -52,10 +52,12 @@ export function FoodHero({ brandName, tagline, outlet, spotlight, menuHref, supp
   // The delivery location the shopper picked in the header, named in the "no delivery" note.
   const place = useDiningModeStore(selectDeliveryPlace);
   const note = outlet ? hoursNote(outlet) : null;
+  // The right half shows a dish or the outlet photo; without either the brand panel takes the row.
+  const hasSidePanel = !!spotlight || !!outlet?.image;
 
   return (
     <section aria-labelledby="food-hero-title" className="mx-auto w-full max-w-6xl px-3 pt-4 sm:px-4 sm:pt-6 lg:px-8">
-      <div className="grid overflow-hidden rounded-3xl border border-border bg-card md:grid-cols-[1.15fr_1fr]">
+      <div className={cn("grid overflow-hidden rounded-3xl border border-border bg-card", hasSidePanel && "md:grid-cols-[1.15fr_1fr]")}>
         <div className="flex flex-col gap-5 bg-brand p-6 text-brand-contrast sm:p-8">
           {outlet && (
             <p className="inline-flex w-fit items-center gap-2 rounded-full bg-black/15 px-3 py-1 text-xs font-semibold">
@@ -94,7 +96,7 @@ export function FoodHero({ brandName, tagline, outlet, spotlight, menuHref, supp
           {outlet && (
             <ul className="flex flex-wrap gap-x-5 gap-y-2 text-sm">
               {outlet.deliveryTime && mode === "delivery" && (
-                <li className="inline-flex items-center gap-1.5"><Clock className="size-4" aria-hidden /> {outlet.deliveryTime}</li>
+                <li className="inline-flex items-center gap-1.5"><Clock className="size-4" aria-hidden /> {outlet.deliveryTime} min</li>
               )}
               {outlet.deliveryFee && mode === "delivery" && outlet.deliveryFee !== "not-deliverable" && outlet.deliveryFee !== "at-outlet" && (
                 <li>{deliveryFeeLabel(outlet.deliveryFee, place)}</li>

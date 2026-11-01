@@ -207,7 +207,7 @@ export function OutletCard({
           {/* Time */}
           {deliveryTime && (
             <span className="text-muted-foreground">
-              {isPickupMode ? `${deliveryTime} min` : `${deliveryTime} min`}
+              {deliveryTime} min
             </span>
           )}
 
