@@ -1,6 +1,5 @@
 "use client";
 
-import { LOGISTICS_UI_URL } from "@/lib/app-urls";
 import {
   ArrowLeft,
   Bike,
@@ -11,7 +10,6 @@ import {
   Phone,
   RefreshCw,
   Star,
-  XCircle,
 } from "lucide-react";
 import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
@@ -22,6 +20,7 @@ import { SiteShell } from "@/components/layout/site-shell";
 import { OrderLineDetails } from "@/components/orders/order-line-details";
 import { OrderStatusPanel } from "@/components/orders/order-status-panel";
 import { PaymentRetryPanel } from "@/components/orders/payment-retry-panel";
+import { CancelOrderControl } from "@/components/orders/cancel-order-control";
 import { OrderDestinationCard } from "@/components/orders/order-destination-card";
 import { RatingDialog } from "@/components/orders/rating-dialog";
 import { GoogleReviewCta } from "@/components/orders/google-review-cta";
@@ -29,11 +28,10 @@ import { timelineFor, timelineIndex } from "@/lib/order-timeline";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { useCancelOrder, useOrder, useOrderTracking } from "@/hooks/use-orders";
+import { useOrder, useOrderTracking } from "@/hooks/use-orders";
 import { formatDateTime } from "@/lib/datetime";
 import { orgRoute } from "@/lib/routes";
 import { toast } from "@/lib/toast";
-import { apiErrorMessage } from "@/lib/api/error-message";
 import { cn } from "@/lib/utils";
 import { useOrgSlug } from "@/providers/org-slug-provider";
 import { useCartStore } from "@/store/cart";
@@ -55,16 +53,12 @@ export default function OrderDetailPage() {
     orderId,
     !!order && !["delivered", "completed", "cancelled"].includes(order.status),
   );
-  const cancelOrder = useCancelOrder();
   const addItem = useCartStore((s) => s.addItem);
 
-  const [showCancelReason, setShowCancelReason] = useState(false);
-  const [cancelReason, setCancelReason] = useState("");
   const [showRating, setShowRating] = useState(false);
 
   const isActive =
     order && !["delivered", "completed", "cancelled", "failed"].includes(order.status);
-  const canCancel = order && ["pending", "confirmed"].includes(order.status);
   const canRate = order && ["delivered", "completed"].includes(order.status) && !order.rating;
   // Pickup orders end at "Picked up", delivery orders at "Delivered" (the page used to show the
   // delivery steps for every order).
@@ -83,20 +77,6 @@ export default function OrderDetailPage() {
     }
     toast.success("Items added to cart!");
     router.push(orgRoute(orgSlug, "/cart"));
-  }
-
-  function handleCancel() {
-    if (!order || !cancelReason.trim()) return;
-    cancelOrder.mutate(
-      { orderId: order.id, reason: cancelReason.trim() },
-      {
-        onSuccess: () => {
-          toast.success("Order cancelled");
-          setShowCancelReason(false);
-        },
-        onError: async (err) => toast.error(await apiErrorMessage(err, "Failed to cancel order")),
-      },
-    );
   }
 
   return (
@@ -384,61 +364,15 @@ export default function OrderDetailPage() {
 
                 {isActive && (
                   <Button variant="outline" className="min-h-11 w-full gap-2 sm:w-auto" asChild>
-                    <a
-                      href={`${
-                        LOGISTICS_UI_URL
-                      }/${orgSlug}/tracking?orderId=${encodeURIComponent(order.id)}`}
-                    >
+                    <Link href={orgRoute(orgSlug, `/track/${order.id}`)}>
                       <Bike className="size-4" />
                       Track Delivery
-                    </a>
+                    </Link>
                   </Button>
                 )}
 
-                {canCancel && !showCancelReason && (
-                  <Button
-                    variant="outline"
-                    className="min-h-11 w-full gap-2 text-destructive hover:bg-destructive hover:text-destructive-foreground sm:w-auto"
-                    onClick={() => setShowCancelReason(true)}
-                  >
-                    <XCircle className="size-4" />
-                    Cancel Order
-                  </Button>
-                )}
+                <CancelOrderControl orderId={order.id} status={order.status} />
               </div>
-
-              {/* Cancel reason input */}
-              {showCancelReason && (
-                <Card className="border-destructive/50">
-                  <CardContent className="flex flex-col gap-3 py-4">
-                    <p className="text-sm font-medium text-foreground">
-                      Why are you cancelling this order?
-                    </p>
-                    <textarea
-                      value={cancelReason}
-                      onChange={(e) => setCancelReason(e.target.value)}
-                      placeholder="e.g., Changed my mind, ordered by mistake..."
-                      className="min-h-[80px] w-full rounded-md border border-border bg-background p-3 text-sm placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring"
-                    />
-                    <div className="flex gap-2">
-                      <Button
-                        size="sm"
-                        variant="destructive"
-                        disabled={!cancelReason.trim() || cancelOrder.isPending}
-                        onClick={handleCancel}
-                      >
-                        {cancelOrder.isPending ? (
-                          <Loader2 className="mr-1 size-4 animate-spin" />
-                        ) : null}
-                        Confirm Cancel
-                      </Button>
-                      <Button size="sm" variant="ghost" onClick={() => setShowCancelReason(false)}>
-                        Keep Order
-                      </Button>
-                    </div>
-                  </CardContent>
-                </Card>
-              )}
             </>
           )}
         </div>

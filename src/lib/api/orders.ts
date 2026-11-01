@@ -160,7 +160,20 @@ export async function listOrders(
   return { orders: ((res.data.data ?? []) as unknown[]).map(normalizeOrder), total: res.data.total ?? 0 };
 }
 
-export async function cancelOrder(tenantSlug: string, orderId: string, reason: string): Promise<void> {
+/**
+ * Cancels an order before the outlet starts it: the signed-in owner's route, or the guest route,
+ * which needs the checkout session the order page was opened with.
+ */
+export async function cancelOrder(
+  tenantSlug: string,
+  orderId: string,
+  reason: string,
+  opts?: { guest?: boolean | undefined; sessionId?: string | undefined },
+): Promise<void> {
+  if (opts?.guest) {
+    await api.post(`${tenantSlug}/orders/guest/${orderId}/cancel`, { reason }, { params: { session_id: opts.sessionId ?? "" } });
+    return;
+  }
   await api.post(`${tenantSlug}/orders/${orderId}/cancel`, { reason });
 }
 

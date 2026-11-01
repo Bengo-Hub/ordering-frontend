@@ -98,15 +98,16 @@ export function useCreateOrder() {
   });
 }
 
-export function useCancelOrder() {
+export function useCancelOrder(opts?: { guest?: boolean | undefined; sessionId?: string | undefined }) {
   const slug = useOrgSlug();
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: ({ orderId, reason }: { orderId: string; reason: string }) =>
-      cancelOrder(slug, orderId, reason),
+      cancelOrder(slug, orderId, reason, opts),
     onSuccess: (_data, { orderId }) => {
       queryClient.invalidateQueries({ queryKey: orderKeys.detail(orderId) });
       queryClient.invalidateQueries({ queryKey: orderKeys.lists() });
+      queryClient.invalidateQueries({ queryKey: ["guest-order", orderId] });
     },
   });
 }

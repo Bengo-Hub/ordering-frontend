@@ -1,8 +1,6 @@
 "use client";
 
-import { LOGISTICS_UI_URL } from "@/lib/app-urls";
 import {
-  Bike,
   CheckCircle2,
   Clock,
   CreditCard,
@@ -21,6 +19,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { getGuestOrder, rateGuestOrder, type Order } from "@/lib/api/orders";
+import { CancelOrderControl } from "@/components/orders/cancel-order-control";
 import { OrderDestinationCard } from "@/components/orders/order-destination-card";
 import { GoogleReviewCta } from "@/components/orders/google-review-cta";
 import { OrderStatusPanel } from "@/components/orders/order-status-panel";
@@ -587,18 +586,8 @@ function GuestOrderContent() {
         <Button asChild variant="outline" className="min-h-11 w-full gap-2 sm:w-auto">
           <Link href={orgRoute(orgSlug, "/catalog")}>Continue Shopping</Link>
         </Button>
-        {!["delivered", "completed", "cancelled", "failed"].includes(order.status) && (
-          <Button asChild variant="outline" className="min-h-11 w-full gap-2 sm:w-auto">
-            <a
-              href={`${
-                LOGISTICS_UI_URL
-              }/${orgSlug}/tracking?orderId=${encodeURIComponent(order.id)}`}
-            >
-              <Bike className="size-4" />
-              Track Delivery
-            </a>
-          </Button>
-        )}
+        {/* This page is the customer's tracker (status, rider and map update live). */}
+        <CancelOrderControl orderId={order.id} status={order.status} guest sessionId={sessionId} />
       </div>
 
       {/* Treasury payment modal for paying a pending prepaid order from this page. */}
