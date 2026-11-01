@@ -139,7 +139,7 @@ describe("CheckoutPage", () => {
 
     renderCheckout();
 
-    expect(await screen.findByText("Pay now — M-Pesa (STK)")).toBeInTheDocument();
+    expect(await screen.findByText("Pay now with M-Pesa (prompt on your phone)")).toBeInTheDocument();
     expect(await screen.findByText("Pay on delivery")).toBeInTheDocument();
   });
 });

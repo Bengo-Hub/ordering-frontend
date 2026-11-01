@@ -354,7 +354,7 @@ export function useCheckoutState() {
       opts.push({
         id: "paystack_now",
         method: "paystack",
-        label: "Pay now — Card (Paystack)",
+        label: "Pay now by card (Paystack)",
         payNow: true,
       });
     }
@@ -362,7 +362,7 @@ export function useCheckoutState() {
       opts.push({
         id: "payhero_now",
         method: "payhero",
-        label: "Pay now — PayHero",
+        label: "Pay now with PayHero",
         description: "M-Pesa, Airtel Money and more",
         payNow: true,
       });
@@ -371,7 +371,7 @@ export function useCheckoutState() {
       opts.push({
         id: "mpesa_now",
         method: "mpesa",
-        label: "Pay now — M-Pesa (STK)",
+        label: "Pay now with M-Pesa (prompt on your phone)",
         payNow: true,
       });
     }
@@ -409,10 +409,10 @@ export function useCheckoutState() {
       opts.push({
         id: "cod_collection",
         method: "cod",
-        label: codGateway.name || (isPickup ? "Pay at the counter" : "Pay on delivery"),
-        description:
-          codGateway.description ||
-          (isPickup ? "Cash or M-Pesa when you collect your order." : "Cash or M-Pesa to the rider when your order arrives."),
+        // Named by how this order is fulfilled: the gateway's own name ("Cash on Delivery") would
+        // tell a pickup customer to wait for a rider.
+        label: isPickup ? "Pay at the counter" : "Pay on delivery",
+        description: isPickup ? "Cash or M-Pesa when you collect your order." : "Cash or M-Pesa to the rider when your order arrives.",
         payNow: false,
       });
     }
@@ -543,6 +543,14 @@ export function useCheckoutState() {
       }
     },
     [orderId, orgSlug, clearCart],
+  );
+
+  // The customer's own order page: live status, the collection or delivery code, payment retry.
+  // Guests reach theirs with the cart's session id.
+  const orderPageHref = useCallback(
+    (id: string) =>
+      isGuestMode ? `${orgRoute(orgSlug, `/orders/guest/${id}`)}?session_id=${sessionId}` : orgRoute(orgSlug, `/orders/${id}`),
+    [isGuestMode, orgSlug, sessionId],
   );
 
   const handlePlaceOrder = useCallback(async () => {
@@ -724,10 +732,7 @@ export function useCheckoutState() {
         setStep("review");
         setOrderError(result.paymentError);
         toast.error(`Order #${result.orderNumber || result.orderId.slice(0, 8)} created but payment gateway is unavailable. Please retry.`);
-        const orderUrl = isGuestMode
-          ? `${orgRoute(orgSlug, `/orders/guest/${result.orderId}`)}?session_id=${sessionId}`
-          : orgRoute(orgSlug, `/orders/${result.orderId}`);
-        router.push(orderUrl);
+        router.push(orderPageHref(result.orderId));
       } else if (selectedOption?.method === "wallet") {
         // Wallet chosen (authed + balance covers total) — pay the freshly created
         // order straight from the wallet instead of the treasury modal.
@@ -764,7 +769,7 @@ export function useCheckoutState() {
     isDeliveryPricingUnavailable, fulfillmentMode, selectedAddressId, isOutsideDeliveryZone, isAtOutlet, scheduledTime,
     items, sessionId, deliveryNotes, promoCode, orderNotes, requestUtensils, isTicketOnly, noFulfillment,
     checkoutMutation, guestCheckoutMutation, orgSlug, router, clearCart,
-    selectedMethod, selectedOption, handleWalletPayment, mpesaCode,
+    selectedMethod, selectedOption, handleWalletPayment, mpesaCode, orderPageHref,
   ]);
 
   const handlePaymentConfirmed = useCallback(
@@ -772,12 +777,9 @@ export function useCheckoutState() {
       setStep("success");
       clearCart();
       setShowPaymentModal(false);
-      const orderUrl = isGuestMode
-        ? `${orgRoute(orgSlug, `/orders/guest/${orderId}`)}?session_id=${sessionId}`
-        : orgRoute(orgSlug, `/orders/${orderId}`);
-      router.push(orderUrl);
+      if (orderId) router.push(orderPageHref(orderId));
     },
-    [clearCart, orgSlug, orderId, isGuestMode, sessionId, router],
+    [clearCart, orderId, orderPageHref, router],
   );
 
   const handlePaymentFailed = useCallback((error: string) => {
@@ -792,16 +794,13 @@ export function useCheckoutState() {
           // Order was created — clear cart and redirect to order page
           // so the user can track or complete payment there.
           clearCart();
-          const orderUrl = isGuestMode
-            ? `${orgRoute(orgSlug, `/orders/guest/${orderId}`)}?session_id=${sessionId}`
-            : orgRoute(orgSlug, `/orders/${orderId}`);
-          router.push(orderUrl);
+          router.push(orderPageHref(orderId));
         } else {
           setStep("review");
         }
       }
     },
-    [step, orderId, isGuestMode, orgSlug, sessionId, router, clearCart],
+    [step, orderId, orderPageHref, router, clearCart],
   );
 
   return {
@@ -894,6 +893,7 @@ export function useCheckoutState() {
     paymentAmount,
     paymentCurrency,
     orderId,
+    orderPageHref,
     handlePaymentConfirmed,
     handlePaymentFailed,
     handlePaymentModalClose,

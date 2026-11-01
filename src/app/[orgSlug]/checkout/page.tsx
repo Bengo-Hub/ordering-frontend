@@ -88,7 +88,12 @@ export default function CheckoutPage() {
     );
   } else if (state.step === "success") {
     // Order placed
-    content = <OrderSuccess orderId={state.orderId!} />;
+    content = (
+      <OrderSuccess
+        orderHref={state.orderPageHref(state.orderId!)}
+        paid={!state.selectedOption || state.selectedOption.payNow || state.selectedOption.method === "wallet"}
+      />
+    );
   } else {
     // Main checkout review
     content = (
