@@ -112,7 +112,8 @@ export function useAdminNav(): AdminNavGroup[] {
   const admin: AdminNavItem[] = [];
   if (isAdmin) admin.push({ label: "Settings", href: "/dashboard/staff/settings", icon: Settings });
   admin.push({ label: "Roles and permissions", href: "/dashboard/staff/roles", icon: ShieldCheck });
-  if (can(["ordering.config.manage"])) {
+  // Managers only view config; saving the review link or connecting Google needs config.manage.
+  if (can(["ordering.config.manage"], ["admin", "superuser"])) {
     admin.push({ label: "Google Business", href: "/dashboard/staff/integrations", icon: MapPin });
   }
   if (isAdmin) admin.push({ label: "Compliance", href: "/dashboard/staff/compliance", icon: FileLock });

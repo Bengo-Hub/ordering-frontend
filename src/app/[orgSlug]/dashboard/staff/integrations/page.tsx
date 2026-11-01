@@ -691,7 +691,7 @@ function IntegrationsContent() {
 export default function GoogleIntegrationsPage() {
   return (
     <RequireAuth
-      roles={["admin", "superuser", "manager"]}
+      roles={["admin", "superuser"]}
       permissions={["ordering.config.manage"]}
       permissionOperator="or"
     >
