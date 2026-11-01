@@ -85,7 +85,7 @@ function DiscoveryMenuItem({
   index?: number;
 }) {
   const opensModal = needsAddToCartModal(item);
-  const itemUrl = item.id ? `/${orgSlug}/catalog/${item.id}` : "#";
+  const itemUrl = item.id ? `/${orgSlug}/catalog/${item.id}${item.outletId ? `?outlet=${item.outletId}` : ""}` : "#";
   const { mutate: toggleFavorite } = useToggleFavorite(orgSlug);
   const [isWhitelisted, setIsWhitelisted] = useState(item.isFavorite ?? false);
 
@@ -269,7 +269,7 @@ function MenuRow({
   cfg: OrderingConfig;
 }) {
   const opensModal = needsAddToCartModal(item);
-  const itemUrl = item.id ? `/${orgSlug}/catalog/${item.id}` : "#";
+  const itemUrl = item.id ? `/${orgSlug}/catalog/${item.id}${item.outletId ? `?outlet=${item.outletId}` : ""}` : "#";
   return (
     <Link
       href={itemUrl}
@@ -546,7 +546,9 @@ export function MenuDiscovery({
         categoryId: m.categoryId ?? "",
         dietary: (m.dietary ?? []) as DietaryTag[],
         ...(m.image != null && m.image !== "" && { image: m.image }),
-        outletId: m.outletId,
+        // A product several outlets sell has no outlet of its own: it is ordered from the outlet
+        // being browsed, so checkout and the delivery quote use that outlet.
+        outletId: m.outletId || activeOutletId,
         outletName: m.outletName,
         isFavorite: m.isFavorite,
         manufacturer: m.manufacturer,
@@ -559,7 +561,7 @@ export function MenuDiscovery({
         modifierGroups: m.modifierGroups,
         ...(m.featured && { feature: "recommended" as const }),
       })),
-    [visibleItems],
+    [visibleItems, activeOutletId],
   );
 
   const updateUrl = useCallback(

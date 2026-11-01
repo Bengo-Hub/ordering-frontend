@@ -16,7 +16,7 @@ import {
 } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
-import { useParams, useRouter } from "next/navigation";
+import { useParams, useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
 
@@ -79,7 +79,11 @@ export default function CatalogItemPage() {
 
   const { data: item, isLoading, error } = useCatalogItem(orgSlug, itemId);
   // The selling outlet, for the pickup point and delivery note (name and address).
-  const { data: itemOutlet } = useOutlet(orgSlug, item?.outletId ?? "");
+  // A product several outlets sell has no outlet of its own; it is ordered from the outlet the
+  // customer was browsing (?outlet= from the menu).
+  const searchParams = useSearchParams();
+  const orderOutletId = item?.outletId || searchParams.get("outlet") || undefined;
+  const { data: itemOutlet } = useOutlet(orgSlug, orderOutletId ?? "");
 
   const [quantity, setQuantity] = useState(1);
   const [selectedOptions, setSelectedOptions] = useState<Record<string, string[]>>({});
@@ -289,8 +293,8 @@ export default function CatalogItemPage() {
       id: line.id,
       name: line.name,
       price: unitPrice,
-      outletId: item.outletId,
-      outletName: item.outletName,
+      ...(orderOutletId ? { outletId: orderOutletId } : {}),
+      ...((item.outletName ?? itemOutlet?.name) ? { outletName: item.outletName ?? itemOutlet?.name } : {}),
       quantity,
       ...(line.inventorySku ? { inventorySku: line.inventorySku } : {}),
       ...(cartModifiers.length > 0 ? { modifiers: cartModifiers } : {}),
@@ -667,8 +671,8 @@ export default function CatalogItemPage() {
             <DeliveryReturnsBox
               orgSlug={orgSlug}
               outlet={
-                item.outletId
-                  ? { id: item.outletId, name: itemOutlet?.name ?? item.outletName ?? "", address: itemOutlet?.address ?? "" }
+                orderOutletId
+                  ? { id: orderOutletId, name: itemOutlet?.name ?? item.outletName ?? "", address: itemOutlet?.address ?? "" }
                   : null
               }
               showReturns={["retail", "pharmacy", "wholesale", "general"].includes(cfg.profile)}
