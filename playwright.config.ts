@@ -25,6 +25,8 @@ const defaultOrgSlug = process.env.E2E_ORG_SLUG || 'urban-loft';
  */
 export default defineConfig({
   testDir: './e2e',
+  // e2e/docs-capture has its own config (pnpm docs:capture) and runs against the demo tenant.
+  testIgnore: ['**/docs-capture/**'],
   fullyParallel: true,
   forbidOnly: !!process.env.CI,
   retries: process.env.CI ? 2 : 0,
