@@ -1,13 +1,18 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, type FormEvent } from "react";
 import { useSearchParams } from "next/navigation";
 import {
+  AlertTriangle,
   CheckCircle2,
+  ExternalLink,
+  Link2,
   Loader2,
   MapPin,
   MessageSquare,
+  RefreshCw,
   Star,
+  Trash2,
   Unplug,
 } from "lucide-react";
 
@@ -18,10 +23,13 @@ import {
   useGoogleLocations,
   useGoogleReviews,
   useGoogleStatus,
+  useRemoveGoogleReviewLink,
   useReplyToGoogleReview,
+  useSaveGoogleReviewLink,
   useSelectGoogleLocation,
 } from "@/hooks/use-google";
 import {
+  isSameLocation,
   starRatingToNumber,
   type GoogleLocation,
   type GoogleReview,
@@ -29,14 +37,175 @@ import {
 } from "@/lib/api/google";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { toast } from "@/lib/toast";
 import { apiErrorMessage } from "@/lib/api/error-message";
 
-// ── Status card ───────────────────────────────────────────────────────────────
+const PLACE_ID_FINDER =
+  "https://developers.google.com/maps/documentation/javascript/examples/places-placeid-finder";
 
-function StatusCard({ status }: { status: GoogleStatus }) {
+// ── Review link (works with or without the Google connection) ───────────────
+
+function ReviewLinkCard({ status }: { status: GoogleStatus }) {
+  const save = useSaveGoogleReviewLink();
+  const remove = useRemoveGoogleReviewLink();
+  const [value, setValue] = useState("");
+  const [editing, setEditing] = useState(false);
+  const link = status.review_link;
+  const hasLink = !!link.review_url;
+  const showForm = !hasLink || editing;
+
+  const handleSave = (e: FormEvent) => {
+    e.preventDefault();
+    const v = value.trim();
+    if (!v) {
+      toast.error("Paste your Google review link or Place ID.");
+      return;
+    }
+    save.mutate(v, {
+      onSuccess: () => {
+        toast.success("Review link saved. Customers will see the button after their order.");
+        setValue("");
+        setEditing(false);
+      },
+      onError: async (err) =>
+        toast.error(await apiErrorMessage(err, "That doesn't look like a Google review link.")),
+    });
+  };
+
+  const handleRemove = () => {
+    if (!confirm("Remove the review link? Customers will stop seeing the Review us on Google button.")) {
+      return;
+    }
+    remove.mutate(undefined, {
+      onSuccess: () => toast.success("Review link removed"),
+      onError: async (err) => toast.error(await apiErrorMessage(err, "Failed to remove the link")),
+    });
+  };
+
+  return (
+    <Card>
+      <CardHeader>
+        <CardTitle className="flex flex-wrap items-center gap-2">
+          <Star className="size-5" />
+          Ask customers for Google reviews
+          {hasLink ? (
+            <Badge variant="soft" className="gap-1 text-[10px]">
+              <CheckCircle2 className="size-3" /> On
+            </Badge>
+          ) : null}
+        </CardTitle>
+        <CardDescription>
+          When an order is delivered or completed, customers see a{" "}
+          <span className="font-medium text-foreground">Review us on Google</span> button on
+          their order page and in the order email.
+        </CardDescription>
+      </CardHeader>
+      <CardContent className="space-y-4">
+        {hasLink ? (
+          <div className="space-y-2 rounded-lg border border-border p-3">
+            <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+              Customers are sent to
+            </p>
+            <p className="break-all text-sm">{link.review_url}</p>
+            <p className="text-xs text-muted-foreground">
+              {link.source === "google"
+                ? "Set from your connected Google location."
+                : "Added by your team."}
+            </p>
+            <div className="flex flex-wrap gap-2 pt-1">
+              <Button asChild size="sm" variant="outline">
+                <a href={link.review_url} target="_blank" rel="noopener noreferrer">
+                  <ExternalLink className="size-4" />
+                  Test the link
+                </a>
+              </Button>
+              {!editing ? (
+                <Button size="sm" variant="ghost" onClick={() => setEditing(true)}>
+                  <Link2 className="size-4" />
+                  Change
+                </Button>
+              ) : null}
+              <Button
+                size="sm"
+                variant="ghost"
+                className="text-destructive hover:text-destructive"
+                disabled={remove.isPending}
+                onClick={handleRemove}
+              >
+                {remove.isPending ? (
+                  <Loader2 className="size-4 animate-spin" />
+                ) : (
+                  <Trash2 className="size-4" />
+                )}
+                Remove
+              </Button>
+            </div>
+          </div>
+        ) : null}
+
+        {showForm ? (
+          <form onSubmit={handleSave} className="space-y-3">
+            <div className="space-y-1.5">
+              <Label htmlFor="google-review-link">Google review link or Place ID</Label>
+              <Input
+                id="google-review-link"
+                value={value}
+                onChange={(e) => setValue(e.target.value)}
+                placeholder="https://g.page/r/... or ChIJ..."
+                autoComplete="off"
+                inputMode="url"
+              />
+            </div>
+            <ul className="list-disc space-y-1 pl-5 text-xs text-muted-foreground">
+              <li>
+                Open your Business Profile on Google (search your business name while signed in),
+                choose <span className="font-medium">Ask for reviews</span> and copy the link.
+              </li>
+              <li>
+                Or find your Place ID with{" "}
+                <a
+                  href={PLACE_ID_FINDER}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="font-medium text-primary underline-offset-4 hover:underline"
+                >
+                  Google&apos;s Place ID finder
+                </a>{" "}
+                and paste it here.
+              </li>
+            </ul>
+            <div className="flex flex-wrap gap-2">
+              <Button type="submit" disabled={save.isPending}>
+                {save.isPending ? <Loader2 className="size-4 animate-spin" /> : null}
+                Save link
+              </Button>
+              {editing ? (
+                <Button
+                  type="button"
+                  variant="ghost"
+                  onClick={() => {
+                    setEditing(false);
+                    setValue("");
+                  }}
+                >
+                  Cancel
+                </Button>
+              ) : null}
+            </div>
+          </form>
+        ) : null}
+      </CardContent>
+    </Card>
+  );
+}
+
+// ── Google connection ──────────────────────────────────────────────────────────
+
+function ConnectionCard({ status }: { status: GoogleStatus }) {
   const connect = useGoogleConnect();
   const disconnect = useDisconnectGoogle();
 
@@ -49,79 +218,74 @@ function StatusCard({ status }: { status: GoogleStatus }) {
           toast.error("Could not start the Google connection.");
         }
       },
-      onError: async (err) => toast.error(await apiErrorMessage(err, "Could not start the Google connection.")),
+      onError: async (err) =>
+        toast.error(await apiErrorMessage(err, "Could not start the Google connection.")),
     });
   };
 
   const handleDisconnect = () => {
-    if (!confirm("Disconnect this Google Business Profile? Reviews will no longer sync.")) {
+    if (
+      !confirm(
+        "Disconnect Google? You won't see or answer reviews here any more. The review link for customers stays.",
+      )
+    ) {
       return;
     }
     disconnect.mutate(undefined, {
-      onSuccess: () => toast.success("Google Business Profile disconnected"),
+      onSuccess: () => toast.success("Google disconnected"),
       onError: async (err) => toast.error(await apiErrorMessage(err, "Failed to disconnect")),
     });
   };
 
-  // Platform hasn't enabled the integration — inert friendly state, no connect button.
+  const title = (
+    <CardTitle className="flex flex-wrap items-center gap-2">
+      <MapPin className="size-5" />
+      Read and answer reviews here
+      {status.connected ? (
+        <Badge variant="soft" className="gap-1 text-[10px]">
+          <CheckCircle2 className="size-3" /> Connected
+        </Badge>
+      ) : null}
+    </CardTitle>
+  );
+
+  // The platform has not set up the Google sign-in yet. Not a dead end: the review
+  // link above already works.
   if (!status.configured) {
     return (
       <Card>
         <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <MapPin className="size-5" />
-            Google Business Profile
-          </CardTitle>
+          {title}
+          <CardDescription>
+            Connecting your Google account lets you read and reply to your Google reviews from
+            this page. It isn&apos;t available yet; we&apos;ll switch it on once Google approves
+            it. Your review link above works without it.
+          </CardDescription>
         </CardHeader>
-        <CardContent>
-          <p className="text-sm text-muted-foreground">
-            Google Business Profile isn&apos;t enabled by the platform yet. Once the
-            platform operator configures it, you&apos;ll be able to connect your
-            business here to manage your Google reviews.
-          </p>
-        </CardContent>
       </Card>
     );
   }
 
-  // Configured + connected — show the linked location + disconnect.
-  if (status.connected) {
+  if (status.status === "reconnect") {
     return (
       <Card>
         <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <MapPin className="size-5" />
-            Google Business Profile
-            <Badge variant="soft" className="ml-1 gap-1 text-[10px]">
-              <CheckCircle2 className="size-3" /> Connected
-            </Badge>
-          </CardTitle>
+          {title}
+          <CardDescription className="flex items-start gap-2">
+            <AlertTriangle className="mt-0.5 size-4 shrink-0 text-amber-500" />
+            Google access has expired. Connect again to keep reading and answering reviews.
+          </CardDescription>
         </CardHeader>
-        <CardContent className="space-y-4">
-          <div className="space-y-1">
-            <p className="text-sm">
-              <span className="text-muted-foreground">Location: </span>
-              <span className="font-medium">
-                {status.location_name || "No location selected yet"}
-              </span>
-            </p>
-            {status.place_id ? (
-              <p className="text-xs text-muted-foreground">
-                Place ID: <code className="font-mono">{status.place_id}</code>
-              </p>
-            ) : null}
-          </div>
-          <Button
-            variant="outline"
-            className="text-destructive hover:text-destructive"
-            disabled={disconnect.isPending}
-            onClick={handleDisconnect}
-          >
-            {disconnect.isPending ? (
-              <Loader2 className="mr-2 size-4 animate-spin" />
+        <CardContent className="flex flex-wrap gap-2">
+          <Button disabled={connect.isPending} onClick={handleConnect}>
+            {connect.isPending ? (
+              <Loader2 className="size-4 animate-spin" />
             ) : (
-              <Unplug className="mr-2 size-4" />
+              <RefreshCw className="size-4" />
             )}
+            Connect again
+          </Button>
+          <Button variant="ghost" disabled={disconnect.isPending} onClick={handleDisconnect}>
             Disconnect
           </Button>
         </CardContent>
@@ -129,27 +293,60 @@ function StatusCard({ status }: { status: GoogleStatus }) {
     );
   }
 
-  // Configured + not connected — offer the connect button.
+  if (!status.linked) {
+    return (
+      <Card>
+        <CardHeader>
+          {title}
+          <CardDescription>
+            Sign in with the Google account that manages your Business Profile. You&apos;ll pick
+            your business location next.
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <Button className="w-full sm:w-auto" disabled={connect.isPending} onClick={handleConnect}>
+            {connect.isPending ? (
+              <Loader2 className="size-4 animate-spin" />
+            ) : (
+              <MapPin className="size-4" />
+            )}
+            Connect Google
+          </Button>
+        </CardContent>
+      </Card>
+    );
+  }
+
   return (
     <Card>
       <CardHeader>
-        <CardTitle className="flex items-center gap-2">
-          <MapPin className="size-5" />
-          Google Business Profile
-        </CardTitle>
+        {title}
+        <CardDescription>
+          {status.connected
+            ? "Your Google reviews show below."
+            : "Google is linked. Choose your business location to see its reviews."}
+        </CardDescription>
       </CardHeader>
       <CardContent className="space-y-4">
-        <p className="text-sm text-muted-foreground">
-          Connect your Google Business Profile to view and reply to your Google
-          reviews from here.
-        </p>
-        <Button disabled={connect.isPending} onClick={handleConnect}>
-          {connect.isPending ? (
-            <Loader2 className="mr-2 size-4 animate-spin" />
+        {status.connected ? (
+          <p className="text-sm">
+            <span className="text-muted-foreground">Location: </span>
+            <span className="font-medium">{status.location_name || status.location_id}</span>
+          </p>
+        ) : null}
+        <LocationPicker status={status} />
+        <Button
+          variant="outline"
+          className="text-destructive hover:text-destructive"
+          disabled={disconnect.isPending}
+          onClick={handleDisconnect}
+        >
+          {disconnect.isPending ? (
+            <Loader2 className="size-4 animate-spin" />
           ) : (
-            <MapPin className="mr-2 size-4" />
+            <Unplug className="size-4" />
           )}
-          Connect Google Business Profile
+          Disconnect Google
         </Button>
       </CardContent>
     </Card>
@@ -159,7 +356,11 @@ function StatusCard({ status }: { status: GoogleStatus }) {
 // ── Location picker ─────────────────────────────────────────────────────────────
 
 function LocationPicker({ status }: { status: GoogleStatus }) {
-  const { data: locations = [], isLoading, isError } = useGoogleLocations(status.connected);
+  // Once a location is chosen the list folds away behind "Switch location".
+  const [open, setOpen] = useState(!status.connected);
+  const { data: locations = [], isLoading, isError, refetch } = useGoogleLocations(
+    status.linked && open,
+  );
   const select = useSelectGoogleLocation();
   const [selectingName, setSelectingName] = useState<string | null>(null);
 
@@ -170,91 +371,101 @@ function LocationPicker({ status }: { status: GoogleStatus }) {
         location_name: loc.name,
         place_id: loc.metadata.placeId,
         display_name: loc.title,
+        new_review_uri: loc.metadata.newReviewUri,
       },
       {
-        onSuccess: () => toast.success(`Location set to ${loc.title || loc.name}`),
-        onError: async (err) => toast.error(await apiErrorMessage(err, "Failed to select location")),
+        onSuccess: () => {
+          toast.success(`Showing reviews for ${loc.title || "this location"}`);
+          setOpen(false);
+        },
+        onError: async (err) => toast.error(await apiErrorMessage(err, "Failed to choose the location")),
         onSettled: () => setSelectingName(null),
       },
     );
   };
 
-  if (isLoading) {
+  if (!open) {
     return (
-      <div className="flex items-center justify-center py-10">
-        <Loader2 className="size-6 animate-spin text-primary" />
-      </div>
-    );
-  }
-
-  if (isError) {
-    return (
-      <p className="py-6 text-center text-sm text-muted-foreground">
-        Couldn&apos;t load your Google locations. Try again shortly.
-      </p>
-    );
-  }
-
-  if (locations.length === 0) {
-    return (
-      <p className="py-6 text-center text-sm text-muted-foreground">
-        No locations found on this Google account.
-      </p>
+      <Button variant="ghost" size="sm" onClick={() => setOpen(true)}>
+        <MapPin className="size-4" />
+        Switch location
+      </Button>
     );
   }
 
   return (
     <div className="space-y-2">
-      {locations.map((loc) => {
-        const isCurrent = !!status.location_name && status.location_name === loc.name;
-        return (
-          <div
-            key={loc.name}
-            className="flex flex-wrap items-center justify-between gap-3 rounded-lg border border-border p-3"
-          >
-            <div className="min-w-0">
-              <p className="truncate font-medium">{loc.title || loc.name}</p>
-              {loc.metadata.placeId ? (
-                <p className="truncate text-xs text-muted-foreground">
-                  Place ID: <code className="font-mono">{loc.metadata.placeId}</code>
-                </p>
-              ) : null}
-            </div>
-            {isCurrent ? (
-              <Badge variant="soft" className="gap-1 text-[10px]">
-                <CheckCircle2 className="size-3" /> Selected
-              </Badge>
-            ) : (
-              <Button
-                size="sm"
-                variant="outline"
-                disabled={selectingName === loc.name}
-                onClick={() => handleSelect(loc)}
-              >
-                {selectingName === loc.name ? (
-                  <Loader2 className="mr-1 size-3.5 animate-spin" />
+      <p className="text-sm font-medium">Choose your business location</p>
+      {isLoading ? (
+        <div className="flex items-center justify-center py-8">
+          <Loader2 className="size-6 animate-spin text-primary" />
+        </div>
+      ) : isError ? (
+        <div className="space-y-2 py-4 text-center">
+          <p className="text-sm text-muted-foreground">
+            Couldn&apos;t load your Google locations.
+          </p>
+          <Button size="sm" variant="outline" onClick={() => void refetch()}>
+            Try again
+          </Button>
+        </div>
+      ) : locations.length === 0 ? (
+        <p className="py-4 text-center text-sm text-muted-foreground">
+          This Google account doesn&apos;t manage any business location. Sign in with the account
+          that owns your Business Profile.
+        </p>
+      ) : (
+        locations.map((loc) => {
+          const isCurrent = isSameLocation(loc.name, status.location_id);
+          return (
+            <div
+              key={loc.name}
+              className="flex flex-wrap items-center justify-between gap-3 rounded-lg border border-border p-3"
+            >
+              <div className="min-w-0 flex-1">
+                <p className="truncate font-medium">{loc.title || loc.name}</p>
+                {loc.storeCode ? (
+                  <p className="truncate text-xs text-muted-foreground">Store code {loc.storeCode}</p>
                 ) : null}
-                {status.location_name ? "Switch to this" : "Select"}
-              </Button>
-            )}
-          </div>
-        );
-      })}
+              </div>
+              {isCurrent ? (
+                <Badge variant="soft" className="gap-1 text-[10px]">
+                  <CheckCircle2 className="size-3" /> Chosen
+                </Badge>
+              ) : (
+                <Button
+                  size="sm"
+                  variant="outline"
+                  disabled={selectingName !== null}
+                  onClick={() => handleSelect(loc)}
+                >
+                  {selectingName === loc.name ? <Loader2 className="size-3.5 animate-spin" /> : null}
+                  Choose
+                </Button>
+              )}
+            </div>
+          );
+        })
+      )}
+      {status.connected ? (
+        <Button variant="ghost" size="sm" onClick={() => setOpen(false)}>
+          Cancel
+        </Button>
+      ) : null}
     </div>
   );
 }
 
-// ── Star rating ─────────────────────────────────────────────────────────────────
+// ── Reviews ──────────────────────────────────────────────────────────────────────
 
-function StarRating({ rating }: { rating: string }) {
-  const n = starRatingToNumber(rating);
+function StarRating({ rating }: { rating: number }) {
   return (
-    <div className="flex items-center gap-0.5" aria-label={`${n} out of 5 stars`}>
+    <div className="flex items-center gap-0.5" aria-label={`${rating} out of 5 stars`}>
       {[1, 2, 3, 4, 5].map((i) => (
         <Star
           key={i}
           className={
-            i <= n
+            i <= Math.round(rating)
               ? "size-4 fill-yellow-400 text-yellow-400"
               : "size-4 text-muted-foreground/40"
           }
@@ -264,26 +475,27 @@ function StarRating({ rating }: { rating: string }) {
   );
 }
 
-// ── Single review row ─────────────────────────────────────────────────────────
-
 function ReviewRow({ review }: { review: GoogleReview }) {
   const reply = useReplyToGoogleReview();
   const [draft, setDraft] = useState("");
+  const [editing, setEditing] = useState(false);
+  const hasReply = !!review.reviewReply?.comment;
 
   const handleReply = () => {
     const comment = draft.trim();
     if (!comment) {
-      toast.error("Enter a reply first.");
+      toast.error("Write a reply first.");
       return;
     }
     reply.mutate(
       { reviewId: review.reviewId, comment },
       {
         onSuccess: () => {
-          toast.success("Reply posted");
+          toast.success("Reply posted on Google");
           setDraft("");
+          setEditing(false);
         },
-        onError: async (err) => toast.error(await apiErrorMessage(err, "Failed to post reply")),
+        onError: async (err) => toast.error(await apiErrorMessage(err, "Failed to post the reply")),
       },
     );
   };
@@ -291,63 +503,91 @@ function ReviewRow({ review }: { review: GoogleReview }) {
   return (
     <div className="rounded-lg border border-border p-4">
       <div className="flex flex-wrap items-center justify-between gap-2">
-        <p className="font-medium">{review.reviewer.displayName || "Anonymous"}</p>
+        <p className="font-medium">{review.reviewer.displayName || "A Google user"}</p>
         <span className="text-xs text-muted-foreground">
           {review.createTime ? new Date(review.createTime).toLocaleDateString() : ""}
         </span>
       </div>
       <div className="mt-1">
-        <StarRating rating={review.starRating} />
+        <StarRating rating={starRatingToNumber(review.starRating)} />
       </div>
       {review.comment ? (
-        <p className="mt-2 text-sm">{review.comment}</p>
+        <p className="mt-2 whitespace-pre-line break-words text-sm">{review.comment}</p>
       ) : (
-        <p className="mt-2 text-sm italic text-muted-foreground">No comment left.</p>
+        <p className="mt-2 text-sm italic text-muted-foreground">Stars only, no comment.</p>
       )}
 
-      {review.reviewReply ? (
+      {hasReply && !editing ? (
         <div className="mt-3 rounded-md border border-border bg-muted/30 p-3">
           <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
             Your reply
           </p>
-          <p className="mt-1 text-sm">{review.reviewReply.comment}</p>
+          <p className="mt-1 whitespace-pre-line break-words text-sm">{review.reviewReply?.comment}</p>
+          <Button
+            size="sm"
+            variant="ghost"
+            className="mt-1 px-0"
+            onClick={() => {
+              setDraft(review.reviewReply?.comment ?? "");
+              setEditing(true);
+            }}
+          >
+            Edit reply
+          </Button>
         </div>
       ) : (
         <div className="mt-3 space-y-2">
           <Textarea
-            placeholder="Write a public reply…"
+            placeholder="Write a public reply. Everyone on Google can see it."
             value={draft}
+            maxLength={4096}
             onChange={(e) => setDraft(e.target.value)}
-            rows={2}
+            rows={3}
           />
-          <Button size="sm" disabled={reply.isPending} onClick={handleReply}>
-            {reply.isPending ? (
-              <Loader2 className="mr-2 size-4 animate-spin" />
-            ) : (
-              <MessageSquare className="mr-2 size-4" />
-            )}
-            Reply
-          </Button>
+          <div className="flex flex-wrap gap-2">
+            <Button size="sm" disabled={reply.isPending} onClick={handleReply}>
+              {reply.isPending ? (
+                <Loader2 className="size-4 animate-spin" />
+              ) : (
+                <MessageSquare className="size-4" />
+              )}
+              {hasReply ? "Update reply" : "Reply"}
+            </Button>
+            {editing ? (
+              <Button size="sm" variant="ghost" onClick={() => setEditing(false)}>
+                Cancel
+              </Button>
+            ) : null}
+          </div>
         </div>
       )}
     </div>
   );
 }
 
-// ── Reviews section ─────────────────────────────────────────────────────────────
-
-function ReviewsSection({ enabled }: { enabled: boolean }) {
-  const { data: reviews = [], isLoading, isError } = useGoogleReviews(enabled);
-
-  if (!enabled) return null;
+function ReviewsSection() {
+  const { data, isLoading, isError, refetch, fetchNextPage, hasNextPage, isFetchingNextPage } =
+    useGoogleReviews(true);
+  const pages = data?.pages ?? [];
+  const reviews = pages.flatMap((p) => p.reviews);
+  const first = pages[0];
 
   return (
     <Card>
       <CardHeader>
-        <CardTitle className="flex items-center gap-2">
+        <CardTitle className="flex flex-wrap items-center gap-2">
           <MessageSquare className="size-5" />
-          Reviews
+          Google reviews
         </CardTitle>
+        {first && first.total > 0 ? (
+          <CardDescription className="flex flex-wrap items-center gap-2">
+            <StarRating rating={first.averageRating} />
+            <span>
+              {first.averageRating.toFixed(1)} from {first.total} review
+              {first.total === 1 ? "" : "s"}
+            </span>
+          </CardDescription>
+        ) : null}
       </CardHeader>
       <CardContent>
         {isLoading ? (
@@ -355,18 +595,32 @@ function ReviewsSection({ enabled }: { enabled: boolean }) {
             <Loader2 className="size-6 animate-spin text-primary" />
           </div>
         ) : isError ? (
-          <p className="py-6 text-center text-sm text-muted-foreground">
-            Couldn&apos;t load reviews. Select a location, then try again.
-          </p>
+          <div className="space-y-2 py-6 text-center">
+            <p className="text-sm text-muted-foreground">Couldn&apos;t load your reviews.</p>
+            <Button size="sm" variant="outline" onClick={() => void refetch()}>
+              Try again
+            </Button>
+          </div>
         ) : reviews.length === 0 ? (
           <p className="py-6 text-center text-sm text-muted-foreground">
-            No reviews yet.
+            No Google reviews yet. They show up here as customers leave them.
           </p>
         ) : (
           <div className="space-y-3">
             {reviews.map((r) => (
               <ReviewRow key={r.reviewId || r.name} review={r} />
             ))}
+            {hasNextPage ? (
+              <Button
+                variant="outline"
+                className="w-full"
+                disabled={isFetchingNextPage}
+                onClick={() => void fetchNextPage()}
+              >
+                {isFetchingNextPage ? <Loader2 className="size-4 animate-spin" /> : null}
+                Show more reviews
+              </Button>
+            ) : null}
           </div>
         )}
       </CardContent>
@@ -376,40 +630,33 @@ function ReviewsSection({ enabled }: { enabled: boolean }) {
 
 // ── Content (inside RequireAuth) ────────────────────────────────────────────────
 
+const CALLBACK_MESSAGES: Record<string, { ok: boolean; text: string }> = {
+  connected: { ok: true, text: "Google connected" },
+  denied: { ok: false, text: "Google connection was cancelled." },
+  not_configured: { ok: false, text: "Connecting Google isn't available yet." },
+};
+
 function IntegrationsContent() {
-  const { data: status, isLoading } = useGoogleStatus();
+  const { data: status, isLoading, isError, refetch } = useGoogleStatus();
   const searchParams = useSearchParams();
   const toastedRef = useRef(false);
 
-  // Handle the post-callback return. The backend callback redirects to
-  // GOOGLE_FRONTEND_INTEGRATIONS_URL with ?integration=google&status=<status>
-  // (see service.go FrontendRedirect). Surface a toast once on mount.
+  // The backend callback lands here with ?integration=google&status=<result>.
   useEffect(() => {
     if (toastedRef.current) return;
-    const integration = searchParams.get("integration");
-    const callbackStatus = searchParams.get("status");
-    // Also tolerate the simpler markers mentioned in the spec.
-    const connectedFlag =
-      searchParams.get("connected") === "1" || searchParams.get("google") === "connected";
-
-    if (integration === "google" && callbackStatus) {
-      toastedRef.current = true;
-      if (callbackStatus === "connected") {
-        toast.success("Google Business Profile connected");
-      } else if (callbackStatus === "denied") {
-        toast.error("Google connection was denied.");
-      } else if (callbackStatus === "not_configured") {
-        toast.error("Google integration isn't configured.");
-      } else {
-        toast.error("Google connection failed. Please try again.");
-      }
-    } else if (connectedFlag) {
-      toastedRef.current = true;
-      toast.success("Google Business Profile connected");
-    }
+    if (searchParams.get("integration") !== "google") return;
+    const result = searchParams.get("status");
+    if (!result) return;
+    toastedRef.current = true;
+    const msg = CALLBACK_MESSAGES[result] ?? {
+      ok: false,
+      text: "Google connection failed. Please try again.",
+    };
+    if (msg.ok) toast.success(msg.text);
+    else toast.error(msg.text);
   }, [searchParams]);
 
-  if (isLoading || !status) {
+  if (isLoading) {
     return (
       <div className="flex min-h-[40vh] items-center justify-center">
         <Loader2 className="size-7 animate-spin text-primary" />
@@ -417,25 +664,24 @@ function IntegrationsContent() {
     );
   }
 
+  if (isError || !status) {
+    return (
+      <Card>
+        <CardContent className="space-y-3 py-8 text-center">
+          <p className="text-sm text-muted-foreground">Couldn&apos;t load this page.</p>
+          <Button variant="outline" onClick={() => void refetch()}>
+            Try again
+          </Button>
+        </CardContent>
+      </Card>
+    );
+  }
+
   return (
     <div className="space-y-6">
-      <StatusCard status={status} />
-
-      {status.configured && status.connected ? (
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <MapPin className="size-5" />
-              {status.location_name ? "Switch location" : "Choose a location"}
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <LocationPicker status={status} />
-          </CardContent>
-        </Card>
-      ) : null}
-
-      <ReviewsSection enabled={status.configured && status.connected} />
+      <ReviewLinkCard status={status} />
+      <ConnectionCard status={status} />
+      {status.connected ? <ReviewsSection /> : null}
     </div>
   );
 }
@@ -449,22 +695,19 @@ export default function GoogleIntegrationsPage() {
       permissions={["ordering.config.manage"]}
       permissionOperator="or"
     >
-      <>
-        <div className="mx-auto w-full max-w-3xl">
-          <header className="mb-6">
-            <p className="text-sm font-semibold uppercase tracking-wide text-primary">
-              Integrations
-            </p>
-            <h1 className="text-2xl font-bold">Google Business Profile</h1>
-            <p className="text-sm text-muted-foreground">
-              Connect your Google Business Profile to view and reply to customer
-              reviews.
-            </p>
-          </header>
+      <div className="mx-auto w-full max-w-3xl">
+        <header className="mb-6">
+          <p className="text-sm font-semibold uppercase tracking-wide text-primary">
+            Integrations
+          </p>
+          <h1 className="text-2xl font-bold">Google reviews</h1>
+          <p className="text-sm text-muted-foreground">
+            Get more Google reviews from your customers, and read and answer them here.
+          </p>
+        </header>
 
-          <IntegrationsContent />
-        </div>
-      </>
+        <IntegrationsContent />
+      </div>
     </RequireAuth>
   );
 }

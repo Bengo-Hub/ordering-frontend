@@ -9,7 +9,6 @@ import {
   Loader2,
   MapPin,
   Star,
-  ExternalLink,
 } from "lucide-react";
 import Link from "next/link";
 import { useParams, useSearchParams } from "next/navigation";
@@ -22,8 +21,8 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { getGuestOrder, rateGuestOrder, type Order } from "@/lib/api/orders";
-import { getGoogleReviewUrl } from "@/lib/api/integrations";
 import { OrderDestinationCard } from "@/components/orders/order-destination-card";
+import { GoogleReviewCta } from "@/components/orders/google-review-cta";
 import { OrderStatusPanel } from "@/components/orders/order-status-panel";
 import { PaymentRetryPanel } from "@/components/orders/payment-retry-panel";
 import { isDeliveryFulfillment, timelineFor, timelineIndex } from "@/lib/order-timeline";
@@ -104,33 +103,6 @@ function StarRow({ rating }: { rating: number }) {
   );
 }
 
-/**
- * "Review us on Google" CTA shown after a customer has rated their order.
- * Fetches the tenant's configured Google review deep link (service-config key
- * `google_review_url`). Renders nothing when no URL is configured.
- */
-function GoogleReviewCta({ orgSlug, enabled }: { orgSlug: string; enabled: boolean }) {
-  const { data: reviewUrl } = useQuery({
-    queryKey: ["google-review-url", orgSlug],
-    queryFn: () => getGoogleReviewUrl(orgSlug),
-    enabled,
-    staleTime: 5 * 60_000,
-    retry: 0,
-  });
-
-  if (!reviewUrl) return null;
-
-  return (
-    <Button asChild className="mt-3 w-full gap-2">
-      <a href={reviewUrl} target="_blank" rel="noopener noreferrer">
-        <Star className="size-4 fill-current" />
-        Review us on Google
-        <ExternalLink className="size-4" />
-      </a>
-    </Button>
-  );
-}
-
 function RateOrderCard({
   order,
   orgSlug,
@@ -198,7 +170,7 @@ function RateOrderCard({
           {order.ratingComment && (
             <p className="text-sm text-foreground">&ldquo;{order.ratingComment}&rdquo;</p>
           )}
-          <GoogleReviewCta orgSlug={orgSlug} enabled />
+          <GoogleReviewCta orgSlug={orgSlug} className="mt-3" />
         </CardContent>
       </Card>
     );
@@ -214,7 +186,7 @@ function RateOrderCard({
           <p className="text-sm text-muted-foreground">
             Thanks for rating your order. We appreciate your feedback.
           </p>
-          <GoogleReviewCta orgSlug={orgSlug} enabled />
+          <GoogleReviewCta orgSlug={orgSlug} className="mt-3" />
         </CardContent>
       </Card>
     );
@@ -274,6 +246,7 @@ function RateOrderCard({
           {mutation.isPending && <Loader2 className="size-4 animate-spin" />}
           Submit Rating
         </Button>
+        <GoogleReviewCta orgSlug={orgSlug} variant="secondary" />
       </CardContent>
     </Card>
   );

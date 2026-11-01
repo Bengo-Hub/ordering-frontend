@@ -24,6 +24,7 @@ import { OrderStatusPanel } from "@/components/orders/order-status-panel";
 import { PaymentRetryPanel } from "@/components/orders/payment-retry-panel";
 import { OrderDestinationCard } from "@/components/orders/order-destination-card";
 import { RatingDialog } from "@/components/orders/rating-dialog";
+import { GoogleReviewCta } from "@/components/orders/google-review-cta";
 import { timelineFor, timelineIndex } from "@/lib/order-timeline";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -263,6 +264,14 @@ export default function OrderDetailPage() {
                   </CardContent>
                 </Card>
               ) : null}
+
+              {/* "Review us on Google" once the order is done (only when the business set a link) */}
+              {["delivered", "completed"].includes(order.status) && (
+                <GoogleReviewCta
+                  orgSlug={orgSlug}
+                  variant={order.rating ? "primary" : "secondary"}
+                />
+              )}
 
               {/* Rider info (if tracking) */}
               {isActive && tracking?.riderName && (
