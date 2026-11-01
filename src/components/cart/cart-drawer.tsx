@@ -5,13 +5,14 @@ import Link from "next/link";
 
 import { Button } from "@/components/ui/button";
 import { ImageWithFallback } from "@/components/ui/image-with-fallback";
-import { useFeeBreakdown } from "@/hooks/use-cart-api";
+import { useCartTotals } from "@/hooks/use-cart-api";
 import { useOrderingConfig } from "@/hooks/use-ordering-config";
 import { useSubscription } from "@/hooks/use-subscription";
 import { orgRoute } from "@/lib/routes";
 import { cn } from "@/lib/utils";
 import { useOrgSlug } from "@/providers/org-slug-provider";
 import { useCartStore, type CartItem } from "@/store/cart";
+import { useDiningModeStore } from "@/store/dining-mode";
 // Centralized in shared-ui-lib — was a local hardcoded-"KES" copy duplicated in cart/page.tsx.
 import { formatCurrency } from "@bengo-hub/shared-ui-lib";
 
@@ -143,10 +144,8 @@ export function CartDrawer({ open, onOpenChange }: CartDrawerProps) {
 
   // Fetch fee breakdown from backend using the first item's outlet
   const outletId = items[0]?.outletId ?? null;
-  const { data: feeData } = useFeeBreakdown(outletId);
-  const deliveryFee = feeData?.delivery_fee ?? 0;
-  const serviceFee = feeData?.service_fee ?? 0;
-  const total = noFulfillment ? cartSubtotal : (feeData?.grand_total ?? cartSubtotal + deliveryFee + serviceFee);
+  const diningMode = useDiningModeStore((s) => s.mode);
+  const { serviceFee, total } = useCartTotals(outletId, diningMode, noFulfillment);
 
   if (!open) return null;
 
@@ -239,16 +238,10 @@ export function CartDrawer({ open, onOpenChange }: CartDrawerProps) {
                   <span className="text-muted-foreground">Subtotal</span>
                   <span className="font-medium">{formatCurrency(cartSubtotal)}</span>
                 </div>
-                {!noFulfillment && (
+                {!noFulfillment && diningMode === "delivery" && (
                   <div className="flex justify-between text-sm">
                     <span className="text-muted-foreground">Delivery fee</span>
-                    <span className="font-medium">
-                      {deliveryFee === 0 ? (
-                        <span className="text-green-600">Free</span>
-                      ) : (
-                        formatCurrency(deliveryFee)
-                      )}
-                    </span>
+                    <span className="text-muted-foreground">At checkout</span>
                   </div>
                 )}
                 {!noFulfillment && (
@@ -256,11 +249,6 @@ export function CartDrawer({ open, onOpenChange }: CartDrawerProps) {
                     <span className="text-muted-foreground">Service fee</span>
                     <span className="font-medium">{formatCurrency(serviceFee)}</span>
                   </div>
-                )}
-                {!noFulfillment && deliveryFee > 0 && feeData?.delivery_discount === 0 && (
-                  <p className="text-xs text-muted-foreground">
-                    Delivery fee based on your location
-                  </p>
                 )}
                 <div className="flex justify-between border-t border-border pt-2 text-base font-semibold">
                   <span>Total</span>

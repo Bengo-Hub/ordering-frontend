@@ -9,7 +9,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { UseCaseIllustration } from "@/components/ui/use-case-icon";
 import { Textarea } from "@/components/ui/textarea";
-import { useFeeBreakdown } from "@/hooks/use-cart-api";
+import { useCartTotals } from "@/hooks/use-cart-api";
 import { useOutlet } from "@/hooks/use-catalog";
 import { useOrderingConfig } from "@/hooks/use-ordering-config";
 import { orgRoute } from "@/lib/routes";
@@ -23,7 +23,6 @@ export default function CartPage() {
   const router = useRouter();
   const orgSlug = useOrgSlug();
   const items = useCartStore((s) => s.items);
-  const subtotal = useCartStore((s) => s.subtotal);
   const removeItem = useCartStore((s) => s.removeItem);
   const updateQuantity = useCartStore((s) => s.updateQuantity);
   const orderNotes = useCartStore((s) => s.orderNotes);
@@ -33,7 +32,6 @@ export default function CartPage() {
   const diningMode = useDiningModeStore((s) => s.mode);
   const { config: cfg, copy } = useOrderingConfig();
 
-  const cartSubtotal = subtotal();
 
   // Event tickets are bought on their own — no delivery/pickup, fees, or utensils.
   const ticketOnly =
@@ -49,12 +47,7 @@ export default function CartPage() {
 
   // Fetch fee breakdown from backend using the first item's outlet and current dining mode
   const outletId = items[0]?.outletId ?? null;
-  const { data: feeData } = useFeeBreakdown(outletId, diningMode);
-  const deliveryFee = feeData?.delivery_fee ?? 0;
-  const serviceFee = noFulfillment ? 0 : (feeData?.service_fee ?? 0);
-  const total = noFulfillment
-    ? cartSubtotal
-    : (feeData?.grand_total ?? cartSubtotal + deliveryFee + serviceFee);
+  const { subtotal: cartSubtotal, serviceFee, total } = useCartTotals(outletId, diningMode, noFulfillment);
 
   // Outlet details for the address line. Called before the empty-cart return so the hook order
   // never changes when the last item is removed (a hook after an early return crashes React).
@@ -269,13 +262,7 @@ export default function CartPage() {
             {!noFulfillment && diningMode === "delivery" && (
               <div className="flex justify-between">
                 <span className="text-muted-foreground">Delivery fee</span>
-                <span>
-                  {deliveryFee === 0 ? (
-                    <span className="text-green-600">Free</span>
-                  ) : (
-                    formatCurrency(deliveryFee)
-                  )}
-                </span>
+                <span className="text-muted-foreground">At checkout</span>
               </div>
             )}
             {!noFulfillment && (

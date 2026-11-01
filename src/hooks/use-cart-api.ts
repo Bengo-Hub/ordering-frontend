@@ -12,6 +12,7 @@ import {
   type FeeBreakdown,
 } from "@/lib/api/cart-api";
 import { useOrgSlug } from "@/providers/org-slug-provider";
+import { useCartStore } from "@/store/cart";
 
 // ─── Query Keys ──────────────────────────────────────────────────────
 
@@ -42,6 +43,24 @@ export function useFeeBreakdown(
     enabled: !!outletId,
     staleTime: 60_000,
   });
+}
+
+/**
+ * Running totals for the cart page and the cart drawer. The server prices the cart it holds for
+ * this customer (the guest cart by session_id); while that cart does not hold the items yet
+ * (item_total 0) the total is the items alone. Delivery is priced at checkout once a location is
+ * picked, so it is never part of the running total here.
+ */
+export function useCartTotals(outletId: string | null, fulfillmentType: string, noFulfillment: boolean) {
+  const sessionId = useCartStore((s) => s.sessionId);
+  const subtotal = useCartStore((s) => s.subtotal)();
+  const { data } = useFeeBreakdown(outletId, fulfillmentType, sessionId);
+  const priced = !noFulfillment && data && data.item_total > 0 ? data : undefined;
+  return {
+    subtotal,
+    serviceFee: priced?.service_fee ?? 0,
+    total: priced ? priced.grand_total - priced.delivery_fee + priced.delivery_discount : subtotal,
+  };
 }
 
 // ─── Mutations ───────────────────────────────────────────────────────
