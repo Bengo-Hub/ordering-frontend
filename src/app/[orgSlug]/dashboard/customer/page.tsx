@@ -1,5 +1,6 @@
 "use client";
 
+import { SUBSCRIPTIONS_UI_URL } from "@/lib/app-urls";
 import { LOGISTICS_UI_URL } from "@/lib/app-urls";
 import {
   BadgeCheckIcon,
@@ -182,7 +183,7 @@ export default function CustomerDashboardPage() {
                     </div>
                     <Button variant="outline" size="sm" asChild>
                       <a
-                        href={`${process.env.NEXT_PUBLIC_SUBSCRIPTIONS_UI_URL ?? "https://pricing.codevertexafrica.com"}/plans`}
+                        href={`${SUBSCRIPTIONS_UI_URL}/plans`}
                         target="_blank"
                         rel="noopener noreferrer"
                       >
@@ -384,7 +385,7 @@ export default function CustomerDashboardPage() {
                     </div>
                     <Button variant="outline" size="sm" asChild>
                       <a
-                        href={`${process.env.NEXT_PUBLIC_SUBSCRIPTIONS_UI_URL ?? "https://pricing.codevertexafrica.com"}/plans`}
+                        href={`${SUBSCRIPTIONS_UI_URL}/plans`}
                         target="_blank"
                         rel="noopener noreferrer"
                       >

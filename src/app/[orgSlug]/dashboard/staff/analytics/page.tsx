@@ -1,5 +1,6 @@
 "use client";
 
+import { SUBSCRIPTIONS_UI_URL } from "@/lib/app-urls";
 import { useEffect, useMemo, useState } from "react";
 
 import {
@@ -33,9 +34,7 @@ import {
 import { AnalyticsFeatureDisabledError } from "@/lib/api/analytics";
 import type { AnalyticsDashboardInfo } from "@/lib/api/analytics";
 
-const SUBSCRIBE_URL =
-  process.env.NEXT_PUBLIC_SUBSCRIPTIONS_UI_URL ||
-  "https://pricing.codevertexafrica.com";
+const SUBSCRIBE_URL = SUBSCRIPTIONS_UI_URL;
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 

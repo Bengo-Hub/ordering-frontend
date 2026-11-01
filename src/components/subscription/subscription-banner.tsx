@@ -1,12 +1,10 @@
 'use client';
 
+import { SUBSCRIPTIONS_UI_URL } from "@/lib/app-urls";
 import { SubscriptionBanner as SharedSubscriptionBanner } from '@bengo-hub/shared-ui-lib/subscription';
 import { useBrandConfig } from '@/hooks/use-brand';
 import { useSubscription } from '@/hooks/use-subscription';
 import { useUsageAlerts } from '@/hooks/use-usage-alerts';
-
-const SUBSCRIPTIONS_UI_URL =
-  process.env.NEXT_PUBLIC_SUBSCRIPTIONS_UI_URL || 'https://pricing.codevertexafrica.com';
 
 const UPGRADE_URL = `${SUBSCRIPTIONS_UI_URL}/plans?service=ordering`;
 const BILLING_URL = `${SUBSCRIPTIONS_UI_URL}/billing`;

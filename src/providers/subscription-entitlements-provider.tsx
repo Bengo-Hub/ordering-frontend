@@ -6,13 +6,13 @@
  * deep-link to the pricing page without any hardcoded per-app feature→tier map.
  */
 
+import { SUBSCRIPTIONS_UI_URL } from "@/lib/app-urls";
 import { useMemo, type ReactNode } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { SubscriptionProvider, type FeatureCatalogEntry } from "@bengo-hub/shared-ui-lib/subscription";
 import { useSubscription } from "@/hooks/use-subscription";
 
-const UPGRADE_BASE =
-  process.env.NEXT_PUBLIC_SUBSCRIPTIONS_UI_URL || "https://pricing.codevertexafrica.com";
+const UPGRADE_BASE = SUBSCRIPTIONS_UI_URL;
 
 interface CatalogItem {
   featureCode: string;
