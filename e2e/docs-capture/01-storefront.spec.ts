@@ -12,7 +12,7 @@ test.describe.serial('Storefront and checkout', () => {
     await openStore(page);
     await shot(page, 'customer/01-store-home.png', {
       callouts: [
-        callout(page.getByRole('button', { name: 'Delivery', exact: true }), 1),
+        callout(page.getByText('Delivery', { exact: true }), 1),
         callout(page.getByRole('button', { name: /now/i }).filter({ hasText: /now/i }), 2),
         callout(page.getByRole('link', { name: /see the menu/i }), 3),
       ],
@@ -66,7 +66,7 @@ test.describe.serial('Storefront and checkout', () => {
       focus: page.getByPlaceholder('Search an area, street or landmark'),
       callouts: [
         callout(page.getByPlaceholder('Search an area, street or landmark'), 1),
-        callout(page.getByText(/KES 150|free delivery/i), 2),
+        callout(page.getByText(/KES 150 · Kondele/), 2),
         callout(page.getByRole('button', { name: /deliver here/i }), 3),
       ],
     });
@@ -84,14 +84,14 @@ test.describe.serial('Storefront and checkout', () => {
     });
     await shot(page, 'customer/08-payment.png', {
       focus: payment,
-      callouts: [callout(payment, 1), callout(page.getByRole('button', { name: /slide to confirm/i }), 2)],
+      callouts: [callout(payment, 1), callout(page.getByRole('button', { name: /slide to confirm|place order/i }), 2)],
     });
 
     // A place outside every area is refused with the nearest area named.
     await chooseDeliveryPlace(page, 'Kakamega');
     await shot(page, 'customer/09-outside-area.png', {
       focus: page.getByPlaceholder('Search an area, street or landmark'),
-      callouts: [callout(page.getByText(/cannot deliver|don't deliver|not deliver/i), 1)],
+      callouts: [callout(page.getByText(/outside our delivery area/i), 1)],
     });
     await page.getByRole('button', { name: 'Close' }).click();
 

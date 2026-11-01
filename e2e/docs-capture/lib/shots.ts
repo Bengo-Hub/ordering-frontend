@@ -16,6 +16,12 @@ export type { Callout };
  * "customer/03-checkout.png".
  */
 export async function shot(page: Page, name: string, opts: { focus?: Locator; callouts?: Callout[] } = {}) {
+  // A fresh browser shows the storefront's cookie notice over the page; decline optional cookies.
+  const reject = page.getByRole('button', { name: 'Reject optional' });
+  if (await reject.isVisible({ timeout: 1_000 }).catch(() => false)) {
+    await reject.click();
+    await page.waitForTimeout(300);
+  }
   await waitForReady(page, opts.focus);
   if (opts.focus) {
     await opts.focus.first().scrollIntoViewIfNeeded().catch(() => {});
@@ -37,8 +43,9 @@ export function callout(locator: Locator, number: number): Callout {
   return { locator: locator.first(), number };
 }
 
-// The specs run in order (01 to 05) and hand each other the orders they placed.
-const STATE_FILE = path.resolve(__dirname, '../../../test-results/docs-capture/journey.json');
+// The specs run in order (01 to 05) and hand each other the orders they placed. Kept outside
+// Playwright's output folder, which is emptied at the start of every run.
+const STATE_FILE = path.resolve(__dirname, '../../../test-results/docs-capture-journey.json');
 
 export interface JourneyOrder {
   id: string;

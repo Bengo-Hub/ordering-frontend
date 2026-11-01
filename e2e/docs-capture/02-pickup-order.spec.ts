@@ -1,7 +1,7 @@
 import { expect, test } from '@playwright/test';
 
 import { appUrl, OUTLETS } from './lib/paths';
-import { openOnlineOrders, orderCard, queueTab } from './lib/pos';
+import { openOnlineOrders, orderCard, queueTab, sidebarTo } from './lib/pos';
 import { waitForReady } from './lib/ready';
 import { callout, loadOrder, saveOrder, shot } from './lib/shots';
 import { addItem, choosePayment, placeOrder, readHandoverCode, startGuestCheckout } from './lib/storefront';
@@ -32,7 +32,7 @@ test.describe.serial('Pickup order', () => {
   test('counter accepts it', async ({ page }) => {
     const order = loadOrder('pickup')!;
     await openOnlineOrders(page, OUTLETS.hotel.name);
-    await queueTab(page, /click & collect/i);
+    await queueTab(page, /pickup & takeaway|click & collect/i);
     const card = await orderCard(page, order.number);
     await card.scrollIntoViewIfNeeded();
     await shot(page, 'pickup/01-new-order.png', {
@@ -50,27 +50,34 @@ test.describe.serial('Pickup order', () => {
   test('kitchen starts and finishes it', async ({ page }) => {
     const order = loadOrder('pickup')!;
     await openOnlineOrders(page, OUTLETS.hotel.name);
-    await page.goto(appUrl('pos', '/kds'));
+    // Open the kitchen screen from the sidebar, the way staff do.
+    await sidebarTo(page, 'Display Board', 'KDS');
+    // The ticket carries the POS number (CC- plus the online order number); found by it so it
+    // still matches after Start changes its buttons.
     const ticket = page
       .locator('div.rounded-2xl, div.rounded-xl')
-      .filter({ hasText: /americano/i })
-      .filter({ has: page.getByRole('button', { name: 'Start' }) })
+      .filter({ hasText: `CC-${order.number}` })
+      .filter({ has: page.getByRole('button') })
       .last();
-    await expect(async () => {
-      if (!(await ticket.isVisible())) await page.reload();
-      await expect(ticket).toBeVisible({ timeout: 5_000 });
-    }).toPass({ timeout: 90_000, intervals: [5_000] });
-    await shot(page, 'pickup/02-kds-ticket.png', {
-      focus: ticket,
-      callouts: [callout(ticket.getByText(/online/i), 1), callout(ticket.getByRole('button', { name: 'Start' }), 2)],
-    });
-    await ticket.getByRole('button', { name: 'Start' }).click();
-    await ticket.getByRole('button', { name: 'Ready' }).click({ timeout: 20_000 });
+    await expect(ticket).toBeVisible({ timeout: 90_000 });
+    const start = ticket.getByRole('button', { name: 'Start' });
+    if (await start.isVisible().catch(() => false)) {
+      await shot(page, 'pickup/02-kds-ticket.png', {
+        focus: ticket,
+        callouts: [callout(ticket.getByText(/online pickup/i), 1), callout(start, 2)],
+      });
+      await start.click();
+    }
+    const kdsReady = ticket.getByRole('button', { name: 'Ready' });
+    if (await kdsReady.isVisible({ timeout: 10_000 }).catch(() => false)) await kdsReady.click();
     await page.waitForTimeout(1_500);
 
-    await page.goto(appUrl('pos', '/online-orders'));
-    await queueTab(page, /click & collect/i);
+    await sidebarTo(page, 'Online Orders', /online orders queue/i);
+    await queueTab(page, /pickup & takeaway|click & collect/i);
     const card = await orderCard(page, order.number);
+    // A printer-only kitchen (or a shop) marks it ready here instead of on the KDS.
+    const counterReady = card.getByRole('button', { name: /^ready$/i });
+    if (await counterReady.isVisible({ timeout: 10_000 }).catch(() => false)) await counterReady.click();
     await expect(card.getByRole('button', { name: /hand over/i })).toBeVisible({ timeout: 60_000 });
     await shot(page, 'pickup/03-ready.png', {
       focus: card,
@@ -81,7 +88,7 @@ test.describe.serial('Pickup order', () => {
   test('counter hands it over with the code', async ({ page }) => {
     const order = loadOrder('pickup')!;
     await openOnlineOrders(page, OUTLETS.hotel.name);
-    await queueTab(page, /click & collect/i);
+    await queueTab(page, /pickup & takeaway|click & collect/i);
     const card = await orderCard(page, order.number);
     await card.getByRole('button', { name: /hand over/i }).click();
     const dialog = page.getByRole('dialog');
@@ -93,10 +100,10 @@ test.describe.serial('Pickup order', () => {
       callouts: [
         callout(dialog.getByPlaceholder('6 digits'), 1),
         callout(dialog.getByRole('button', { name: /^cash$/i }), 2),
-        callout(dialog.getByRole('button', { name: /handed over/i }), 3),
+        callout(dialog.getByRole('button', { name: /handed over|received ksh/i }), 3),
       ],
     });
-    await dialog.getByRole('button', { name: /handed over/i }).click();
+    await dialog.getByRole('button', { name: /handed over|received ksh/i }).click();
     await expect(dialog).toBeHidden({ timeout: 20_000 });
   });
 

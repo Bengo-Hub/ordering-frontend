@@ -62,7 +62,7 @@ export async function chooseDeliveryPlace(page: Page, place: string) {
   const target = (await area.first().isVisible({ timeout: 8_000 }).catch(() => false)) ? area : any;
   await target.first().click();
   // The live quote appears under the map once logistics answers.
-  await expect(page.getByText(/free delivery|delivery · KES|KES \d+ delivery|cannot deliver|don't deliver/i).first()).toBeVisible({
+  await expect(page.getByText(/free delivery|KES \d+ ·|outside our delivery area|cannot deliver|don't deliver/i).first()).toBeVisible({
     timeout: 20_000,
   });
 }
@@ -86,16 +86,16 @@ export async function cartSession(page: Page): Promise<string> {
   });
 }
 
-/** Confirms the order with the slide control (Enter is its keyboard path) and returns it. */
+/** Confirms the order (Place Order on a computer, the slide control on a phone) and returns it. */
 export async function placeOrder(page: Page): Promise<JourneyOrder> {
   const session = await cartSession(page);
-  const slider = page.getByRole('button', { name: /slide to confirm/i });
-  await slider.scrollIntoViewIfNeeded();
+  const confirm = page.getByRole('button', { name: /slide to confirm|place order|pay deposit/i }).first();
+  await confirm.scrollIntoViewIfNeeded();
   const created = page.waitForResponse(
     (r) => /\/checkout(\/guest)?$/.test(new URL(r.url()).pathname) && r.request().method() === 'POST',
     { timeout: 45_000 },
   );
-  await slider.focus();
+  await confirm.focus();
   await page.keyboard.press('Enter');
   const res = await created;
   const body = await res.json().catch(() => ({}));
@@ -110,5 +110,7 @@ export async function placeOrder(page: Page): Promise<JourneyOrder> {
 export async function readHandoverCode(page: Page): Promise<string | undefined> {
   await page.getByText(/collection code|delivery code/i).first().waitFor({ state: 'visible', timeout: 20_000 }).catch(() => {});
   const text = await page.locator('body').innerText();
-  return text.match(/(?:collection|delivery) code[^\d]{0,60}(\d{6})/i)?.[1];
+  // The page spaces the digits out (9 1 9 4 2 6).
+  const m = text.match(/(?:collection|delivery) code[\s\S]{0,160}?((?:\d[ \t]*){6})/i);
+  return m?.[1]?.replace(/\s+/g, '');
 }
