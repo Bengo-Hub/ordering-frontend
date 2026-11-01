@@ -13,6 +13,9 @@ export function usePromoDeals() {
     queryFn: () => fetchPromoDeals(slug),
     enabled: !!slug,
     staleTime: 60 * 1000, // 1 minute — matches the backend's own short cache TTL
+    // Deals run on days and hours (pos-api judges the schedule), so a page left open picks up a
+    // deal that starts and drops one that ends without a reload.
+    refetchInterval: 2 * 60 * 1000,
     retry: 1,
   });
 }

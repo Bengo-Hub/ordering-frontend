@@ -13,6 +13,9 @@ export function usePromoBanners(useCase?: string) {
     queryFn: () => fetchPromoBanners(slug, useCase),
     enabled: !!slug,
     staleTime: 60 * 1000, // 1 minute — matches the backend's own short cache TTL
+    // Banners follow their promotion's days and hours, so a page left open picks up one that
+    // starts and drops one that ends without a reload.
+    refetchInterval: 2 * 60 * 1000,
     retry: 1,
   });
 }

@@ -22,6 +22,8 @@ export function useMarketplaceDeals() {
     queryKey: ["marketplace-deals"],
     queryFn: fetchMarketplaceDeals,
     staleTime: 2 * 60 * 1000,
+    // Deals run on days and hours, so a page left open follows them without a reload.
+    refetchInterval: 2 * 60 * 1000,
     retry: 1,
   });
 }
