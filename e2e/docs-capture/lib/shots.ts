@@ -23,6 +23,16 @@ export async function shot(page: Page, name: string, opts: { focus?: Locator; ca
     await page.waitForTimeout(300);
   }
   await waitForReady(page, opts.focus);
+  // A toast ("Status updated", "Job taken") can sit over the very thing a callout points at;
+  // wait for it to leave, and close any that stays.
+  const toasts = page.locator('[data-sonner-toast]');
+  if (await toasts.first().isVisible().catch(() => false)) {
+    await toasts.first().waitFor({ state: 'hidden', timeout: 8_000 }).catch(async () => {
+      await page.keyboard.press('Escape').catch(() => {});
+      await page.locator('[data-sonner-toast] [data-close-button]').first().click({ timeout: 1_000 }).catch(() => {});
+    });
+    await page.waitForTimeout(300);
+  }
   if (opts.focus) {
     await opts.focus.first().scrollIntoViewIfNeeded().catch(() => {});
     await page.waitForTimeout(400);
@@ -31,9 +41,22 @@ export async function shot(page: Page, name: string, opts: { focus?: Locator; ca
   // and say so, rather than hang the run or draw an arrow at nothing.
   const visible: Callout[] = [];
   for (const c of opts.callouts ?? []) {
-    const ok = await c.locator.first().waitFor({ state: 'visible', timeout: 5_000 }).then(() => true).catch(() => false);
-    if (ok) visible.push(c);
-    else console.warn(`[docs-capture] ${name}: callout ${c.number} not visible, skipped`);
+    const shown = await c.locator.first().waitFor({ state: 'visible', timeout: 5_000 }).then(() => true).catch(() => false);
+    // Also inside the viewport and not covered (a sticky header or a toast over it would put the
+    // marker on the wrong thing).
+    const onScreen =
+      shown &&
+      (await c.locator
+        .first()
+        .evaluate((el) => {
+          const r = el.getBoundingClientRect();
+          if (r.top < 0 || r.bottom > window.innerHeight || r.left < 0 || r.right > window.innerWidth) return false;
+          const hit = document.elementFromPoint(r.left + r.width / 2, r.top + r.height / 2);
+          return !!hit && (hit === el || el.contains(hit) || hit.contains(el));
+        })
+        .catch(() => false));
+    if (onScreen) visible.push(c);
+    else console.warn(`[docs-capture] ${name}: callout ${c.number} not on screen, skipped`);
   }
   await screenshotWithCallouts(page, assetPath(name), visible);
 }
@@ -54,6 +77,8 @@ export interface JourneyOrder {
   url: string;
   /** Collection or delivery code shown to the customer. */
   code?: string;
+  /** True for a delivery order (it rings under Delivery in the POS queue). */
+  delivery?: boolean;
 }
 
 export function saveOrder(key: string, order: JourneyOrder) {

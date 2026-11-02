@@ -22,15 +22,16 @@ test.describe.serial('Rejected order', () => {
   test('outlet rejects it with a reason', async ({ page }) => {
     const order = loadOrder('rejected')!;
     await openOnlineOrders(page, OUTLETS.hotel.name);
-    await queueTab(page, /pickup & takeaway|click & collect/i);
+    // Pickup orders ring under Pickup & Takeaway, delivery orders under Delivery.
+    await queueTab(page, order.delivery ? /^delivery/i : /pickup & takeaway|click & collect/i);
     const card = await orderCard(page, order.number);
     // A new order waiting to be accepted looks the same whatever happens next; this is the
     // pickup guide's first screenshot too.
     await shot(page, 'pickup/01-new-order.png', {
       focus: card,
       callouts: [
-        callout(card.getByText(/espresso/i), 1),
-        callout(card.getByText(/pay at counter/i), 2),
+        callout(card.getByText(/\d+×/), 1),
+        callout(card.getByText(/pay at counter|pay on delivery/i), 2),
         callout(card.getByRole('button', { name: /accept/i }), 3),
       ],
     });
