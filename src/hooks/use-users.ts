@@ -24,7 +24,10 @@ export function useUsers(q = "") {
   const slug = useOrgSlug();
   return useQuery<TenantUser[]>({
     queryKey: userKeys.list(slug, q),
-    queryFn: () => listUsers(slug, q),
+    // The signal cancels the request when a newer search replaces it.
+    queryFn: ({ signal }) => listUsers(slug, q, signal),
+    // Keep the current list while the next search loads.
+    placeholderData: (prev) => prev,
     enabled: !!slug,
     staleTime: 30_000,
   });

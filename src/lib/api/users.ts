@@ -25,11 +25,11 @@ export interface TenantUser {
  * @param slug org slug (path tenant segment)
  * @param q    optional case-insensitive name/email filter
  */
-export async function listUsers(slug: string, q?: string): Promise<TenantUser[]> {
+export async function listUsers(slug: string, q?: string, signal?: AbortSignal): Promise<TenantUser[]> {
   const params: Record<string, string> = {};
   if (q && q.trim()) {
     params.q = q.trim();
   }
-  const res = await api.get(`${slug}/admin/users`, { params });
+  const res = await api.get(`${slug}/admin/users`, { params, ...(signal ? { signal } : {}) });
   return res.data?.users ?? [];
 }

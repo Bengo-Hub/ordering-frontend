@@ -4,6 +4,7 @@ import dynamic from "next/dynamic";
 import { CheckCircle2, Loader2, MapPin, Navigation, Search, XCircle } from "lucide-react";
 import { useMemo, useState } from "react";
 import type { ZoneShape } from "@bengo-hub/maps";
+import { useDebouncedSearch } from "@bengo-hub/shared-ui-lib/search";
 
 import { Button } from "@/components/ui/button";
 import { useDeliveryCoverage, useDeliveryQuote, usePlaceSearch, useReversePlace } from "@/hooks/use-delivery";
@@ -51,13 +52,15 @@ export function DeliveryLocationPicker({
   className,
 }: DeliveryLocationPickerProps) {
   const [point, setPoint] = useState<LatLng | null>(value ? { lat: value.lat, lng: value.lng } : null);
-  const [query, setQuery] = useState("");
+  // Geocoding runs once typing pauses (or on Enter), and only from the third character.
+  const search = useDebouncedSearch({ minChars: 3 });
   const [locateError, setLocateError] = useState<string | null>(null);
   // A searched place keeps its own name; a dragged or located pin uses the reverse lookup.
   const [pickedName, setPickedName] = useState<string | null>(value?.placeName ?? null);
 
   const coverage = useDeliveryCoverage(outletId);
-  const places = usePlaceSearch(query);
+  const places = usePlaceSearch(search.term);
+  const placesLoading = places.isFetching || search.isDebouncing;
   const reverse = useReversePlace(point);
   const quote = useDeliveryQuote(point, outletId, orderTotal);
 
@@ -88,19 +91,18 @@ export function DeliveryLocationPicker({
       <div className="relative">
         <Search className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
         <input
-          value={query}
-          onChange={(e) => setQuery(e.target.value)}
+          {...search.inputProps}
           placeholder="Search an area, street or landmark"
           className="h-11 w-full rounded-xl border border-input bg-background pl-9 pr-3 text-sm outline-none focus:ring-2 focus:ring-primary/40"
         />
-        {query.trim().length >= 3 && (
+        {search.value.trim().length >= 3 && (
           <div className="absolute inset-x-0 top-12 z-20 max-h-64 overflow-y-auto rounded-xl border bg-background shadow-lg">
-            {places.isFetching && (
+            {placesLoading && (
               <p className="flex items-center gap-2 px-3 py-2 text-sm text-muted-foreground">
                 <Loader2 className="size-3 animate-spin" /> Searching...
               </p>
             )}
-            {!places.isFetching && (places.data ?? []).length === 0 && (
+            {!placesLoading && (places.data ?? []).length === 0 && (
               <p className="px-3 py-2 text-sm text-muted-foreground">No places found. Drag the pin instead.</p>
             )}
             {(places.data ?? []).map((p, i) => (
@@ -111,7 +113,7 @@ export function DeliveryLocationPicker({
                 onClick={() => {
                   setPoint(p.location);
                   setPickedName(p.name);
-                  setQuery("");
+                  search.clear();
                 }}
               >
                 <MapPin className="mt-0.5 size-4 shrink-0 text-muted-foreground" />

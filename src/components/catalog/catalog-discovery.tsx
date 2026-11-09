@@ -1,7 +1,8 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
+import { normalizeSearchTerm, useDebouncedSearch } from "@bengo-hub/shared-ui-lib/search";
 import {
   ChefHatIcon,
   FilterIcon,
@@ -386,7 +387,6 @@ export function MenuDiscovery({
   const orgSlug = useOrgSlug();
   const router = useRouter();
   const searchParams = useSearchParams();
-  const [search, setSearch] = useState(initialSearch ?? "");
   const [activeCategoryId, setActiveCategoryId] = useState<string | "all">(
     initialCategory ?? "all",
   );
@@ -409,6 +409,15 @@ export function MenuDiscovery({
   const [appliedMaxPrice, setAppliedMaxPrice] = useState<number | undefined>(undefined);
   const [appliedInStockOnly, setAppliedInStockOnly] = useState(false);
   const [page, setPage] = useState(1);
+  // The box updates on every key; the catalogue is only queried once typing pauses (or on
+  // Enter), and a new term starts again from the first page.
+  const search = useDebouncedSearch({
+    initial: initialSearch ?? "",
+    onTermChange: () => setPage(1),
+  });
+  const { setValue: setSearchValue, term: searchTerm } = search;
+  const searchTermRef = useRef(searchTerm);
+  searchTermRef.current = searchTerm;
   const [modalItem, setModalItem] = useState<AddToCartModalItem | null>(null);
   const addItem = useCartStore((state) => state.addItem);
 
@@ -458,7 +467,7 @@ export function MenuDiscovery({
     () => ({
       ...(activeCategoryId && activeCategoryId !== "all" && { category: activeCategoryId }),
       ...(activeOutletId && { outletId: activeOutletId }),
-      ...(search.trim() && { search: search.trim() }),
+      ...(searchTerm && { search: searchTerm }),
       ...(activeDietary.length > 0 && { dietary: activeDietary }),
       ...(favoriteOnly && { favoriteOnly: true }),
       ...(brandId && { brandId }),
@@ -471,7 +480,7 @@ export function MenuDiscovery({
     [
       activeCategoryId,
       activeOutletId,
-      search,
+      searchTerm,
       activeDietary,
       favoriteOnly,
       brandId,
@@ -600,7 +609,6 @@ export function MenuDiscovery({
   useEffect(() => {
     if (initialCategory != null) setActiveCategoryId(initialCategory || "all");
     if (initialOutlet != null) setActiveOutletId(initialOutlet);
-    if (initialSearch != null) setSearch(initialSearch);
     if (initialDietary != null) setActiveDietary(initialDietary as DietaryTag[]);
     if (initialFavoriteOnly != null) setFavoriteOnly(initialFavoriteOnly);
     if (initialSort != null) setSort((initialSort as CatalogSort) || "default");
@@ -609,13 +617,21 @@ export function MenuDiscovery({
   }, [
     initialCategory,
     initialOutlet,
-    initialSearch,
     initialDietary,
     initialFavoriteOnly,
     initialSort,
     initialFilter,
     initialBrand,
   ]);
+
+  // A search arriving from the URL (a shared link, back/forward) is searched at once. When the
+  // URL only echoes the term already searched here, the box is left alone so text typed since
+  // then is kept.
+  useEffect(() => {
+    if (initialSearch == null) return;
+    if (normalizeSearchTerm(initialSearch) === searchTermRef.current) return;
+    setSearchValue(initialSearch, { immediate: true });
+  }, [initialSearch, setSearchValue]);
 
   const handleAddToCart = (item: MenuItem) => {
     // Variant/modifier products open the quick add-to-cart modal so the customer can
@@ -712,12 +728,16 @@ export function MenuDiscovery({
                 type="search"
                 inputMode="search"
                 placeholder={copy.searchPlaceholder}
-                value={search}
-                onChange={(e) => setSearch(e.target.value)}
-                onBlur={() => updateUrl({ search: search.trim() || undefined })}
-                onKeyDown={(e) =>
-                  e.key === "Enter" && updateUrl({ search: search.trim() || undefined })
-                }
+                {...search.inputProps}
+                // Leaving the box only records the term already searched in the URL; it never
+                // starts a search of its own.
+                onBlur={() => updateUrl({ search: searchTerm || undefined })}
+                onKeyDown={(e) => {
+                  search.inputProps.onKeyDown(e);
+                  if (e.key === "Enter" && !e.nativeEvent.isComposing) {
+                    updateUrl({ search: normalizeSearchTerm(search.value) || undefined });
+                  }
+                }}
                 className="h-10 rounded-full pl-10"
               />
             </div>

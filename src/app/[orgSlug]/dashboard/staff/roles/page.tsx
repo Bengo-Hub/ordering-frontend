@@ -1,6 +1,7 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
+import { normalizeSearchTerm, useDebouncedValue } from "@bengo-hub/shared-ui-lib/search";
 import { Loader2, ShieldCheck, Trash2, UserPlus, Users } from "lucide-react";
 
 import { RequireAuth } from "@/components/auth/require-auth";
@@ -147,13 +148,9 @@ function AssignRoleForm({ roles }: { roles: OrderingRole[] }) {
   const [userId, setUserId] = useState("");
   const [roleId, setRoleId] = useState("");
 
-  // Debounce the user search so we don't hit the API on every keystroke.
+  // The box updates on every key; the user directory is only queried once typing pauses.
   const [userSearch, setUserSearch] = useState("");
-  const [debouncedSearch, setDebouncedSearch] = useState("");
-  useEffect(() => {
-    const t = setTimeout(() => setDebouncedSearch(userSearch), 250);
-    return () => clearTimeout(t);
-  }, [userSearch]);
+  const debouncedSearch = useDebouncedValue(normalizeSearchTerm(userSearch));
 
   const { data: users = [], isLoading: usersLoading } = useUsers(debouncedSearch);
 

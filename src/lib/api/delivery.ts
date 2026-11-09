@@ -112,8 +112,9 @@ export async function fetchDeliveryQuote(slug: string, p: { lat: number; lng: nu
   return data;
 }
 
-export async function searchPlaces(slug: string, q: string): Promise<Place[]> {
-  const { data } = await logistics.get(`${slug}/routing/geocode/search`, { params: { q } });
+export async function searchPlaces(slug: string, q: string, signal?: AbortSignal): Promise<Place[]> {
+  // Geocoding is a paid, rate-limited lookup: the signal drops a request a newer term replaced.
+  const { data } = await logistics.get(`${slug}/routing/geocode/search`, { params: { q }, ...(signal ? { signal } : {}) });
   return Array.isArray(data) ? data : [];
 }
 

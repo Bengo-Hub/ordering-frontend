@@ -165,6 +165,7 @@ export async function fetchMenuItems(
   filters?: MenuFilters,
   page = 1,
   limit = 20,
+  signal?: AbortSignal,
 ): Promise<PaginatedResponse<MenuItem>> {
   const params = new URLSearchParams();
   params.set("page", String(page));
@@ -187,8 +188,10 @@ export async function fetchMenuItems(
   // reaches the backend as an unrecognised ?sort= value.
   if (filters?.sort && SERVER_SORTS.has(filters.sort)) params.set("sort", filters.sort);
 
+  // The signal cancels this request when a newer search or filter replaces it.
   const res = await api.get<BackendListResponse<BackendMenuItem>>(
     `${tenantSlug}/catalog/items?${params.toString()}`,
+    signal ? { signal } : {},
   );
   const outletId = filters?.outletId ?? "";
   const outletName = "";

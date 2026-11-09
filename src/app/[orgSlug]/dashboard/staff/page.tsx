@@ -14,6 +14,7 @@ import {
   XCircle,
 } from "lucide-react";
 import { useCallback, useState } from "react";
+import { useDebouncedSearch } from "@bengo-hub/shared-ui-lib/search";
 
 import { RequireAuth } from "@/components/auth/require-auth";
 import { PermissionActionButton } from "@/components/auth/permission-action-button";
@@ -149,14 +150,15 @@ function statusIcon(status: string) {
 
 export default function StaffDashboardPage() {
   const [statusFilter, setStatusFilter] = useState<string>("all");
-  const [search, setSearch] = useState("");
   const [page, setPage] = useState(1);
+  // Orders are searched once typing pauses (or on Enter), starting again from the first page.
+  const search = useDebouncedSearch({ onTermChange: () => setPage(1) });
   const [riderPickerOrderId, setRiderPickerOrderId] = useState<string | null>(null);
 
   const limit = 50;
   const filters = {
     ...(statusFilter !== "all" ? { status: statusFilter } : {}),
-    ...(search.trim() ? { search: search.trim() } : {}),
+    ...(search.term ? { search: search.term } : {}),
     limit,
     page,
   };
@@ -243,11 +245,7 @@ export default function StaffDashboardPage() {
               <Input
                 className="pl-10"
                 placeholder="Search by order number..."
-                value={search}
-                onChange={(e) => {
-                  setSearch(e.target.value);
-                  setPage(1);
-                }}
+                {...search.inputProps}
               />
             </div>
             <p className="text-sm text-muted-foreground">{total} orders</p>

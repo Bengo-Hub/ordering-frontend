@@ -68,6 +68,7 @@ export interface AdminOrderFilters {
 export async function listAdminOrders(
   slug: string,
   filters?: AdminOrderFilters,
+  signal?: AbortSignal,
 ): Promise<{ orders: AdminOrder[]; total: number }> {
   // ordering-backend reads snake_case query keys (payment_status, date_from, date_to); sending the
   // camelCase field names silently dropped those filters.
@@ -78,7 +79,7 @@ export async function listAdminOrders(
     ...(dateFrom ? { date_from: dateFrom } : {}),
     ...(dateTo ? { date_to: dateTo } : {}),
   };
-  const res = await api.get(`${slug}/admin/orders`, { params });
+  const res = await api.get(`${slug}/admin/orders`, { params, ...(signal ? { signal } : {}) });
   const raw = res.data;
   // Backend returns { data: [...], total, limit, page } — normalize to { orders, total }
   const orders: AdminOrder[] = (raw.data ?? raw.orders ?? []).map(normalizeOrder);

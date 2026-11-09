@@ -30,9 +30,12 @@ export const adminKeys = {
 
 export function useAdminOrders(filters?: AdminOrderFilters) {
   const slug = useOrgSlug();
-  return useQuery({
+  return useQuery<Awaited<ReturnType<typeof listAdminOrders>>>({
     queryKey: adminKeys.orderList(filters ?? {}),
-    queryFn: () => listAdminOrders(slug, filters),
+    // The signal cancels the request when a newer search or filter replaces it.
+    queryFn: ({ signal }) => listAdminOrders(slug, filters, signal),
+    // Keep the current rows on screen while the next search or page loads.
+    placeholderData: (prev) => prev,
     staleTime: 15_000,
     refetchInterval: 30_000,
   });

@@ -74,7 +74,7 @@ export function useCatalogItems(
 ) {
   return useQuery({
     queryKey: [tenantSlug, ...catalogKeys.itemList(filters), page, limit],
-    queryFn: () => fetchMenuItems(tenantSlug, filters, page, limit),
+    queryFn: ({ signal }) => fetchMenuItems(tenantSlug, filters, page, limit, signal),
     enabled: !!tenantSlug && enabled,
     placeholderData: keepPreviousData,
     staleTime: CATALOG_STALE_MS,

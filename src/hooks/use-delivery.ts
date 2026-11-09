@@ -2,7 +2,14 @@
 
 import { keepPreviousData, useQuery } from "@tanstack/react-query";
 
-import { fetchDeliveryCoverage, fetchDeliveryQuote, reversePlace, searchPlaces, type LatLng } from "@/lib/api/delivery";
+import {
+  fetchDeliveryCoverage,
+  fetchDeliveryQuote,
+  reversePlace,
+  searchPlaces,
+  type LatLng,
+  type Place,
+} from "@/lib/api/delivery";
 import { useOrgSlug } from "@/providers/org-slug-provider";
 
 const round4 = (v: number) => Math.round(v * 1e4) / 1e4;
@@ -32,13 +39,16 @@ export function useDeliveryQuote(point: LatLng | null, outletId?: string | null,
   });
 }
 
+/** Place search. Pass the debounced term (`useDebouncedSearch().term`), never the raw box text. */
 export function usePlaceSearch(q: string) {
   const slug = useOrgSlug();
   const term = q.trim();
-  return useQuery({
+  return useQuery<Place[]>({
     queryKey: ["place-search", slug, term.toLowerCase()],
-    queryFn: () => searchPlaces(slug, term),
+    queryFn: ({ signal }) => searchPlaces(slug, term, signal),
     enabled: !!slug && term.length >= 3,
+    // Keep the last suggestions listed while the next term loads.
+    placeholderData: (prev) => prev,
     staleTime: 10 * 60_000,
   });
 }
