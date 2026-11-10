@@ -8,8 +8,10 @@ import { ThemeProvider } from "next-themes";
 
 import { useMe } from "@/hooks/use-me";
 import { attachOutletIdGetter, setOn401 } from "@/lib/api/base";
+import { AUTH_STORAGE_KEY, reloadSessionFromStorage } from "@/lib/auth/token-refresh";
 import { createQueryClient } from "@/lib/query-client";
 import { useAuthStore } from "@/store/auth";
+import { watchSessionAcrossTabs } from "@bengo-hub/shared-ui-lib/auth";
 import { useOutletFilterStore } from "@/store/outlet-filter";
 
 import type { QueryClient } from "@tanstack/react-query";
@@ -39,6 +41,10 @@ export function AppProviders({ children }: PropsWithChildren) {
   useEffect(() => {
     initializeAuth();
   }, [initializeAuth]);
+
+  // Another tab renewed or replaced the session: load it here so this tab stops sending a
+  // rotated-away token. The API clients read the token from the store on every request.
+  useEffect(() => watchSessionAcrossTabs(AUTH_STORAGE_KEY, reloadSessionFromStorage), []);
 
   // Attach outlet ID getter so the API interceptor always sends X-Outlet-ID
   // when a staff/admin user has a selected outlet in the store.

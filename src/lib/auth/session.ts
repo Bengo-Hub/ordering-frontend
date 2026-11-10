@@ -1,6 +1,8 @@
 import type { SessionTokens, UserProfile } from "./types";
 
-const STORAGE_KEY = "ordering.auth";
+/** localStorage key of the saved session; also watched for writes from other tabs. */
+export const AUTH_STORAGE_KEY = "ordering.auth";
+const STORAGE_KEY = AUTH_STORAGE_KEY;
 
 interface AuthState {
   session: SessionTokens | null;
