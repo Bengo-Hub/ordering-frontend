@@ -54,13 +54,13 @@ export function AppProviders({ children }: PropsWithChildren) {
 
   // Rehydrate outlet from localStorage on mount (for page refreshes)
   useEffect(() => {
-    if (typeof window === 'undefined') return;
-    const stored = localStorage.getItem('ordering-selected-outlet-id');
+    if (typeof window === "undefined") return;
+    const stored = localStorage.getItem("ordering-selected-outlet-id");
     if (stored && !useOutletFilterStore.getState().selectedOutlet) {
       useOutletFilterStore.getState().selectOutlet({
         id: stored,
-        code: '',
-        name: '',
+        code: "",
+        name: "",
       });
     }
   }, []);

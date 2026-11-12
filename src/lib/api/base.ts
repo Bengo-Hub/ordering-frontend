@@ -88,7 +88,7 @@ api.interceptors.response.use(
       if (retryCount < 3) {
         error.config._retryCount = retryCount + 1;
         // Exponential backoff: 1s, 2s, 4s (respect Retry-After header if present)
-        const retryAfter = error.response?.headers?.['retry-after'];
+        const retryAfter = error.response?.headers?.["retry-after"];
         const delayMs = retryAfter
           ? parseInt(retryAfter, 10) * 1000
           : Math.pow(2, retryCount) * 1000;
@@ -122,7 +122,7 @@ api.interceptors.response.use(
     }
     if (error.response?.status === 403 && onSubscription403Callback) {
       const data = error.response?.data;
-      if (data?.code === 'subscription_inactive' || data?.upgrade === true) {
+      if (data?.code === "subscription_inactive" || data?.upgrade === true) {
         onSubscription403Callback(data);
       }
     }
@@ -130,10 +130,10 @@ api.interceptors.response.use(
     // Show the customer a friendly, non-technical message rather than a raw error.
     if (error.response?.status === 402) {
       const data = error.response?.data;
-      if (data?.code === 'usage_limit_exceeded' || data?.metric === 'orders') {
-        const { toast } = await import('sonner');
-        toast.error('This store is not accepting new orders right now', {
-          description: 'It has reached its order capacity for the moment. Please try again later.',
+      if (data?.code === "usage_limit_exceeded" || data?.metric === "orders") {
+        const { toast } = await import("sonner");
+        toast.error("This store is not accepting new orders right now", {
+          description: "It has reached its order capacity for the moment. Please try again later.",
           duration: 7000,
         });
       }
@@ -141,8 +141,8 @@ api.interceptors.response.use(
     // Normalize the real backend message onto the error so call sites can show it
     // (instead of a generic "Failed to …"). Handles Blob bodies from responseType:'blob'.
     try {
-      const { apiErrorMessage } = await import('./error-message');
-      const msg = await apiErrorMessage(error, '');
+      const { apiErrorMessage } = await import("./error-message");
+      const msg = await apiErrorMessage(error, "");
       if (msg) (error as { normalizedMessage?: string }).normalizedMessage = msg;
     } catch {
       /* never let normalization mask the original error */

@@ -5,33 +5,33 @@ import { apiErrorMessage } from "@/lib/api/error-message";
 import { attachAuthTokenGetter } from "@/lib/api/base";
 import { attachPlatformAuthTokenGetter } from "@/lib/api/platform-services";
 import {
-    buildAuthorizeUrl,
-    buildLogoutUrl,
-    exchangeCodeForTokens,
-    fetchOrderSummary,
-    fetchProfile,
-    fetchProfileFromSSO,
-    revokeServerSession,
-    updatePreferences,
-    updateProfile,
+  buildAuthorizeUrl,
+  buildLogoutUrl,
+  exchangeCodeForTokens,
+  fetchOrderSummary,
+  fetchProfile,
+  fetchProfileFromSSO,
+  revokeServerSession,
+  updatePreferences,
+  updateProfile,
 } from "@/lib/auth/api";
 import {
-    consumeState,
-    consumeVerifier,
-    generateCodeChallenge,
-    generateCodeVerifier,
-    generateState,
-    storeState,
-    storeVerifier,
+  consumeState,
+  consumeVerifier,
+  generateCodeChallenge,
+  generateCodeVerifier,
+  generateState,
+  storeState,
+  storeVerifier,
 } from "@/lib/auth/pkce";
 import { loadAuthState, persistAuthState } from "@/lib/auth/session";
 import type {
-    AuthResponse,
-    OrderSummary,
-    PreferencesUpdateInput,
-    ProfileUpdateInput,
-    SessionTokens,
-    UserProfile,
+  AuthResponse,
+  OrderSummary,
+  PreferencesUpdateInput,
+  ProfileUpdateInput,
+  SessionTokens,
+  UserProfile,
 } from "@/lib/auth/types";
 import { toast } from "@/lib/toast";
 
@@ -56,7 +56,10 @@ interface AuthState {
   updateProfile: (input: ProfileUpdateInput) => Promise<void>;
   updatePreferences: (input: PreferencesUpdateInput) => Promise<void>;
   refreshOrders: () => Promise<void>;
-  hydrateFromWebAuthn: (tokens: { accessToken: string; refreshToken: string; expiresIn: number }, tenantSlug?: string) => Promise<void>;
+  hydrateFromWebAuthn: (
+    tokens: { accessToken: string; refreshToken: string; expiresIn: number },
+    tenantSlug?: string,
+  ) => Promise<void>;
   /** Subscription info loaded lazily after auth — never blocks login. */
   subscriptionInfo: Record<string, unknown> | null | undefined;
   setSubscriptionInfo: (info: Record<string, unknown> | null) => void;
@@ -116,7 +119,10 @@ function clearSession(set: (value: Partial<AuthState>) => void) {
   });
 }
 
-function getInitialAuthState(): Pick<AuthState, "session" | "user" | "status" | "error" | "orders"> {
+function getInitialAuthState(): Pick<
+  AuthState,
+  "session" | "user" | "status" | "error" | "orders"
+> {
   const loaded = loadAuthState();
   const status = loaded.session && loaded.user ? "authenticated" : "idle";
   return { ...loaded, status, error: null, orders: [] };
@@ -188,10 +194,12 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     // Fetch profile from SSO (not backend — avoids 401 during JIT sync)
     // Expired token on reload: renew it with the refresh token (one small call) instead of a
     // full SSO sign-in; a known profile is kept. Dynamic import: token-refresh imports this store.
-    const expiringOnLoad = !session.expiresAt || Date.now() >= new Date(session.expiresAt).getTime() - 60_000;
-    const renewedOnLoad = session.refreshToken && expiringOnLoad
-      ? await (await import("@/lib/auth/token-refresh")).refreshAccessToken(session.accessToken)
-      : null;
+    const expiringOnLoad =
+      !session.expiresAt || Date.now() >= new Date(session.expiresAt).getTime() - 60_000;
+    const renewedOnLoad =
+      session.refreshToken && expiringOnLoad
+        ? await (await import("@/lib/auth/token-refresh")).refreshAccessToken(session.accessToken)
+        : null;
     if (renewedOnLoad) {
       if (user) {
         set({ status: "authenticated", lastAuthenticatedAt: Date.now() });
@@ -200,7 +208,9 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     }
     try {
       set({ status: "loading", error: null });
-      const ssoResponse = await fetchProfileFromSSO(get().session?.accessToken ?? session.accessToken);
+      const ssoResponse = await fetchProfileFromSSO(
+        get().session?.accessToken ?? session.accessToken,
+      );
       const payload: AuthResponse = {
         session: { ...session, sessionId: ssoResponse.session?.sessionId ?? "" },
         user: ssoResponse.user,
@@ -254,9 +264,10 @@ export const useAuthStore = create<AuthState>((set, get) => ({
         : typeof window !== "undefined"
           ? window.location.pathname.split("/").slice(0, 2).join("/")
           : "";
-      const callbackUrl = typeof window !== "undefined"
-        ? `${window.location.origin}${slugSegment}/auth/callback`
-        : "";
+      const callbackUrl =
+        typeof window !== "undefined"
+          ? `${window.location.origin}${slugSegment}/auth/callback`
+          : "";
 
       // Pass tenant so auth-api can mint token for that org; default urban-loft per plan.
       const authorizeUrl = buildAuthorizeUrl({
@@ -355,13 +366,27 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     clearSession(set);
     // Clear Zustand persist storage to prevent rehydration of stale session
     if (typeof window !== "undefined") {
-      try { localStorage.removeItem("ordering-auth-storage"); } catch { /* no-op */ }
-      try { localStorage.removeItem("tenantId"); } catch { /* no-op */ }
-      try { sessionStorage.clear(); } catch { /* no-op */ }
+      try {
+        localStorage.removeItem("ordering-auth-storage");
+      } catch {
+        /* no-op */
+      }
+      try {
+        localStorage.removeItem("tenantId");
+      } catch {
+        /* no-op */
+      }
+      try {
+        sessionStorage.clear();
+      } catch {
+        /* no-op */
+      }
       // Redirect to SSO logout → clears session cookie → redirects to accounts login page
       // Use accounts URL (not app URL) so user lands on login page, not a redirect loop
       const returnTo = encodeURIComponent(window.location.origin);
-      window.location.href = buildLogoutUrl(`https://accounts.codevertexafrica.com/login?return_to=${returnTo}`);
+      window.location.href = buildLogoutUrl(
+        `https://accounts.codevertexafrica.com/login?return_to=${returnTo}`,
+      );
     }
   },
 

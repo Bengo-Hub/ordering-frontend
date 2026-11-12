@@ -1,13 +1,13 @@
 import { api } from "@/lib/api/base";
-import { revokeServerSession as sharedRevokeServerSession } from '@bengo-hub/shared-ui-lib/auth';
+import { revokeServerSession as sharedRevokeServerSession } from "@bengo-hub/shared-ui-lib/auth";
 import type {
-    AuthResponse,
-    OrderSummary,
-    Permission,
-    PreferencesUpdateInput,
-    ProfileUpdateInput,
-    UserProfile,
-    UserRole,
+  AuthResponse,
+  OrderSummary,
+  Permission,
+  PreferencesUpdateInput,
+  ProfileUpdateInput,
+  UserProfile,
+  UserRole,
 } from "./types";
 import { serviceUrl } from "@/lib/service-urls";
 
@@ -77,7 +77,8 @@ export async function refreshTokens(refreshToken: string): Promise<{
     body: JSON.stringify({ refresh_token: refreshToken, client_id: SSO_CLIENT_ID }),
   });
   // The status tells the shared refresher a refused session (sign in again) from an outage.
-  if (!response.ok) throw Object.assign(new Error("Token refresh failed"), { status: response.status });
+  if (!response.ok)
+    throw Object.assign(new Error("Token refresh failed"), { status: response.status });
   return response.json();
 }
 
@@ -135,7 +136,9 @@ function getTenantSlug(tenantSlug?: string): string | null {
 export async function fetchProfile(tenantSlug?: string): Promise<AuthResponse> {
   const slug = getTenantSlug(tenantSlug);
   if (!slug) {
-    return Promise.reject(new Error("Tenant slug required for /auth/me (set by URL or localStorage)"));
+    return Promise.reject(
+      new Error("Tenant slug required for /auth/me (set by URL or localStorage)"),
+    );
   }
   const { data } = await api.get<AuthResponse>(`${slug}/auth/me`);
   return data;
@@ -209,7 +212,10 @@ export async function fetchProfileFromSSO(accessToken: string): Promise<AuthResp
 /**
  * Update user profile via ordering-backend. Requires tenant in path.
  */
-export async function updateProfile(input: ProfileUpdateInput, tenantSlug?: string): Promise<AuthResponse> {
+export async function updateProfile(
+  input: ProfileUpdateInput,
+  tenantSlug?: string,
+): Promise<AuthResponse> {
   const slug = getTenantSlug(tenantSlug);
   if (!slug) return Promise.reject(new Error("Tenant slug required"));
   const { data } = await api.patch<AuthResponse>(`${slug}/users/profile`, input);
@@ -219,7 +225,10 @@ export async function updateProfile(input: ProfileUpdateInput, tenantSlug?: stri
 /**
  * Update user preferences via ordering-backend. Requires tenant in path.
  */
-export async function updatePreferences(input: PreferencesUpdateInput, tenantSlug?: string): Promise<AuthResponse> {
+export async function updatePreferences(
+  input: PreferencesUpdateInput,
+  tenantSlug?: string,
+): Promise<AuthResponse> {
   const slug = getTenantSlug(tenantSlug);
   if (!slug) return Promise.reject(new Error("Tenant slug required"));
   const { data } = await api.patch<AuthResponse>(`${slug}/users/preferences`, input);

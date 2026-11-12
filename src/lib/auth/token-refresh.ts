@@ -9,10 +9,10 @@
  * loadAuthState and persistAuthState.
  */
 
-import { createSessionRefresher } from '@bengo-hub/shared-ui-lib/auth';
-import { useAuthStore } from '@/store/auth';
-import { refreshTokens } from '@/lib/auth/api';
-import { AUTH_STORAGE_KEY, loadAuthState, persistAuthState } from '@/lib/auth/session';
+import { createSessionRefresher } from "@bengo-hub/shared-ui-lib/auth";
+import { useAuthStore } from "@/store/auth";
+import { refreshTokens } from "@/lib/auth/api";
+import { AUTH_STORAGE_KEY, loadAuthState, persistAuthState } from "@/lib/auth/session";
 
 export { AUTH_STORAGE_KEY };
 
@@ -47,5 +47,5 @@ const refreshSession = createSessionRefresher({
  */
 export async function refreshAccessToken(failedToken?: string | null): Promise<string | null> {
   const outcome = await refreshSession(failedToken);
-  return 'token' in outcome ? outcome.token : null;
+  return "token" in outcome ? outcome.token : null;
 }
