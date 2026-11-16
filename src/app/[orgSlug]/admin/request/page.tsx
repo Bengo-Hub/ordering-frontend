@@ -11,6 +11,9 @@ import { brand } from "@/config/brand";
 
 type SubmitState = "idle" | "submitting" | "success";
 
+/** New merchant accounts are a sales enquiry. */
+const ADMIN_REQUEST_EMAIL = "sales@codevertexafrica.com";
+
 export default function AdminRequestPage() {
   const [state, setState] = useState<SubmitState>("idle");
   const [org, setOrg] = useState("");
@@ -34,7 +37,7 @@ export default function AdminRequestPage() {
     e.preventDefault();
     setState("submitting");
     // Submit via mailto (no backend required yet)
-    const to = "codevertexitsolutions@gmail.com";
+    const to = ADMIN_REQUEST_EMAIL;
     const subject = encodeURIComponent("Admin Account Request – Ordering Platform");
     const href = `mailto:${to}?subject=${subject}&body=${body}`;
     window.location.href = href;
@@ -152,7 +155,7 @@ export default function AdminRequestPage() {
                 <span className="inline-flex items-center gap-2 text-xs font-medium text-muted-foreground">
                   <MailIcon className="size-4 text-brand-emphasis" aria-hidden />
                   Your email client should be open now. If not, email
-                  codevertexitsolutions@gmail.com.
+                  {" "}{ADMIN_REQUEST_EMAIL}.
                 </span>
               ) : null}
             </div>
