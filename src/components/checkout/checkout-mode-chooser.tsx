@@ -23,7 +23,7 @@ export function CheckoutModeChooser({ onChooseGuest, onChooseSignIn }: CheckoutM
           </div>
           <div>
             <p className="font-semibold">Continue as Guest</p>
-            <p className="text-sm text-muted-foreground">Quick checkout with just your email</p>
+            <p className="text-sm text-muted-foreground">Quick checkout with your name and an email or phone</p>
           </div>
         </button>
 

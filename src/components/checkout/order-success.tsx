@@ -1,5 +1,6 @@
 "use client";
 
+import type { ReactNode } from "react";
 import { CheckCircle2 } from "lucide-react";
 import Link from "next/link";
 
@@ -12,9 +13,11 @@ interface OrderSuccessProps {
   orderHref: string;
   /** False for pay on delivery or at the counter: nothing has been paid yet. */
   paid: boolean;
+  /** Shown under the message, e.g. a guest's "Save my details" card. */
+  extra?: ReactNode;
 }
 
-export function OrderSuccess({ orderHref, paid }: OrderSuccessProps) {
+export function OrderSuccess({ orderHref, paid, extra }: OrderSuccessProps) {
   const orgSlug = useOrgSlug();
 
   return (
@@ -30,6 +33,7 @@ export function OrderSuccess({ orderHref, paid }: OrderSuccessProps) {
             : "You pay when you collect it or when it is delivered. Follow your order and find your collection or delivery code on the order page."}
         </p>
       </div>
+      {extra && <div className="w-full max-w-md">{extra}</div>}
       <div className="w-full max-w-xs space-y-3">
         <Button asChild className="w-full">
           <Link href={orderHref}>Track your order</Link>

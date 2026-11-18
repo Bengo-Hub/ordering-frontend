@@ -24,6 +24,7 @@ interface TenantBrandConfig {
   app_short_name?: string;
   app_icon_url?: string;
   app_theme_color?: string;
+  placeholder_names?: string[];
 }
 
 export const brandKeys = {
@@ -47,6 +48,8 @@ export interface BrandConfig {
   appName: string | undefined;
   /** Tenant's own icon for this app; undefined uses the business logo. */
   appIconUrl: string | undefined;
+  /** Names a guest may not check out under; undefined uses the bundled list (lib/guest-name). */
+  placeholderNames: string[] | undefined;
 }
 
 function staticBrandConfig(): BrandConfig {
@@ -64,6 +67,7 @@ function staticBrandConfig(): BrandConfig {
     useCases: [],
     appName: undefined,
     appIconUrl: undefined,
+    placeholderNames: undefined,
   };
 }
 
@@ -104,6 +108,9 @@ export function useBrandConfig() {
           useCases: data.use_cases ?? [],
           appName: data.app_name || undefined,
           appIconUrl: data.app_icon_url || undefined,
+          placeholderNames: Array.isArray(data.placeholder_names) && data.placeholder_names.length > 0
+            ? data.placeholder_names.filter((n): n is string => typeof n === "string")
+            : undefined,
         };
       } catch {
         return staticBrandConfig();

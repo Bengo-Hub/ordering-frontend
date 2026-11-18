@@ -44,7 +44,7 @@ export async function startGuestCheckout(page: Page) {
   await page.waitForTimeout(300);
   await page.locator('input[type="tel"]').first().fill(TEST_CUSTOMER.phone);
   await page.waitForTimeout(300);
-  await page.getByPlaceholder(/your name/i).fill(TEST_CUSTOMER.name);
+  await page.getByLabel(/your name/i).fill(TEST_CUSTOMER.name);
   await page.waitForTimeout(400);
 }
 

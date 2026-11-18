@@ -31,6 +31,24 @@ import { cn } from "@/lib/utils";
 import { OrderLineDetails } from "@/components/orders/order-line-details";
 import { useOrgSlug } from "@/providers/org-slug-provider";
 import { serviceUrl } from "@/lib/service-urls";
+import { SaveDetailsCard } from "@/components/checkout/save-details-card";
+import type { SavedGuestDetails } from "@/lib/guest-details";
+import { useAuthStore } from "@/store/auth";
+
+/** The details a guest order was placed with, for the "Save my details" card. */
+function guestDetailsFromOrder(order: Order): SavedGuestDetails {
+  const meta = order.metadata ?? {};
+  const text = (key: string) => (typeof meta[key] === "string" ? (meta[key] as string).trim() : "");
+  const details: SavedGuestDetails = {
+    name: text("contactName"),
+    phone: text("contactPhone"),
+    email: text("contactEmail"),
+  };
+  if (order.deliveryAddress && order.deliveryLat != null && order.deliveryLng != null) {
+    details.address = { address: order.deliveryAddress, lat: order.deliveryLat, lng: order.deliveryLng };
+  }
+  return details;
+}
 
 const TREASURY_API_URL = serviceUrl("treasury");
 
@@ -260,6 +278,7 @@ function GuestOrderContent() {
   const sessionId = searchParams.get("session_id") ?? "";
   const autoOpenRating = searchParams.get("rate") === "1";
   const autoOpenPay = searchParams.get("pay") === "1";
+  const authStatus = useAuthStore((s) => s.status);
 
   const queryKey = ["guest-order", orderId, sessionId];
   const {
@@ -588,6 +607,16 @@ function GuestOrderContent() {
           orderId={orderId}
           queryKey={["guest-order", orderId, sessionId]}
           autoOpen={autoOpenRating}
+        />
+      )}
+
+      {/* The guest who placed it (same checkout session) may keep their details or add a password. */}
+      {sessionId && order.metadata?.guest === true && authStatus !== "authenticated" && (
+        <SaveDetailsCard
+          orgSlug={orgSlug}
+          details={guestDetailsFromOrder(order)}
+          orderId={order.id}
+          sessionId={sessionId}
         />
       )}
 

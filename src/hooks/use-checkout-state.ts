@@ -1,11 +1,12 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useQuery } from "@tanstack/react-query";
 import { isValidPhone } from "@bengo-hub/shared-ui-lib/contact";
 
 import { useAddresses } from "@/hooks/use-addresses";
+import { useBrandConfig } from "@/hooks/use-brand";
 import { useCheckout, useGuestCheckout, useFeeBreakdown } from "@/hooks/use-cart-api";
 import { useOutlet } from "@/hooks/use-catalog";
 import { useApplyPromoCode } from "@/hooks/use-orders";
@@ -15,6 +16,8 @@ import type { DeliveryPoint } from "@/components/location/delivery-location-pick
 import { apiErrorMessage } from "@/lib/api/error-message";
 import { api } from "@/lib/api/base";
 import { payOrderWithWallet } from "@/lib/api/orders";
+import { clearGuestDetails, loadGuestDetails, type SavedGuestDetails } from "@/lib/guest-details";
+import { guestNameError, normalizeGuestName } from "@/lib/guest-name";
 import { orgRoute } from "@/lib/routes";
 import { toast } from "@/lib/toast";
 import { useOrgSlug } from "@/providers/org-slug-provider";
@@ -153,7 +156,22 @@ export function useCheckoutState() {
   );
   const [guestEmail, setGuestEmail] = useState("");
   const [guestPhone, setGuestPhone] = useState("");
-  const [guestName, setGuestName] = useState("");
+  const [guestName, setGuestNameRaw] = useState("");
+  // The name is checked once the guest leaves the field or tries to place the order; the backend
+  // runs the same check and its message lands here too.
+  const [guestNameTouched, setGuestNameTouched] = useState(false);
+  const [guestNameServerError, setGuestNameServerError] = useState<string | null>(null);
+  const setGuestName = useCallback((v: string) => {
+    setGuestNameRaw(v);
+    setGuestNameServerError(null);
+  }, []);
+  // The store's placeholder list (GET /config); the bundled one applies until it loads.
+  const placeholderNames = useBrandConfig().data?.placeholderNames;
+  const guestNameMessage =
+    guestNameServerError ?? (guestNameTouched ? guestNameError(guestName, placeholderNames) : null);
+  // True when the guest form was filled from details saved on this device.
+  const [prefilledFromDevice, setPrefilledFromDevice] = useState(false);
+  const prefillTried = useRef(false);
   // A pin picked on the map (guests always; signed-in customers when not using a saved address).
   const [deliveryLocation, setDeliveryLocationState] = useState<DeliveryPoint | null>(() =>
     toDeliveryPoint(useDiningModeStore.getState().deliveryLocation),
@@ -311,6 +329,49 @@ export function useCheckoutState() {
     : "35-50 min";
 
   const isGuestMode = checkoutMode === "guest" && status !== "authenticated";
+
+  // Fill the guest form once from details the guest chose to save on this device. Fields the
+  // guest already typed in are kept; the saved address is used only when no pin is chosen yet.
+  useEffect(() => {
+    if (!isGuestMode || prefillTried.current) return;
+    prefillTried.current = true;
+    const saved = loadGuestDetails(orgSlug);
+    if (!saved) return;
+    setGuestNameRaw((v) => v || saved.name);
+    setGuestEmail((v) => v || saved.email);
+    setGuestPhone((v) => v || saved.phone);
+    const addr = saved.address;
+    if (addr) {
+      setDeliveryLocationState((cur) => cur ?? { lat: addr.lat, lng: addr.lng, address: addr.address, placeName: addr.placeName });
+    }
+    setPrefilledFromDevice(true);
+  }, [isGuestMode, orgSlug]);
+
+  // "Not you? Clear": forget the saved details and empty the form.
+  const clearSavedGuestDetails = useCallback(() => {
+    clearGuestDetails(orgSlug);
+    setGuestNameRaw("");
+    setGuestEmail("");
+    setGuestPhone("");
+    setGuestNameTouched(false);
+    setGuestNameServerError(null);
+    setPrefilledFromDevice(false);
+  }, [orgSlug]);
+
+  // What the "Save my details" card offers to keep after the order: the details just used, and
+  // the delivery pin when this was a delivery to a picked location.
+  const guestDetailsForSave = useMemo<SavedGuestDetails>(() => {
+    const details: SavedGuestDetails = {
+      name: normalizeGuestName(guestName),
+      phone: guestPhone.trim(),
+      email: guestEmail.trim(),
+    };
+    if (fulfillmentMode !== "pickup" && !noFulfillment && !selectedAddressId && deliveryLocation) {
+      details.address = { address: deliveryLocation.address, lat: deliveryLocation.lat, lng: deliveryLocation.lng };
+      if (deliveryLocation.placeName) details.address.placeName = deliveryLocation.placeName;
+    }
+    return details;
+  }, [guestName, guestPhone, guestEmail, fulfillmentMode, noFulfillment, selectedAddressId, deliveryLocation]);
 
   // ─── Payment method options (from the payment-methods aggregate) ───────
   const walletBalance = paymentMethodsData?.wallet?.balance ?? null;
@@ -555,6 +616,12 @@ export function useCheckoutState() {
 
   const handlePlaceOrder = useCallback(async () => {
     if (isGuestMode) {
+      const nameProblem = guestNameError(guestName, placeholderNames);
+      if (nameProblem) {
+        setGuestNameTouched(true);
+        toast.error(nameProblem);
+        return;
+      }
       if (!guestEmail.trim() && !guestPhone.trim()) {
         toast.error("Please provide an email or phone number");
         return;
@@ -654,7 +721,7 @@ export function useCheckoutState() {
         };
         if (guestEmail.trim()) guestPayload.contactEmail = guestEmail.trim();
         if (guestPhone.trim()) guestPayload.contactPhone = guestPhone.trim();
-        if (guestName.trim()) guestPayload.contactName = guestName.trim();
+        guestPayload.contactName = normalizeGuestName(guestName);
         // Delivery address from saved address or guest-picked location (deliveries only: a
         // pickup order must not carry the browsing location as a drop-off).
         if (effectiveFulfillment === "pickup") {
@@ -759,13 +826,21 @@ export function useCheckoutState() {
       }
     } catch (error: unknown) {
       setStep("review");
+      // The backend refused the guest's name: show its message next to the name field.
+      const data = (error as { response?: { data?: { field?: unknown; message?: unknown } } })?.response?.data;
+      if (data?.field === "contactName" && typeof data.message === "string") {
+        setGuestNameServerError(data.message);
+        setGuestNameTouched(true);
+        toast.error(data.message);
+        return;
+      }
       const message =
         error instanceof Error ? error.message : "Failed to place order. Please try again.";
       setOrderError(message);
       toast.error(message);
     }
   }, [
-    isGuestMode, guestEmail, guestPhone, guestName, deliveryLocation, deliveryPin, deliveryQuote,
+    isGuestMode, guestEmail, guestPhone, guestName, placeholderNames, deliveryLocation, deliveryPin, deliveryQuote,
     isDeliveryPricingUnavailable, fulfillmentMode, selectedAddressId, isOutsideDeliveryZone, isAtOutlet, scheduledTime,
     items, sessionId, deliveryNotes, promoCode, orderNotes, requestUtensils, isTicketOnly, noFulfillment,
     checkoutMutation, guestCheckoutMutation, orgSlug, router, clearCart,
@@ -877,6 +952,13 @@ export function useCheckoutState() {
     setGuestPhone,
     guestName,
     setGuestName,
+    /** Inline message for the name field, null when there is nothing to say. */
+    guestNameMessage,
+    onGuestNameBlur: () => setGuestNameTouched(true),
+    prefilledFromDevice,
+    clearSavedGuestDetails,
+    guestDetailsForSave,
+    sessionId,
     deliveryLocation,
     setDeliveryLocation,
     handleSignInForCheckout,

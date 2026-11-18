@@ -284,7 +284,7 @@ test.describe.serial('Order lifecycle: guest checkout', () => {
     const emailField = page.getByPlaceholder(/email address/i);
     await expect(emailField).toBeVisible({ timeout: 10_000 });
     await expect(page.getByPlaceholder(/phone number/i)).toBeVisible({ timeout: 5_000 });
-    await expect(page.getByPlaceholder(/your name/i)).toBeVisible({ timeout: 5_000 });
+    await expect(page.getByLabel(/your name/i)).toBeVisible({ timeout: 5_000 });
 
     // "Sign in instead" link
     await expect(page.getByText(/sign in instead/i)).toBeVisible({ timeout: 5_000 });

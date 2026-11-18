@@ -23,6 +23,7 @@ import { FeeBreakdownCard } from "@/components/checkout/fee-breakdown";
 import { FulfillmentToggle } from "@/components/checkout/fulfillment-toggle";
 import { GuestContactForm } from "@/components/checkout/guest-contact-form";
 import { OrderSuccess } from "@/components/checkout/order-success";
+import { SaveDetailsCard } from "@/components/checkout/save-details-card";
 import { OrderSummarySection } from "@/components/checkout/order-summary-section";
 import { PromoCodeSection } from "@/components/checkout/promo-code-section";
 import { SchedulePicker } from "@/components/checkout/schedule-picker";
@@ -92,6 +93,16 @@ export default function CheckoutPage() {
       <OrderSuccess
         orderHref={state.orderPageHref(state.orderId!)}
         paid={!state.selectedOption || state.selectedOption.payNow || state.selectedOption.method === "wallet"}
+        extra={
+          state.isGuestMode ? (
+            <SaveDetailsCard
+              orgSlug={state.orgSlug}
+              details={state.guestDetailsForSave}
+              orderId={state.orderId ?? undefined}
+              sessionId={state.sessionId || undefined}
+            />
+          ) : undefined
+        }
       />
     );
   } else {
@@ -121,6 +132,10 @@ export default function CheckoutPage() {
               onPhoneChange={state.setGuestPhone}
               onNameChange={state.setGuestName}
               onSignIn={state.handleSignInForCheckout}
+              nameError={state.guestNameMessage}
+              onNameBlur={state.onGuestNameBlur}
+              prefilled={state.prefilledFromDevice}
+              onClearSaved={state.clearSavedGuestDetails}
             />
           )}
 
