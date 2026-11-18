@@ -146,8 +146,8 @@ jobs:
           echo "DEPLOY=true" >> $GITHUB_ENV
           echo "SETUP_DATABASES=false" >> $GITHUB_ENV
           echo "DB_TYPES=none" >> $GITHUB_ENV
-          echo "NAMESPACE=food-delivery" >> $GITHUB_ENV
-          echo "ENV_SECRET_NAME=ordering-frontend-env" >> $GITHUB_ENV
+          echo "NAMESPACE=ordering" >> $GITHUB_ENV
+          echo "ENV_SECRET_NAME=ordering-frontend-secrets" >> $GITHUB_ENV
           echo "REGISTRY_SERVER=docker.io" >> $GITHUB_ENV
           echo "REGISTRY_NAMESPACE=codevertex" >> $GITHUB_ENV
           echo "VALUES_FILE_PATH=apps/ordering-frontend/values.yaml" >> $GITHUB_ENV
@@ -226,8 +226,8 @@ jobs:
           DEPLOY: true
           SETUP_DATABASES: false
           DB_TYPES: none
-          NAMESPACE: food-delivery
-          ENV_SECRET_NAME: ordering-frontend-env
+          NAMESPACE: ordering
+          ENV_SECRET_NAME: ordering-frontend-secrets
           REGISTRY_SERVER: docker.io
           REGISTRY_NAMESPACE: codevertex
           VALUES_FILE_PATH: apps/ordering-frontend/values.yaml
@@ -259,7 +259,7 @@ jobs:
         if: success() && needs.sync-secrets.outputs.result != 'synced'
         env:
           KUBE_CONFIG_B64: ${{ secrets.KUBE_CONFIG }}
-          NS: food-delivery
+          NS: ordering
           APP_NAME: ordering-frontend
         run: |
           if [ -z "${KUBE_CONFIG_B64}" ]; then
@@ -287,7 +287,7 @@ jobs:
         if: success() && needs.sync-secrets.outputs.result != 'synced'
         env:
           KUBE_CONFIG_B64: ${{ secrets.KUBE_CONFIG }}
-          NS: food-delivery
+          NS: ordering
         run: |
           if [ -z "${KUBE_CONFIG_B64}" ]; then
             echo "⏭️ Skipping health check - no KUBE_CONFIG available"
@@ -298,9 +298,9 @@ jobs:
           mkdir -p ~/.kube
           echo "$KUBE_CONFIG_B64" | base64 -d > ~/.kube/config
 
-          if kubectl get deployment ordering-frontend-app -n ${NS} >/dev/null 2>&1; then
-            kubectl rollout status deployment/ordering-frontend-app -n ${NS} --timeout=300s
-            HOSTS=$(kubectl get ingress -n ${NS} -o jsonpath='{.items[*].spec.rules[*].host}' | tr ' ' '\n' | grep -E 'fooddeliveryapp' || true)
+          if kubectl get deployment ordering-frontend -n ${NS} >/dev/null 2>&1; then
+            kubectl rollout status deployment/ordering-frontend -n ${NS} --timeout=300s
+            HOSTS=$(kubectl get ingress ordering-frontend -n ${NS} -o jsonpath='{.spec.rules[*].host}' | tr ' ' '\n' | grep -E '^ordering\.' || true)
             if [ -n "$HOSTS" ]; then
               for H in $HOSTS; do
                 echo "Checking https://$H/healthz ..."
