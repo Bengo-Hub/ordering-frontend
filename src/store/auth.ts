@@ -3,6 +3,7 @@ import { create } from "zustand";
 
 import { apiErrorMessage } from "@/lib/api/error-message";
 import { attachAuthTokenGetter } from "@/lib/api/base";
+import { cookieMode } from "@/lib/auth/session-mode";
 import { attachPlatformAuthTokenGetter } from "@/lib/api/platform-services";
 import {
   buildAuthorizeUrl,
@@ -137,14 +138,22 @@ export const useAuthStore = create<AuthState>((set, get) => ({
   hydrateFromWebAuthn: async (tokens, tenantSlug) => {
     set({ status: "syncing", error: null });
     try {
-      const session: SessionTokens = {
+      let session: SessionTokens = {
         accessToken: tokens.accessToken,
         refreshToken: tokens.refreshToken,
         expiresAt: new Date(Date.now() + tokens.expiresIn * 1000).toISOString(),
         sessionId: "",
       };
-      persistAuthState({ session, user: null });
-      set({ session });
+      if (cookieMode()) {
+        // Passkey sign-in: its refresh token goes into the sso cookie too.
+        const { adoptSignIn } = await import("@/lib/auth/cookie-session");
+        const adopted = await adoptSignIn(tokens.refreshToken);
+        if (!adopted) throw new Error("Sign-in failed");
+        session = adopted;
+      } else {
+        persistAuthState({ session, user: null });
+        set({ session });
+      }
 
       if (tenantSlug && typeof window !== "undefined") {
         localStorage.setItem("tenantSlug", tenantSlug);
@@ -176,6 +185,23 @@ export const useAuthStore = create<AuthState>((set, get) => ({
   },
 
   initialize: async () => {
+    if (cookieMode()) {
+      // No token is stored: a known profile gets its first token through the sso cookie.
+      const known = get().user;
+      if (!known) {
+        set({ status: "idle", error: null, orders: [] });
+        return;
+      }
+      set({ status: "loading", error: null });
+      const { getCookieSession } = await import("@/lib/auth/cookie-session");
+      const token = await getCookieSession().getAccessToken();
+      if (!token) {
+        clearSession(set);
+        return;
+      }
+      set({ status: "authenticated", lastAuthenticatedAt: Date.now() });
+      return;
+    }
     const { session, user } = get();
     if (!session) {
       set({ status: "idle", user: null, error: null, orders: [] });
@@ -314,15 +340,23 @@ export const useAuthStore = create<AuthState>((set, get) => ({
         redirectUri: callbackUrl,
       });
 
-      // Step 2: Store session tokens
-      const session: SessionTokens = {
+      // Step 2: Store session tokens (with the cookie session, the refresh token goes into
+      // auth-api's HttpOnly cookie and only the in-memory access token is kept).
+      let session: SessionTokens = {
         accessToken: tokens.access_token,
         refreshToken: tokens.refresh_token ?? "",
         expiresAt: new Date(Date.now() + tokens.expires_in * 1000).toISOString(),
         sessionId: "",
       };
-      persistAuthState({ session, user: null });
-      set({ session });
+      if (cookieMode()) {
+        const { adoptSignIn } = await import("@/lib/auth/cookie-session");
+        const adopted = await adoptSignIn(tokens.refresh_token ?? "");
+        if (!adopted) throw new Error("Sign-in failed");
+        session = adopted;
+      } else {
+        persistAuthState({ session, user: null });
+        set({ session });
+      }
 
       // Step 3: Fetch profile from SSO /me (always available, no JIT sync needed).
       // Do NOT call backend APIs here — the user may not be JIT-synced yet and
@@ -362,7 +396,13 @@ export const useAuthStore = create<AuthState>((set, get) => ({
   logout: async () => {
     // Revoke the backend session (Redis session_token keys + DB sessions) while
     // the access token is still available, before clearing local state.
-    await revokeServerSession(get().session?.accessToken);
+    if (cookieMode()) {
+      // Revokes the session, clears the sso cookie and signs the other tabs out.
+      const { getCookieSession } = await import("@/lib/auth/cookie-session");
+      await getCookieSession().end();
+    } else {
+      await revokeServerSession(get().session?.accessToken);
+    }
     clearSession(set);
     // Clear Zustand persist storage to prevent rehydration of stale session
     if (typeof window !== "undefined") {

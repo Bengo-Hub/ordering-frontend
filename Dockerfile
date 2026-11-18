@@ -19,6 +19,10 @@ COPY . .
 ARG NEXT_PUBLIC_API_URL=https://orderingapi.codevertexafrica.com/api/v1
 ARG NEXT_PUBLIC_SSO_URL=https://sso.codevertexafrica.com
 ARG NEXT_PUBLIC_CAFE_WEBSITE_URL=https://theurbanloftcafe.com
+# Sign-in keeps tokens out of browser storage on ordering.codevertexafrica.com (sso cookie session,
+# fleet plan G11); tenant storefront domains keep stored tokens. "false" goes back to stored tokens.
+ARG NEXT_PUBLIC_COOKIE_SESSION=true
+ENV NEXT_PUBLIC_COOKIE_SESSION=$NEXT_PUBLIC_COOKIE_SESSION
 ARG NEXT_PUBLIC_LOGISTICS_UI_URL=https://logistics.codevertexafrica.com
 ARG NEXT_PUBLIC_NOTIFICATIONS_API_URL=https://notificationsapi.codevertexafrica.com
 ARG NEXT_PUBLIC_TREASURY_API_URL=https://booksapi.codevertexafrica.com

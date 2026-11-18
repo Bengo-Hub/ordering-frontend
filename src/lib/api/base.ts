@@ -66,6 +66,11 @@ export function attachAuthTokenGetter(getter: () => string | null) {
   accessTokenGetter = getter;
 }
 
+/** The signed-in access token the auth store registered, for clients outside this one (wallet). */
+export function currentAccessToken(): string | null {
+  return accessTokenGetter();
+}
+
 let on401Callback: (() => void) | null = null;
 let onSubscription403Callback: ((data: any) => void) | null = null;
 

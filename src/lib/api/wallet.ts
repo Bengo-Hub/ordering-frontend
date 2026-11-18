@@ -1,4 +1,5 @@
 import axios from "axios";
+import { currentAccessToken } from "./base";
 
 // ─── Treasury-authenticated API client ───────────────────────────────
 // Wallet data lives in treasury-api (not ordering-backend).
@@ -16,15 +17,12 @@ const treasuryAuthApi = axios.create({
   // Keeping it false simplifies CORS (server doesn't need Allow-Credentials: true).
 });
 
-// Import the shared token getter registered by auth setup (same getter used by the ordering api client).
-// We re-use the same localStorage/cookie approach: token is written by the auth session.
+// The signed-in token comes from the getter the auth store registers (the same one the ordering
+// api client uses). It used to read localStorage "accessToken", which nothing writes, so wallet
+// calls went out unauthenticated; with the cookie session the token is never stored anyway.
 treasuryAuthApi.interceptors.request.use((config) => {
   if (typeof window !== "undefined") {
-    // Attach stored access token for treasury JWT auth
-    const token =
-      localStorage.getItem("accessToken") ||
-      sessionStorage.getItem("accessToken") ||
-      null;
+    const token = currentAccessToken();
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
     }
