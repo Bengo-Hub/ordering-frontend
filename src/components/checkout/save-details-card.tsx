@@ -21,6 +21,11 @@ import {
 } from "@/lib/guest-details";
 import { cn } from "@/lib/utils";
 
+// The account lives in Codevertex Accounts, so its terms and privacy policy are the ones that apply.
+const ACCOUNTS_URL = (process.env.NEXT_PUBLIC_AUTH_UI_URL || "https://accounts.codevertexafrica.com").replace(/\/$/, "");
+const LEGAL_TERMS_URL = `${ACCOUNTS_URL}/terms-of-service`;
+const LEGAL_PRIVACY_URL = `${ACCOUNTS_URL}/privacy`;
+
 const MIN_PASSWORD_LENGTH = 8;
 
 interface SaveDetailsCardProps {
@@ -222,6 +227,12 @@ export function SaveDetailsCard({ orgSlug, details, orderId, sessionId, classNam
                 />
                 <p className="text-xs text-muted-foreground">
                   At least 8 characters. We&apos;ll email a code to {details.email} to confirm it&apos;s you.
+                </p>
+                <p className="text-xs text-muted-foreground">
+                  Creating an account means you accept the{" "}
+                  <a href={LEGAL_TERMS_URL} target="_blank" rel="noopener noreferrer" className="underline">terms of use</a>{" "}
+                  and{" "}
+                  <a href={LEGAL_PRIVACY_URL} target="_blank" rel="noopener noreferrer" className="underline">privacy policy</a>.
                 </p>
               </div>
             )}
