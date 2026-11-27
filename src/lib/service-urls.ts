@@ -25,8 +25,22 @@ function appHost(): string {
 export function isTenantDomain(host: string): boolean {
   const h = host.toLowerCase();
   if (!h || h === appHost()) return false;
-  const name = h.split(":")[0] ?? "";
-  return name !== "localhost" && name !== "127.0.0.1" && !name.endsWith(".local");
+  return isPublicHostName(h);
+}
+
+/**
+ * A host that can be a business's own domain: a dotted public name. Kubelet probes reach the pod by
+ * its IP, so an IP literal, a single-label name or a cluster-internal name is never looked up
+ * (looking them up cost a 404 from auth-api every minute per pod, through Cloudflare).
+ */
+export function isPublicHostName(host: string): boolean {
+  const h = host.trim().toLowerCase();
+  if (h.startsWith("[")) return false; // IPv6 literal with a port, "[::1]:3000"
+  const name = h.split(":").length > 2 ? h : (h.split(":")[0] ?? ""); // bare IPv6 keeps its colons
+  if (!name || name.includes(":")) return false; // IPv6
+  if (/^\d{1,3}(\.\d{1,3}){3}$/.test(name)) return false; // IPv4
+  if (!name.includes(".")) return false; // localhost, pod and service short names
+  return !/\.(local|internal|localhost|svc|cluster\.local)$/.test(name);
 }
 
 /**

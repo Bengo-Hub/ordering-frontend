@@ -1,6 +1,23 @@
 import { describe, expect, it } from "vitest";
 
 import { normaliseHost, slugForHost, tenantRewritePath } from "@/lib/tenant-domains";
+import { isPublicHostName } from "@/lib/service-urls";
+
+describe("isPublicHostName", () => {
+  it("refuses probe and cluster hosts, so they are never looked up in auth-api", () => {
+    expect(isPublicHostName("192.168.135.44:3000")).toBe(false);
+    expect(isPublicHostName("192.168.135.44")).toBe(false);
+    expect(isPublicHostName("[::1]:3000")).toBe(false);
+    expect(isPublicHostName("fe80::1")).toBe(false);
+    expect(isPublicHostName("localhost:3000")).toBe(false);
+    expect(isPublicHostName("ordering-frontend")).toBe(false);
+    expect(isPublicHostName("ordering-frontend.ordering.svc.cluster.local")).toBe(false);
+  });
+  it("accepts a business's own domain", () => {
+    expect(isPublicHostName("urbaneats.theurbanloftcafe.com")).toBe(true);
+    expect(isPublicHostName("alphachinamarket.co.ke:443")).toBe(true);
+  });
+});
 
 describe("tenant domains", () => {
   it("maps each tenant domain to its slug, ignoring port and case", () => {
